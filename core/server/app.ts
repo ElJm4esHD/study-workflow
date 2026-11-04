@@ -79,7 +79,7 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   const webDist = opts.webDist;
   if (webDist) await app.register(fastifyStatic, { root: webDist });
   app.setNotFoundHandler((req, reply) => {
-    if (webDist && req.method === 'GET' && !req.url.startsWith('/api')) return reply.sendFile('index.html');
+    if (webDist && req.method === 'GET' && !/^\/api(\/|\?|$)/.test(req.url))return reply.sendFile('index.html');
     return reply.status(404).send(body('no_encontrado', 'No encontrado.'));
   });
 

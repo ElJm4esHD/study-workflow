@@ -1,4 +1,8 @@
 import { expect, test } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { buildApp } from './app.ts';
 import { httpError } from './errors.ts';
 import { orderModules, type ServerModule } from './registry.ts';
 import { makeTestApp } from './testing.ts';
@@ -80,4 +84,40 @@ test('ctx.transaction hace rollback si falla', async () => {
   db.exec('CREATE TABLE z (x)');
   expect(() => transaction(() => { db.exec('INSERT INTO z VALUES (1)'); throw new Error('x'); })).toThrow();
   expect(db.prepare('SELECT * FROM z').all()).toEqual([]);
+});
+
+async function webApp() {
+  const dir = mkdtempSync(join(tmpdir(), 'web-'));
+  writeFileSync(join(dir, 'index.html'), '<!doctype html><title>SPA</title>');
+  return buildApp({ dbPath: ':memory:', modules: [], webDist: dir });
+}
+
+test('con webDist: GET / sirve index.html', async () => {
+  const r = await (await webApp()).inject('/');
+  expect(r.statusCode).toBe(200);
+  expect(r.body).toContain('<title>SPA</title>');
+});
+
+test('con webDist: GET /todo/123 (ruta SPA) sirve index.html', async () => {
+  const r = await (await webApp()).inject('/todo/123');
+  expect(r.statusCode).toBe(200);
+  expect(r.body).toContain('<title>SPA</title>');
+});
+
+test('con webDist: GET /apple y /apis no son API y sirven index.html', async () => {
+  const app = await webApp();
+  for (const url of ['/apple', '/apis']) {
+    const r = await app.inject(url);
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toContain('<title>SPA</title>');
+  }
+});
+
+test('con webDist: GET /api/inexistente, /api y /api?x siguen siendo 404 JSON', async () => {
+  const app = await webApp();
+  for (const url of ['/api/inexistente', '/api', '/api?x=1']) {
+    const r = await app.inject(url);
+    expect(r.statusCode).toBe(404);
+    expect(r.json().error.code).toBe('no_encontrado');
+  }
 });
