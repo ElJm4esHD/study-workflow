@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
-import { formatDate } from '../../../core/shared/dates.ts';
+import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import type { PlanSummary } from '../server/index.ts';
 import { deleteCounts } from './logic.ts';
 import './import.css';
@@ -36,7 +36,7 @@ export function PlansPage() {
       <div className="card-group">
         {data?.map((p) => (
           <div key={p.id} className="card">
-            <h2 style={{ marginLeft: 0 }}>{p.title ?? `Plan del ${formatDate(p.createdAt.slice(0, 10))}`}</h2>
+            <h2 style={{ marginLeft: 0 }}>{p.title ?? `Plan del ${formatDate(todayAR(new Date(p.createdAt)))}`}</h2>
             <div className="imp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={p.tasksTotal} aria-valuenow={p.tasksDone}>
               <div style={{ width: p.tasksTotal ? `${(100 * p.tasksDone) / p.tasksTotal}%` : 0 }} />
             </div>

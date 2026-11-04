@@ -30,6 +30,7 @@ export function ImportPage() {
     let t: string;
     try {
       t = await navigator.clipboard.readText();
+      if (!t.trim()) throw new Error('vacío');
     } catch {
       notify('No pude leer el portapapeles. Pegalo abajo.');
       area.current?.focus();
