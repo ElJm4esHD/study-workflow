@@ -1,0 +1,24 @@
+import type { ComponentType } from 'react';
+import type { RouteObject } from 'react-router';
+
+export interface WebModule {
+  id: string;
+  name: string;
+  icon: ComponentType;
+  routes: RouteObject[];
+  nav?: { path: string; order: number };
+  settings?: ComponentType;
+  requires?: string[];
+}
+
+/** Módulos activos: los habilitados más sus `requires` registrados; un `requires` sin parte web se ignora. */
+export function resolveEnabled(all: WebModule[], isEnabled: (id: string) => boolean): WebModule[] {
+  const on = new Set(all.filter((m) => isEnabled(m.id)).map((m) => m.id));
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const m of all) if (on.has(m.id)) for (const r of m.requires ?? []) {
+      if (!on.has(r) && all.some((x) => x.id === r)) { on.add(r); grew = true; }
+    }
+  }
+  return all.filter((m) => on.has(m.id));
+}
