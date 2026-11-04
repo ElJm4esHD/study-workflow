@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "dev:server": "node --watch core/server/main.ts",
     "dev": "node scripts/dev.mjs",
-    "build": "vite build"
+    "build": "vite build",
+    "deploy": "node scripts/deploy.mjs",
+    "server-setup": "node scripts/deploy.mjs --setup"
   },
   "devDependencies": {
     "@dnd-kit/core": "^6.3.1",
