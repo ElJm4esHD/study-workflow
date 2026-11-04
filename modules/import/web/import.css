@@ -1,0 +1,19 @@
+.imp-big { width: 100%; min-height: 64px; font-size: 1.1rem; }
+.imp-text { width: 100%; min-height: 160px; font: inherit; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.imp-err { border: 2px solid var(--danger); color: var(--danger); border-radius: 16px; padding: 12px 16px; margin: 12px 0; }
+.imp-materia { background: var(--surface); border: 0; border-radius: var(--r); padding: 16px; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.imp-materia select { min-height: 48px; font: inherit; }
+.imp-materia label { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.imp-row { display: flex; align-items: center; min-height: 64px; border-left: 6px solid var(--bar); background: var(--surface); }
+.imp-row label { flex: 1; display: flex; align-items: center; min-height: 64px; gap: 4px; cursor: pointer; }
+.imp-row input[type='checkbox'] { width: 28px; height: 28px; margin: 10px; flex: none; accent-color: var(--accent); }
+.imp-row .imp-body { display: flex; flex-direction: column; padding: 6px 12px 6px 0; overflow-wrap: anywhere; }
+.imp-tag { font-size: .8rem; color: var(--muted); }
+.imp-tag.exam { color: var(--accent); font-weight: 700; text-transform: uppercase; }
+.imp-save { position: sticky; bottom: calc(var(--nav-h) + 12px); margin-top: 16px; width: 100%; }
+.imp-bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.imp-bar > div { height: 100%; background: var(--accent); }
+.imp-dialog { border: 0; border-radius: var(--r); padding: 20px; max-width: min(420px, 92vw); background: var(--surface); color: var(--text); }
+.imp-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+.imp-dialog label { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.imp-dialog input[type='checkbox'] { width: 24px; height: 24px; accent-color: var(--accent); }
