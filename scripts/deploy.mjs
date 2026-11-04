@@ -35,8 +35,8 @@ const sha = git('rev-parse', 'HEAD');
 const push = run('git', ['push', `ssh://${target}/~/git/study-workflow.git`, 'main'], { stdio: 'inherit' });
 if (push.status !== 0) die('✖ Deploy FALLÓ: no se pudo hacer push (¿corriste npm run server-setup?).');
 
-const remote = `git --git-dir ~/git/study-workflow.git show ${sha}:scripts/remote-deploy.sh | bash -s ${sha} ${port}`;
+const remote = `set -o pipefail; git --git-dir ~/git/study-workflow.git show ${sha}:scripts/remote-deploy.sh | bash -s ${sha} ${port}`;
 const r = spawnSync('ssh', [target, remote], { stdio: 'inherit' });
 const code = r.status ?? 1;
-console.log(code === 0 ? `✔ Deploy OK (${sha.slice(0, 7)})` : '✖ Deploy FALLÓ, la versión anterior sigue corriendo');
+console.log(code === 0 ? `✔ Deploy OK (${sha.slice(0, 7)})` : '✖ Deploy FALLÓ (mirá el mensaje de arriba)');
 process.exit(code);

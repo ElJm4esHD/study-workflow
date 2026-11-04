@@ -24,7 +24,7 @@ Datos en el server: `/srv/study-workflow/` (`study.sqlite` y `backups/`). Backup
 ```
 ssh-keygen -t ed25519
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh tu-usuario@<host> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-ssh <host> echo ok
+ssh tu-usuario@<host> echo ok
 ```
 
 `<host>` es el hostname MagicDNS del server (el de `tailscale status`).
@@ -55,7 +55,7 @@ Requiere MagicDNS y HTTPS certificates habilitados en el admin de Tailscale. Con
 npm run deploy
 ```
 
-Exige árbol limpio y rama `main`, hace push al repo del server y por SSH construye la imagen, hace backup de la base, levanta el contenedor nuevo y espera `/api/health`. Si falla el build o el health check, restaura el backup, vuelve a levantar la versión anterior y termina con `✖ Deploy FALLÓ`. Se conservan las 3 versiones más nuevas.
+Exige árbol limpio y rama `main`, hace push al repo del server y por SSH construye la imagen, hace backup de la base, levanta el contenedor nuevo y espera `/api/health`. Si falla el build no toca nada; si falla el health check, restaura el backup, vuelve a levantar la versión anterior y termina con `✖ Deploy FALLÓ`. Se conservan las 3 versiones más nuevas.
 
 ### Backups y restore
 

@@ -28,7 +28,7 @@ if [ -n "$PREV" ] && [ -n "$(dc "$PREV" "$PREV" ps -q app)" ]; then
     || { echo "BACKUP FALLÓ, no se toca nada"; exit 1; }
 fi
 
-dc "$SHA" "$SHA" up -d
+dc "$SHA" "$SHA" up -d || echo "UP FALLÓ"
 for i in $(seq 15); do
   if curl -fsS "http://127.0.0.1:$PORT/api/health" </dev/null >/dev/null 2>&1; then
     echo "$SHA" > .deployed
