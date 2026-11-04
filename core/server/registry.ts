@@ -1,9 +1,23 @@
 import type { FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
 
-// Placeholders: la Task 3 define estos services.
-export interface MateriasService {}
-export interface SettingsService {}
+export type Materia = {
+  id: string; name: string; color: string; archived: boolean; createdAt: string; updatedAt: string;
+};
+
+export interface MateriasService {
+  list(): Materia[];
+  get(id: string): Materia | undefined;
+  findByNameKey(key: string): Materia | undefined;
+  create(input: { id?: string; name: string; color: string }): Materia;
+  update(id: string, patch: { name?: string; color?: string; archived?: boolean }): Materia;
+}
+
+export interface SettingsService {
+  getAll(): Record<string, unknown>;
+  get<T>(key: string, fallback: T): T;
+  set(key: string, value: unknown): void;
+}
 
 export interface ServerModule {
   id: string;

@@ -3,7 +3,7 @@ import { httpError } from './errors.ts';
 import { orderModules, type ServerModule } from './registry.ts';
 import { makeTestApp } from './testing.ts';
 
-const base = { migrationsDir: new URL('./migrations/', import.meta.url) };
+const base = { migrationsDir: new URL('../shared/', import.meta.url) }; // sin .sql: no migra nada
 const mod = (id: string, extra: Partial<ServerModule> = {}): ServerModule => ({
   id, ...base, routes: async () => {}, ...extra,
 });
@@ -40,6 +40,14 @@ test('error de validación de Fastify → 400 code "validacion"', async () => {
   const r = await app.inject({ method: 'POST', url: '/api/demo/v', payload: {} });
   expect(r.statusCode).toBe(400);
   expect(r.json().error.code).toBe('validacion');
+  expect(r.json().error.message).toBe('Datos inválidos: n.');
+});
+
+test('otro 4xx de Fastify → solicitud_invalida en español', async () => {
+  const app = await makeTestApp();
+  const r = await app.inject({ method: 'POST', url: '/api/settings', payload: '{', headers: { 'content-type': 'application/json' } });
+  expect(r.statusCode).toBe(400);
+  expect(r.json().error).toEqual({ code: 'solicitud_invalida', message: 'Solicitud inválida.' });
 });
 
 test('error inesperado → 500 error_interno', async () => {
