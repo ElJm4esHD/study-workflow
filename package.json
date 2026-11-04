@@ -7,11 +7,16 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:server": "node --watch core/server/main.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.10",
+    "fastify": "^5.12.8"
   }
 }
