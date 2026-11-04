@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 'react-router';
 import { CoreProvider, useCore } from './CoreContext.tsx';
-import { ErrorBoundary } from './ErrorBoundary.tsx';
+import { ErrorBoundary, ErrorScreen } from './ErrorBoundary.tsx';
 import { Shell } from './Shell.tsx';
 import { AjustesPage } from './AjustesPage.tsx';
 
@@ -13,6 +13,7 @@ function Routes() {
     const first = enabledModules.find((m) => m.nav)?.nav!.path ?? '/ajustes';
     const routes: RouteObject[] = [{
       element: <Shell />,
+      errorElement: <ErrorScreen />,
       children: [
         { path: '/', element: <Navigate to={first} replace /> },
         ...enabledModules.flatMap((m) => m.routes),

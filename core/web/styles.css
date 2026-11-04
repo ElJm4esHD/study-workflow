@@ -1,7 +1,7 @@
 /* Dirección: One UI. Fondo gris suave, superficies grandes y muy redondeadas, títulos amplios arriba,
    acento azul, navegación con "píldora" en el ítem activo. Tipografía del sistema. */
 :root {
-  --bg: #f1f2f6; --surface: #fff; --text: #16181d; --muted: #5d6270; --line: #e1e3ea;
+  --bg: #f1f2f6; --surface: #fff; --text: #16181d; --muted: #5d6270; --line: #e1e3ea; --off: #767a86;
   --accent: #2f5fe0; --on-accent: #fff; --accent-soft: #dfe7ff; --danger: #c4262e;
   --r: 24px; --nav-h: 72px;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -9,7 +9,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b0c0f; --surface: #1a1c21; --text: #eceef3; --muted: #a2a7b4; --line: #2b2e36;
+    --bg: #0b0c0f; --surface: #1a1c21; --text: #eceef3; --muted: #a2a7b4; --line: #2b2e36; --off: #7b8091;
     --accent: #8aa8ff; --on-accent: #0b1330; --accent-soft: #26335f; --danger: #ff8a8f;
   }
 }
@@ -79,7 +79,7 @@ input:not([type='checkbox']) {
 .mod-name { display: inline-flex; align-items: center; gap: 12px; font-weight: 500; }
 .switch { position: relative; width: 56px; height: 48px; display: inline-flex; align-items: center; }
 .switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.track { width: 52px; height: 30px; border-radius: 15px; background: var(--line); position: relative; transition: background .15s; pointer-events: none; }
+.track { width: 52px; height: 30px; border-radius: 15px; background: var(--off); position: relative; transition: background .15s; pointer-events: none; }
 .track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .switch input:checked + .track { background: var(--accent); }
 .switch input:checked + .track::after { transform: translateX(22px); }
