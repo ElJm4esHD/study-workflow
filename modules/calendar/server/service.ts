@@ -3,6 +3,8 @@ import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
 import { httpError } from '../../../core/server/errors.ts';
 import type { CoreContext } from '../../../core/server/registry.ts';
 import type { EventKind } from '../shared.ts';
+import { expandEvents, seriesDates } from './recurrence.ts';
+import type { Occurrence } from './recurrence.ts';
 
 export type CalendarEvent = {
   id: string; title: string; notes: string | null; kind: EventKind; materiaId: string | null;
@@ -22,6 +24,12 @@ export interface CalendarService {
   getByIds(ids: string[]): CalendarEvent[];
   findByDates(dates: string[]): CalendarEvent[];
   deleteByIds(ids: string[], o?: { exceptKinds?: EventKind[] }): number;
+  getOne(id: string): CalendarEvent | undefined;
+  update(id: string, patch: Partial<EventInput>): CalendarEvent;
+  remove(id: string): void;
+  listRange(from: string, to: string): Occurrence[];
+  detachOccurrence(seriesId: string, date: string, input: EventInput): CalendarEvent;
+  deleteOccurrence(seriesId: string, date: string): void;
 }
 
 const KINDS = ['evento', 'parcial', 'recuperatorio', 'final'];
@@ -77,6 +85,15 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
   const all = (sql: string, ...args: string[]) => (db.prepare(sql).all(...args) as Row[]).map(toEvent);
   const byId = (id: string) => all('SELECT * FROM calendar_events WHERE id = ?', id)[0];
 
+  const detached = (seriesId: string, date: string) =>
+    all('SELECT * FROM calendar_events WHERE series_id = ? AND original_date = ?', seriesId, date)[0];
+  const checkOccurrence = (seriesId: string, date: string) => {
+    const s = byId(seriesId);
+    if (!s) throw httpError(404, 'no_encontrado', 'El evento no existe.');
+    if (s.repeatWeekdays === null) throw httpError(400, 'no_es_serie', 'El evento no se repite.');
+    if (!seriesDates(s, date, date).length) throw httpError(400, 'fecha_fuera_de_serie', 'Esa fecha no es parte de la serie.');
+  };
+
   const svc: CalendarService = {
     create(i) {
       if (i.id) { const ex = byId(i.id); if (ex) return ex; }
@@ -94,6 +111,55 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
     },
     // El que llama lo envuelve en ctx.transaction para que sea todo o nada (igual que todo).
     createMany: (items) => items.map((i) => svc.create(i)),
+    getOne: byId,
+    update(id, patch) {
+      const ex = byId(id);
+      if (!ex) throw httpError(404, 'no_encontrado', 'El evento no existe.');
+      const m: EventInput = { ...ex, ...patch };
+      // Una serie es de un solo día: si mueve el inicio, el fin lo acompaña.
+      if (m.repeatWeekdays != null && patch.endDate === undefined) m.endDate = m.startDate;
+      const msg = validateEvent(m);
+      if (msg) throw httpError(400, 'validacion', msg);
+      const materiaId = m.materiaId ?? null;
+      if (materiaId !== null && !ctx.materias.get(materiaId)) throw httpError(400, 'materia_inexistente', 'La materia no existe.');
+      db.prepare(`UPDATE calendar_events SET title=?, notes=?, kind=?, materia_id=?, all_day=?, start_date=?, start_time=?,
+        end_date=?, end_time=?, repeat_weekdays=?, repeat_until=?, updated_at=? WHERE id=?`)
+        .run(m.title.trim(), m.notes ?? null, m.kind, materiaId, m.allDay ? 1 : 0, m.startDate, m.startTime ?? null,
+          m.endDate ?? m.startDate, m.endTime ?? null, m.repeatWeekdays?.join(',') ?? null, m.repeatUntil ?? null,
+          new Date().toISOString(), id);
+      return byId(id)!;
+    },
+    remove(id) {
+      if (!byId(id)) throw httpError(404, 'no_encontrado', 'El evento no existe.');
+      db.prepare('DELETE FROM calendar_events WHERE id = ?').run(id); // el cascade borra separados y exdates
+    },
+    listRange(from, to) {
+      const events = all(`SELECT * FROM calendar_events WHERE start_date <= ? AND (end_date >= ? OR repeat_weekdays IS NOT NULL) ${ORDER}`, to, from);
+      const exdates = new Map<string, Set<string>>();
+      for (const r of db.prepare('SELECT event_id, date FROM calendar_exdates').all() as { event_id: string; date: string }[]) {
+        (exdates.get(r.event_id) ?? exdates.set(r.event_id, new Set()).get(r.event_id)!).add(r.date);
+      }
+      return expandEvents(events, exdates, from, to);
+    },
+    detachOccurrence(seriesId, date, input) {
+      checkOccurrence(seriesId, date);
+      return ctx.transaction(() => {
+        const solo = { ...input, endDate: input.endDate ?? input.startDate, repeatWeekdays: null, repeatUntil: null };
+        const prev = detached(seriesId, date);
+        db.prepare('INSERT OR IGNORE INTO calendar_exdates (event_id, date) VALUES (?, ?)').run(seriesId, date);
+        if (prev) return svc.update(prev.id, solo);
+        const e = svc.create({ ...solo, id: undefined });
+        db.prepare('UPDATE calendar_events SET series_id = ?, original_date = ? WHERE id = ?').run(seriesId, date, e.id);
+        return byId(e.id)!;
+      });
+    },
+    deleteOccurrence(seriesId, date) {
+      checkOccurrence(seriesId, date);
+      ctx.transaction(() => {
+        db.prepare('INSERT OR IGNORE INTO calendar_exdates (event_id, date) VALUES (?, ?)').run(seriesId, date);
+        db.prepare('DELETE FROM calendar_events WHERE series_id = ? AND original_date = ?').run(seriesId, date);
+      });
+    },
     getByIds: (ids) => ids.length ? all(`SELECT * FROM calendar_events WHERE id IN (${marks(ids.length)}) ${ORDER}`, ...ids) : [],
     findByDates: (dates) => dates.length
       ? all(`SELECT * FROM calendar_events WHERE repeat_weekdays IS NULL AND start_date IN (${marks(dates.length)}) ${ORDER}`, ...dates)
