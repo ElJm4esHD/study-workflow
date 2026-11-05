@@ -93,7 +93,7 @@ export function ImportPage() {
           <textarea ref={area} className="imp-text" value={text} onChange={(e) => setText(e.target.value)} />
         </label>
         <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()}>Ver vista previa</button>
-        <Link to="/importar/planes">Ver planes importados</Link>
+        <Link to="/importar/planes" className="imp-planes-link">Ver planes importados</Link>
       </div>
       {error && <div className="imp-err" role="alert">{error}</div>}
       {preview && (

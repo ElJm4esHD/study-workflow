@@ -22,7 +22,7 @@ p { margin: 0 0 .75rem; }
 .page-title small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
 
 .shell { min-height: 100dvh; }
-.main { padding: 0 12px calc(var(--nav-h) + 24px); }
+.main { padding: 0 12px calc(var(--nav-h) + 88px); }
 .nav {
   position: fixed; inset: auto 0 0 0; height: var(--nav-h); display: flex; background: var(--surface);
   border-top: 1px solid var(--line); z-index: 10;
@@ -78,7 +78,7 @@ p { margin: 0 0 .75rem; }
 .card { background: var(--surface); border-radius: var(--r-card); padding: 14px; }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .card-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
-.card-head a { color: var(--accent); font-size: 13px; text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+.card-head a { color: var(--accent); font-size: 13px; text-decoration: none; min-height: 44px; min-width: 44px; justify-content: flex-end; display: inline-flex; align-items: center; }
 /* Inicio: una columna en el celu (.dash-all), dos por `column` en la compu (.dash-col). */
 .dash-all, .dash-col { display: flex; flex-direction: column; gap: 10px; }
 .dash-col { display: none; }
@@ -106,7 +106,7 @@ input:not([type='checkbox']):not([type='radio']), textarea, select {
 
 /* Fila de tarea: 48 px, con .chk de 44 x 44. Estructura: .task-row > .chk + .body(.title + .meta) + .dur */
 .task-row { display: flex; align-items: center; gap: 4px; min-height: 48px; border-radius: 8px; transition: opacity var(--t); }
-.task-row .body { flex: 1; min-width: 0; padding: 4px 0; color: inherit; text-decoration: none; }
+.task-row .body { flex: 1; min-width: 0; padding: 4px 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; color: inherit; text-decoration: none; }
 .task-row .title { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t); }
 .task-row .meta { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
 .task-row .dur { font-size: 12.5px; color: var(--muted); flex: none; padding-right: 4px; }
