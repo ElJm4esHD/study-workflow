@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { enqueue, flush, isQueueable, lastCopyAt, patchCopies, pending, readCopy, saveCopy, type Store } from './offline.ts';
+import { appendCopy, applyPending, enqueue, flush, isQueueable, lastCopyAt, patchCopies, pending, readCopy, saveCopy, type Store } from './offline.ts';
 
 const mem = (): Store => {
   const m = new Map<string, string>();
@@ -93,4 +93,66 @@ test('flush: error de red en el 2do op → sent 1, remaining 2, sin duplicar', a
   expect(r).toEqual({ sent: 1, dropped: 0, remaining: 2 });
   expect(pending(s).map((o) => o.id)).toEqual(['b', 'c']);
   expect(n).toBe(2); // GET + PATCH de 'a'
+});
+
+test('C1b: enqueue toma el updatedAt más nuevo entre las copias', () => {
+  const s = mem();
+  saveCopy('/api/todo', [{ ...todo('a'), updatedAt: 'u1' }], 't0', s);
+  saveCopy('/api/todo/a', { ...todo('a'), updatedAt: 'u2' }, 't0', s);
+  expect(enqueue('a', true, 't1', s).baseUpdatedAt).toBe('u2');
+});
+
+test('I1: base null → PATCH solo si el servidor es anterior al tilde', async () => {
+  const run = async (server: string) => {
+    const s = mem();
+    enqueue('a', true, '2026-11-05T10:00:00Z', s);
+    const methods: string[] = [];
+    await flush(async (m) => { methods.push(m); return { status: 200, json: { ...todo('a'), updatedAt: server } }; }, s);
+    return methods;
+  };
+  expect(await run('2026-11-05T09:00:00Z')).toEqual(['GET', 'PATCH']);
+  expect(await run('2026-11-05T11:00:00Z')).toEqual(['GET']);
+});
+
+test('I2: 5xx en el PATCH → corta y deja el op; 4xx lo descarta', async () => {
+  let s = setup('a');
+  const mk = (st: number) => async (m: string) => ({ status: m === 'GET' ? 200 : st, json: todo('a') });
+  expect(await flush(mk(503) as any, s)).toEqual({ sent: 0, dropped: 0, remaining: 1 });
+  expect(await flush(mk(400) as any, s)).toEqual({ sent: 0, dropped: 1, remaining: 0 });
+  s = setup('a');
+  expect(await flush((async () => ({ status: 502, json: {} })) as any, s)).toMatchObject({ remaining: 1 });
+});
+
+test('I3: un tilde hecho durante el flush se conserva, rebasado al updatedAt del PATCH', async () => {
+  const s = setup('a');
+  const r = await flush(async (m) => {
+    if (m === 'PATCH') {
+      enqueue('a', false, 't2', s); // el usuario vuelve a tocar mientras se envía
+      return { status: 200, json: { ...todo('a'), updatedAt: 'u9' } };
+    }
+    return { status: 200, json: todo('a') };
+  }, s);
+  expect(r).toEqual({ sent: 1, dropped: 0, remaining: 1 });
+  expect(pending(s)).toEqual([{ id: 'a', completed: false, baseUpdatedAt: 'u9', at: 't2' }]);
+});
+
+test('I5: applyPending reaplica los tildes sin subir a datos frescos', () => {
+  const s = setup('a');
+  expect(applyPending([todo('a'), todo('b')], s).map((t) => t.completed)).toEqual([true, false]);
+});
+
+test('I6: tope de 40 copias (cae la más vieja) y cuota llena no tira', () => {
+  const s = mem();
+  for (let i = 0; i < 41; i++) saveCopy(`/api/x${i}`, i, `t${String(i).padStart(2, '0')}`, s);
+  expect(readCopy('/api/x0', s)).toBeUndefined();
+  expect(readCopy('/api/x40', s)?.data).toBe(40);
+  const full: Store = { get: () => null, set: () => { throw new DOMException('cuota', 'QuotaExceededError'); } };
+  expect(() => saveCopy('/api/y', 1, 't', full)).not.toThrow();
+});
+
+test('appendCopy agrega a la copia de lista', () => {
+  const s = mem();
+  saveCopy('/api/todo', [todo('a')], 't0', s);
+  appendCopy('/api/todo', todo('n'), s);
+  expect(readCopy<any[]>('/api/todo', s)!.data.map((t) => t.id)).toEqual(['a', 'n']);
 });
