@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellLevel, countdownLabel, daysUntil, dayCell, dayDetail, examColor, levelOf, nextExams, weekSummary } from './summary.ts';
+import { examWhat, whenLabel, cellLevel, countdownLabel, daysUntil, dayCell, dayDetail, examColor, levelOf, nextExams, weekSummary } from './summary.ts';
 import type { AgendaData } from './summary.ts';
 import type { Occurrence } from '../server/recurrence.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
@@ -93,5 +93,7 @@ describe('summary', () => {
     expect([cellLevel({ minutes: 0, unestimated: false, any: true }), cellLevel({ minutes: 100, unestimated: false, any: true }), cellLevel({ minutes: 0, unestimated: false, any: false })]).toEqual([1, 3, 0]);
     expect(daysUntil('2026-11-05', '2026-11-20')).toBe(15);
     expect([0, 1, 15].map(countdownLabel)).toEqual(['Hoy', '1 día', '15 días']);
+    expect([0, 1, 5].map(whenLabel)).toEqual(['hoy', 'mañana', 'en 5 días']);
+    expect([examWhat('Parcial', 'Álgebra'), examWhat('Parcial')]).toEqual(['Parcial de Álgebra', 'Parcial']);
   });
 });

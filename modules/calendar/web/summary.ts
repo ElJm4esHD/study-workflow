@@ -97,3 +97,7 @@ export const cellLevel = (p: { minutes: number; unestimated: boolean; any: boole
 export const daysUntil = (from: string, to: string): number => Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);
 
 export const countdownLabel = (n: number): string => (n <= 0 ? 'Hoy' : n === 1 ? '1 día' : `${n} días`);
+
+export const examWhat = (kind: string, materia?: string): string => (materia ? `${kind} de ${materia}` : kind);
+
+export const whenLabel = (n: number): string => (n <= 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} días`);
