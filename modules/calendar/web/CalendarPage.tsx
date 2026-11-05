@@ -29,7 +29,7 @@ const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart
 function contrastOn(hex: string) {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
     .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? '#000' : '#fff';
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18 ? '#000' : '#fff';
 }
 
 type Data = { events: Occurrence[]; todos: TodoItem[] };
@@ -44,6 +44,7 @@ export function CalendarPage() {
   const [data, setData] = useState<Data>({ events: [], todos: [] });
   const [title, setTitle] = useState('');
   const [view, setView] = useState('');
+  const [shown, setShown] = useState('');
   const [initial] = useState(() => ({
     vista: VIEWS.find((v) => v.id === (params.get('vista') ?? settings['calendar.initialView'])) ?? VIEWS[0],
     fecha: params.get('fecha') ?? todayAR(),
@@ -53,10 +54,13 @@ export function CalendarPage() {
   useSwipe(wrap, { onLeft: () => controller.next(), onRight: () => controller.prev() });
 
   async function onDatesSet(i: DatesSetInfo) {
-    const vista = VIEWS.find((v) => v.fc === i.view.type)!.id;
+    // Un tipo desconocido no debe romper la pantalla: se conserva la vista anterior.
+    const vista = VIEWS.find((v) => v.fc === i.view.type)?.id ?? view;
+    const fecha = ymd(i.view.currentStart);
     setTitle(i.view.title);
     setView(vista);
-    setParams({ vista, fecha: ymd(i.view.currentStart) }, { replace: true });
+    setShown(fecha);
+    setParams({ vista, fecha }, { replace: true });
     const me = ++seq.current; // ignora respuestas viejas si el usuario sigue deslizando
     try {
       const r = await api<Data>('GET', `/api/calendar/agenda?from=${ymd(i.start)}&to=${addDays(ymd(i.end), -1)}`);
@@ -140,7 +144,7 @@ export function CalendarPage() {
           }}
         />
       </div>
-      <Link to={`/calendario/evento/nuevo?fecha=${initial.fecha}`} className="cal-fab" aria-label="Nuevo evento"><PlusIcon /></Link>
+      <Link to={`/calendario/evento/nuevo?fecha=${shown || initial.fecha}`} className="cal-fab" aria-label="Nuevo evento"><PlusIcon /></Link>
     </>
   );
 }

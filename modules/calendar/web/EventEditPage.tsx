@@ -40,17 +40,20 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   const [repeat, setRepeat] = useState(isSeries);
   const [weekdays, setWeekdays] = useState<number[]>(item?.repeatWeekdays ?? []);
   const [until, setUntil] = useState(item?.repeatUntil ?? '');
+  const rep0 = useRef({ repeat, weekdays: weekdays.join(), until });
   const [action, setAction] = useState<'save' | 'delete'>('save');
   const dlg = useRef<HTMLDialogElement>(null);
   // Sin ocurrencia no hay nada que separar: se edita la serie directo.
   const asksScope = isSeries && !!ocurrencia;
+  // Si se tocó la repetición, el cambio solo tiene sentido para toda la serie: no se pregunta.
+  const repChanged = repeat !== rep0.current.repeat || weekdays.join() !== rep0.current.weekdays || until !== rep0.current.until;
   const back = () => (window.history.state?.idx > 0 ? nav(-1) : nav('/calendario', { replace: true }));
   const url = `/api/calendar/events/${item?.id}`;
   const options = materias.filter((m) => !m.archived || m.id === item?.materiaId);
 
   const body = (series: boolean): EventInput => ({
     title, kind, materiaId: materiaId || null, allDay, startDate,
-    startTime: allDay ? null : startTime || null, endDate: series ? startDate : endDate,
+    startTime: allDay ? null : startTime || null, endDate: series || ocurrencia ? startDate : endDate,
     endTime: allDay ? null : endTime || null, notes: notes.trim() || null,
     repeatWeekdays: series ? weekdays : null, repeatUntil: series ? until || null : null,
   });
@@ -60,6 +63,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   }
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (asksScope && repChanged) { run(() => api('PATCH', url, seriesPatch())); return; }
     if (asksScope) { setAction('save'); dlg.current?.showModal(); return; }
     run(() => {
       const b = body(repeat);
@@ -71,15 +75,18 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
     if (asksScope) { setAction('delete'); dlg.current?.showModal(); return; }
     if (confirm(`¿Borrar "${item!.title}"?`)) run(() => api('DELETE', url));
   }
+  // Toda la serie: la fecha solo se manda si el usuario la cambió (si no, correría el inicio de la serie a la ocurrencia).
+  function seriesPatch() {
+    const { startDate: s, endDate: _e, ...rest } = body(repeat);
+    return s === ocurrencia ? rest : { ...rest, startDate: s, endDate: repeat ? s : endDate };
+  }
   function scoped(solo: boolean) {
     dlg.current?.close();
     const occ = `${url}/occurrences/${ocurrencia}`;
     run(() => {
       if (action === 'delete') return api('DELETE', solo ? occ : url);
       if (solo) return api('PUT', occ, body(false));
-      // Si la fecha no se tocó no se manda: mover el inicio de la serie a la ocurrencia la correría.
-      const { startDate: s, ...rest } = body(true);
-      return api('PATCH', url, s === ocurrencia ? rest : { ...rest, startDate: s });
+      return api('PATCH', url, seriesPatch());
     });
   }
   function toggleDay(d: number) {
