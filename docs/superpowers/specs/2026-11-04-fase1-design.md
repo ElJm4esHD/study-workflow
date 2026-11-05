@@ -53,7 +53,8 @@ Cada dependencia, con su justificación en una línea:
 | `@fastify/static` | server | Servir el build del frontend desde el mismo contenedor. |
 | `react`, `react-dom` | web | Stack definido. |
 | `react-router` | web | Rutas por módulo y links directos (`/todo/:id`, `/calendario?fecha=`) que van a necesitar los widgets en la Fase 3. |
-| `@fullcalendar/core`, `react`, `daygrid`, `timegrid`, `list`, `interaction` | web | [tuya] Vistas mes, semana y lista; `interaction` es el plugin MIT para tocar un día o una franja horaria. |
+| `@fullcalendar/react` (trae daygrid, timegrid, list e interaction como entrypoints `@fullcalendar/react/*`) | web | [tuya] Vistas mes, semana y lista; `interaction` es el plugin MIT para tocar un día o una franja horaria. |
+| `temporal-polyfill` | web | Peer obligatorio de FullCalendar 7. |
 | `@dnd-kit/core`, `@dnd-kit/sortable` | web | Reordenar con el dedo sin pelearse con el scroll (activación con long-press). Hacerlo a mano en touch es frágil. |
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/*` | dev | Stack definido. |
 | `vitest` | dev | Tests de server y web con la misma herramienta que Vite; la API se prueba con `fastify.inject`, sin red. |
