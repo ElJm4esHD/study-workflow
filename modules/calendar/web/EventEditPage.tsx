@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
+import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import type { CalendarEvent, EventInput } from '../server/service.ts';
 import { KIND_LABELS } from './views.ts';
@@ -101,17 +102,24 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
         <label>Título
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item} />
         </label>
-        <label>Tipo
-          <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
-            {Object.entries(KIND_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select>
-        </label>
-        <label>Materia
-          <select value={materiaId} onChange={(e) => setMateriaId(e.target.value)}>
-            <option value="">Sin materia</option>
-            {options.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
+        <div className="cal-field" role="group" aria-label="Tipo">
+          <span>Tipo</span>
+          <div className="pills">
+            {(Object.entries(KIND_LABELS) as [typeof kind, string][]).map(([k, l]) => (
+              <button type="button" key={k} className="pill" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div className="cal-field" role="group" aria-label="Materia">
+          <span>Materia</span>
+          <div className="pills">
+            <button type="button" className="pill" aria-pressed={materiaId === ''} onClick={() => setMateriaId('')}>Sin materia</button>
+            {options.map((m) => (
+              <button type="button" key={m.id} className="pill" style={materiaVars(m.color)} title={m.name} aria-pressed={materiaId === m.id}
+                onClick={() => setMateriaId(m.id)}><span className="dot" aria-hidden="true" />&nbsp;{m.sigla}</button>
+            ))}
+          </div>
+        </div>
         <Switch label="Todo el día" checked={allDay} onChange={setAllDay} />
         <label>Fecha de inicio
           <input type="date" value={startDate} required
