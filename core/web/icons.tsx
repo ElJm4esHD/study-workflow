@@ -9,3 +9,4 @@ export const PlusIcon = () => <Svg><path d="M12 5v14M5 12h14" /></Svg>;
 export const ChecklistIcon = () => <Svg><path d="m4 6 2 2 3-3M4 14l2 2 3-3M13 7h7M13 15h7" /></Svg>;
 export const ImportIcon = () => <Svg><path d="M12 3v12M7 10l5 5 5-5M4 20h16" /></Svg>;
 export const CalendarIcon = () => <Svg><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></Svg>;
+export const HomeIcon = () => <Svg><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10" /></Svg>;

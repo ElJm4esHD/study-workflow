@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { makeSigla } from '../shared/sigla.ts';
 import { PALETTE } from '../shared/palette.ts';
 import type { Materia } from '../server/registry.ts';
 import { webModules } from '../../modules/web.ts';
@@ -25,12 +26,14 @@ function MateriaForm({ initial, onDone }: { initial?: Materia; onDone(): void })
   const { reloadMaterias, notify } = useCore();
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState(initial?.color ?? PALETTE[7].hex);
+  const [sigla, setSigla] = useState(initial?.sigla ?? '');
+  const [siglaTouched, setSiglaTouched] = useState(!!initial);
   const [error, setError] = useState('');
   async function submit(e: FormEvent) {
     e.preventDefault();
     try {
-      if (initial) await api('PATCH', `/api/materias/${initial.id}`, { name, color });
-      else await api('POST', '/api/materias', { name, color });
+      if (initial) await api('PATCH', `/api/materias/${initial.id}`, { name, color, sigla });
+      else await api('POST', '/api/materias', { name, color, sigla });
       reloadMaterias();
       notify(initial ? 'Materia guardada.' : 'Materia creada.');
       onDone();
@@ -41,7 +44,10 @@ function MateriaForm({ initial, onDone }: { initial?: Materia; onDone(): void })
   return (
     <form className="card form" onSubmit={submit}>
       <label>Nombre
-        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required autoFocus />
+        <input value={name} onChange={(e) => { setName(e.target.value); if (!siglaTouched) setSigla(makeSigla(e.target.value)); }} maxLength={60} required autoFocus />
+      </label>
+      <label>Sigla
+        <input value={sigla} onChange={(e) => { setSigla(e.target.value.toUpperCase()); setSiglaTouched(true); }} maxLength={5} />
       </label>
       <Swatches value={color} onChange={setColor} />
       {error && <p className="error" role="alert">{error}</p>}
@@ -71,7 +77,7 @@ function Materias() {
     ? <li key={m.id}><MateriaForm initial={m} onDone={() => setEditing(null)} /></li>
     : (
       <li key={m.id} className="list-row">
-        <MateriaChip materia={m} />
+        <span className="mod-name"><MateriaChip materia={m} />{m.name}</span>
         <span className="row">
           <button className="btn" onClick={() => setEditing(m.id)} aria-label={`Editar ${m.name}`}>Editar</button>
           <button className="btn" onClick={() => archive(m)} aria-label={`${m.archived ? 'Desarchivar' : 'Archivar'} ${m.name}`}>

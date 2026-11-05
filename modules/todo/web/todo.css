@@ -1,9 +1,9 @@
 .todo-tabs { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 8px; padding: 0 16px; scrollbar-width: none; }
 .todo-tab {
-  flex: none; min-height: 48px; padding: 0 18px; border-radius: 24px; border: 1px solid var(--line); background: var(--surface);
+  flex: none; min-height: 48px; padding: 0 18px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface);
   color: var(--text); font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
 }
-.todo-tab[aria-selected='true'], .todo-tab[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.todo-tab[aria-selected='true'], .todo-tab[aria-pressed='true'] { background: var(--surface-2); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .todo-group { margin-bottom: 1.25rem; }
 .todo-group h2 { margin-top: 1rem; }
 .todo-row { display: flex; align-items: center; min-height: 64px; border-left: 6px solid var(--bar); background: var(--surface); touch-action: manipulation; -webkit-user-select: none; user-select: none; }
@@ -14,16 +14,15 @@
 .todo-title { overflow-wrap: anywhere; }
 .todo-row.done .todo-title { text-decoration: line-through; color: var(--muted); }
 .todo-meta { font-size: .875rem; }
-.late { color: var(--danger); }
+.late { color: var(--late); }
 .todo-fab {
   position: fixed; right: 16px; bottom: calc(var(--nav-h) + 80px); width: 56px; height: 56px; border-radius: 28px; z-index: 9;
   background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
 }
 .todo-add { position: fixed; left: 0; right: 0; bottom: var(--nav-h); padding: 8px 16px; background: var(--bg); z-index: 9; border-top: 1px solid var(--line); }
-.todo-add input { width: 100%; max-width: 688px; display: block; border-radius: 24px; background: var(--surface); }
-.btn.danger { color: var(--danger); }
+.todo-add input { width: 100%; max-width: 688px; display: block; border-radius: var(--r-ctl); background: var(--surface); }
 @media (min-width: 768px) {
-  .todo-add { left: 200px; padding-left: 32px; }
+  .todo-add { left: var(--side-w); padding-left: 32px; }
   .todo-fab { bottom: 88px; }
 }
 .todo-end { height: 72px; }

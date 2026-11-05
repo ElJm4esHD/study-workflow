@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 
 import { CoreProvider, useCore } from './CoreContext.tsx';
 import { ErrorBoundary, ErrorScreen } from './ErrorBoundary.tsx';
 import { Shell } from './Shell.tsx';
+import { InicioPage } from './InicioPage.tsx';
 import { AjustesPage } from './AjustesPage.tsx';
 
 function Routes() {
@@ -10,12 +11,11 @@ function Routes() {
   const key = enabledModules.map((m) => m.id).join();
   // Se recrea solo cuando cambia el conjunto de módulos activos, no en cada render.
   const router = useMemo(() => {
-    const first = enabledModules.find((m) => m.nav)?.nav!.path ?? '/ajustes';
     const routes: RouteObject[] = [{
       element: <Shell />,
       errorElement: <ErrorScreen />,
       children: [
-        { path: '/', element: <Navigate to={first} replace /> },
+        { path: '/', element: <InicioPage /> },
         ...enabledModules.flatMap((m) => m.routes),
         { path: '/ajustes', element: <AjustesPage /> },
         { path: '*', element: <Navigate to="/" replace /> },

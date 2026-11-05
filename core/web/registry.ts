@@ -8,6 +8,7 @@ export interface WebModule {
   routes: RouteObject[];
   nav?: { path: string; order: number };
   settings?: ComponentType;
+  dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];
   requires?: string[];
 }
 
@@ -21,4 +22,12 @@ export function resolveEnabled(all: WebModule[], isEnabled: (id: string) => bool
     }
   }
   return all.filter((m) => on.has(m.id));
+}
+
+export type DashboardCard = NonNullable<WebModule['dashboard']>[number];
+
+/** Tarjetas de Inicio de los módulos dados: `all` por `order` (celu, una columna); `left`/`right` para la compu. */
+export function dashboardCards(mods: WebModule[]): { left: DashboardCard[]; right: DashboardCard[]; all: DashboardCard[] } {
+  const all = mods.flatMap((m) => m.dashboard ?? []).sort((a, b) => a.order - b.order);
+  return { all, left: all.filter((c) => c.column === 'left'), right: all.filter((c) => c.column === 'right') };
 }

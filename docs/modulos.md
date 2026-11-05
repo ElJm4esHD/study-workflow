@@ -45,8 +45,17 @@ interface WebModule {
   routes: RouteObject[];                 // react-router, paths absolutos
   nav?: { path: string; order: number }; // ítem de navegación
   settings?: ComponentType;              // panel opcional en Ajustes
+  dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];  // tarjetas de Inicio
   requires?: string[];
 }
+```
+
+Inicio (`/`) junta las `dashboard` de los módulos activos: en el celu una sola columna ordenada por `order`, en la compu dos columnas según `column`. La tarjeta usa las clases globales `.card` y `.card-head` (h3 + link). Ejemplo:
+
+```tsx
+dashboard: [{ id: 'notas-resumen', order: 40, column: 'right', Card: () => (
+  <div className="card"><div className="card-head"><h3>Notas</h3><a href="/notas">Ver</a></div></div>
+) }],
 ```
 
 Todo pedido HTTP pasa por `api()` de `core/web/api.ts`; los módulos nunca llaman a `fetch`.
