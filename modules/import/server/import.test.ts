@@ -20,7 +20,7 @@ const make = async () => {
   const todos = app.ctx.services.get<TodoService>('todo')!;
   const cal = app.ctx.services.get<CalendarService>('calendar')!;
   const commit = (payload: object) => app.inject({ method: 'POST', url: '/api/import/commit', payload });
-  const create = { algebra: { create: { name: 'Álgebra', color: '#e5484d' } } };
+  const create = { algebra: { create: { name: 'Álgebra', color: '#f4a3a3' } } };
   return { app, todos, cal, commit, create };
 };
 type App = Awaited<ReturnType<typeof make>>['app'];
@@ -38,13 +38,13 @@ test('commit crea tareas, eventos y el plan; GET plans muestra el progreso', asy
 test('commit crea la materia nueva con su color', async () => {
   const { app, commit, create } = await make();
   await commit({ text: planText(), include: [0], materias: create });
-  expect(app.ctx.materias.findByNameKey('algebra')).toMatchObject({ name: 'Álgebra', color: '#e5484d' });
+  expect(app.ctx.materias.findByNameKey('algebra')).toMatchObject({ name: 'Álgebra', color: '#f4a3a3' });
 });
 
 test('create de una materia que ya existe reusa la existente', async () => {
   const { app, todos, commit } = await make();
-  const m = app.ctx.materias.create({ name: 'algebra', color: '#e8590c' });
-  const r = await commit({ text: planText(), include: [0], materias: { algebra: { create: { name: 'Álgebra', color: '#e5484d' } } } });
+  const m = app.ctx.materias.create({ name: 'algebra', color: '#f5bf93' });
+  const r = await commit({ text: planText(), include: [0], materias: { algebra: { create: { name: 'Álgebra', color: '#f4a3a3' } } } });
   expect(r.statusCode).toBe(201);
   expect(app.ctx.materias.list()).toHaveLength(1);
   expect(todos.list()[0].materiaId).toBe(m.id);
