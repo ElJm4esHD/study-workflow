@@ -11,7 +11,7 @@ import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
-import { groupMinutes, groupTodos, orderBetween, type TodoView } from './views.ts';
+import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
 import './todo.css';
 
 const VIEWS: { id: TodoView; label: string }[] = [
@@ -32,7 +32,7 @@ function Row({ item, today, view, sigla, color, selected, sortable, onToggle }: 
       {...s.attributes} {...s.listeners}>
       <button type="button" className="chk" onClick={() => onToggle(item)} aria-pressed={item.completed}
         aria-label={`${item.completed ? 'Destildar' : 'Completar'}: ${item.title}`}><span /></button>
-      <Link to={`/todo/${item.id}`} className="body" draggable={false}>
+      <Link to={{ pathname: `/todo/${item.id}`, search: keepSearch(useLocation().search) }} className="body" draggable={false}>
         <div className="title">{item.title}</div>
         <div className="meta">
           {sigla && <span className="chip">{sigla}</span>}
@@ -53,7 +53,7 @@ export function TodoPage() {
   const view = VIEWS.find((v) => v.id === params.get('vista'))?.id ?? 'hoy';
   const materiaId = params.get('materia');
   const { data, error, reload } = useApi<TodoItem[]>('/api/todo');
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const editing = useMatch('/todo/:id')?.params.id;
   const first = useRef(true);
   // En la compu la lista sigue montada al guardar en el panel: se recarga al cambiar de ruta.
@@ -174,15 +174,19 @@ export function TodoPage() {
           </section>
         );
       })}
-      <Link to="/todo/nueva" className="todo-fab" aria-label="Nueva tarea"><PlusIcon /></Link>
+      {!editing && <Link to={{ pathname: "/todo/nueva", search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea"><PlusIcon /></Link>}
     </>
   );
 }
 
 const useWide = () => {
-  const q = window.matchMedia('(min-width: 1024px)');
-  const [wide, setWide] = useState(q.matches);
-  useEffect(() => { const f = () => setWide(q.matches); q.addEventListener('change', f); return () => q.removeEventListener('change', f); }, [q]);
+  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const q = window.matchMedia('(min-width: 1024px)');
+    const f = () => setWide(q.matches);
+    q.addEventListener('change', f);
+    return () => q.removeEventListener('change', f);
+  }, []);
   return wide;
 };
 

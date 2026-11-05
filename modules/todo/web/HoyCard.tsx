@@ -46,7 +46,7 @@ export function HoyCard() {
   return (
     <section className="card">
       {head}
-      <p className="hoy-sub">{now.length} pendientes de {total}</p>
+      <p className="hoy-sub">{now.length} {now.length === 1 ? "pendiente" : "pendientes"} de {total}</p>
       {late.length + now.length === 0 && <p className="muted">Nada pendiente para hoy.</p>}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         {late.map(row)}

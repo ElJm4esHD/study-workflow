@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
 import { isValidDate } from '../../../core/shared/dates.ts';
@@ -7,6 +7,7 @@ import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
+import { keepSearch } from './views.ts';
 import './todo.css';
 
 const PRESETS = [15, 30, 45, 60, 90];
@@ -24,7 +25,8 @@ function Form({ item }: { item?: TodoItem }) {
   const [category, setCategory] = useState<TodoCategory>(item?.category ?? 'tarea');
   const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
-  const back = () => nav('/todo', { replace: true });
+  const { search } = useLocation();
+  const back = () => nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -106,7 +108,7 @@ export function TodoEditPage() {
   const { data, error, loading, reload } = useApi<TodoItem>(id ? `/api/todo/${id}` : null);
   return (
     <div className="card">
-      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3><Link to="/todo" replace>Cerrar</Link></div>
+      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3><Link to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace>Cerrar</Link></div>
       {id && loading && !data && <p className="muted">Cargando…</p>}
       {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
       {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} />}

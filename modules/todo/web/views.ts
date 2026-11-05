@@ -54,3 +54,11 @@ export function hoyCardData(items: TodoItem[], today: string) {
   const all = late?.key === 'vencidas' ? late.items : [];
   return { late: all.slice(0, LATE_MAX), lateMore: Math.max(0, all.length - LATE_MAX), today: (late?.key === 'vencidas' ? now : late)?.items ?? [] };
 }
+
+/** Query a conservar al abrir/cerrar la edición (vista y filtro); `fecha` es solo del prefill de /todo/nueva. */
+export const keepSearch = (search: string): string => {
+  const p = new URLSearchParams(search);
+  p.delete('fecha');
+  const s = p.toString();
+  return s ? `?${s}` : '';
+};
