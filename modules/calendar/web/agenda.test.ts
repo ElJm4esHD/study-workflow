@@ -37,6 +37,14 @@ describe('agenda offline', () => {
     expect(r.todos).toHaveLength(1);
   });
 
+  it('loadAgenda offline cae a la copia ancha previa si la actual no se guardó', async () => {
+    const prev = rememberWide('2026-11-04');
+    rememberWide('2026-11-05');
+    m.api.mockRejectedValue(new ApiError(0, 'sin_conexion', 'x'));
+    m.readCopy.mockImplementation((u: string) => u === prev ? { data: { events: [], todos: [td('2026-11-20')] }, at: '' } : undefined);
+    expect((await loadAgenda('2026-11-20', '2026-11-20')).todos).toHaveLength(1);
+  });
+
   it('loadAgenda offline sin copia relanza el error', async () => {
     m.api.mockRejectedValue(new ApiError(0, 'sin_conexion', 'x'));
     await expect(loadAgenda('2026-11-20', '2026-11-20')).rejects.toThrow('x');

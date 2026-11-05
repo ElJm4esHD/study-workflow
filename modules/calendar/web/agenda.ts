@@ -18,6 +18,8 @@ export const sliceAgenda = (data: AgendaData, from: string, to: string): AgendaD
 /** Para `prefetch`: devuelve la URL ancha y la recuerda para usarla sin conexión. */
 export function rememberWide(today: string): string {
   const url = wideAgendaUrl(today);
+  const old = localStorage.getItem(KEY);
+  if (old && old !== url) localStorage.setItem(`${KEY}.prev`, old); // por si esta carga falla
   localStorage.setItem(KEY, url);
   return url;
 }
@@ -27,8 +29,7 @@ export async function loadAgenda(from: string, to: string): Promise<AgendaData> 
     return await api<AgendaData>('GET', `/api/calendar/agenda?from=${from}&to=${to}`);
   } catch (e) {
     if (!(e instanceof ApiError) || e.code !== 'sin_conexion') throw e;
-    const url = localStorage.getItem(KEY);
-    const copy = url ? readCopy<AgendaData>(url) : undefined;
+    const copy = [KEY, `${KEY}.prev`].map((k) => localStorage.getItem(k)).map((u) => u ? readCopy<AgendaData>(u) : undefined).find(Boolean);
     if (!copy) throw e;
     return sliceAgenda(copy.data, from, to);
   }

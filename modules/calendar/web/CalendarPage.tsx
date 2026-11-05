@@ -11,7 +11,7 @@ import es from '@fullcalendar/react/locales/es';
 import '@fullcalendar/react/skeleton.css';
 import '@fullcalendar/react/themes/classic/theme.css';
 import '@fullcalendar/react/themes/classic/palette.css';
-import { ApiError } from '../../../core/web/api.ts';
+import { ApiError, onReload } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
@@ -109,7 +109,7 @@ export function CalendarPage() {
       if (me === seq.current) setLoadError(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
     }
   }
-  useEffect(() => { void load(); }, [range]);
+  useEffect(() => { void load(); return onReload(() => void load()); }, [range]);
 
   function onDatesSet(i: DatesSetInfo) {
     setFcTitle(i.view.title);
