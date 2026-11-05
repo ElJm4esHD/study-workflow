@@ -89,6 +89,12 @@ describe('summary', () => {
     expect(w[1].perDay[1]).toEqual({ minutes: 0, unestimated: false, exam: true, any: true });
   });
 
+  it('weekSummary: un evento de 3 días cuenta una vez y marca los 3 días', () => {
+    const w = weekSummary(data([ev({ materiaId: 'a', startDate: '2026-11-06', endDate: '2026-11-08', occurrenceDate: '2026-11-06' })], []), '2026-11-06', 7);
+    expect(w[0].count).toBe(1);
+    expect(w[0].perDay.map((p) => p.any)).toEqual([true, true, true, false, false, false, false]);
+  });
+
   it('cellLevel, daysUntil, countdownLabel', () => {
     expect([cellLevel({ minutes: 0, unestimated: false, any: true }), cellLevel({ minutes: 100, unestimated: false, any: true }), cellLevel({ minutes: 0, unestimated: false, any: false })]).toEqual([1, 3, 0]);
     expect(daysUntil('2026-11-05', '2026-11-20')).toBe(15);

@@ -37,7 +37,7 @@ La app funciona pero el diseño no sirve. El calendario lista todas las tareas e
 - **Estilo:** oscuro con tarjetas. Contenido en tarjetas (`--surface`) separadas del fondo (`--bg`).
 - **Tema:** oscuro siempre (`color-scheme: dark`). Se reemplaza el modo claro/oscuro según sistema que había. Todos los colores en variables CSS de `:root` en `core/web/styles.css`; un tema claro futuro solo redefine ese bloque.
 - **Tokens base** (del mockup):
-  `--bg #10131a`, `--surface #191e28`, `--surface-2 #222937`, `--line #2b3342`, `--text #e6e9f0`, `--muted #98a1b3`, `--faint #6b7487`, `--accent #b7c4ff`, `--on-accent #141a33`. Vencidas en `#ffadad`, "Entrega" en `#ffd38a` (también como variables).
+  `--bg #10131a`, `--surface #191e28`, `--surface-2 #222937`, `--line #2b3342`, `--text #e6e9f0`, `--muted #98a1b3`, `--faint #7b859b`, `--accent #b7c4ff`, `--on-accent #141a33`. Vencidas en `#ffadad`, "Entrega" en `#ffd38a` (también como variables).
 - **Esquinas:** tarjetas 12 px, controles 10 px, chips 4–6 px.
 - **Densidad:** compacta. Filas de tarea de 48 px, checkbox con zona táctil de 44 × 44. Las celdas del mes son el blanco táctil de cada día.
 - **Tipografía:** `system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif`. Números con `font-variant-numeric: tabular-nums`. Escala del mockup (22 / 18 / 15 / 14.5 / 13 / 12.5 / 11.5 / 10.5 px).

@@ -58,7 +58,7 @@ export function hoyCardData(items: TodoItem[], today: string) {
 /** Query a conservar al abrir/cerrar la edición (vista y filtro); `fecha` es solo del prefill de /todo/nueva. */
 export const keepSearch = (search: string): string => {
   const p = new URLSearchParams(search);
-  p.delete('fecha');
+  p.delete('fecha'); p.delete('volver');
   const s = p.toString();
   return s ? `?${s}` : '';
 };

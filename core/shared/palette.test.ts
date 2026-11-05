@@ -25,6 +25,15 @@ test('pastel sobre --surface >= 4.5:1', () => {
 test('blanco sobre strong >= 4.5:1', () => {
   for (const { strong } of [...PALETTE, NEUTRAL]) expect(contrast('#ffffff', strong), strong).toBeGreaterThanOrEqual(4.5);
 });
+test('texto blanco sobre chip translúcido negro 25% encima de strong >= 4.5:1', () => {
+  for (const { strong } of [...PALETTE, NEUTRAL]) {
+    const dark = '#' + [1, 3, 5].map((i) => Math.round(parseInt(strong.slice(i, i + 2), 16) * 0.75).toString(16).padStart(2, '0')).join('');
+    expect(contrast('#ffffff', dark), strong).toBeGreaterThanOrEqual(4.5);
+  }
+});
+test('--faint sobre --surface >= 4.5:1', () => {
+  expect(contrast('#7b859b', SURFACE)).toBeGreaterThanOrEqual(4.5);
+});
 test('strongOf: par conocido y fallback NEUTRAL', () => {
   expect(strongOf(PALETTE[3]!.hex)).toBe(PALETTE[3]!.strong);
   expect(strongOf('#123456')).toBe(NEUTRAL.strong);

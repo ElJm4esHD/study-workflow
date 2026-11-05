@@ -84,7 +84,8 @@ export function weekSummary(data: AgendaData, from: string, days: number) {
     }
     for (const e of data.events.filter((x) => onDay(x, d))) {
       const r = row(e.materiaId);
-      r.count++; r.perDay[i].any = true;
+      if (i === dates.findIndex((x) => onDay(e, x))) r.count++; // un evento multi-día cuenta una vez
+      r.perDay[i].any = true;
       if (isExam(e)) r.perDay[i].exam = true;
     }
   });

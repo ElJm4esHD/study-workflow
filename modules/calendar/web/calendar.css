@@ -40,7 +40,7 @@
 .cal-cell.exam .n { color: var(--on-strong); font-weight: 700; }
 .cal-cell.exam .ex { flex: none; color: var(--on-strong); font-size: 11px; font-weight: 700; padding: 0 3px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
 .cal-cell.exam .ex small { display: block; font-weight: 500; opacity: .9; }
-.cal-cell.exam .chip:not(.solid) { background: color-mix(in srgb, var(--on-strong) 20%, transparent); color: var(--on-strong); }
+.cal-cell.exam .chip:not(.solid) { background: rgb(0 0 0 / .25); color: var(--on-strong); }
 .cal-cell .more { font-size: 10.5px; color: var(--muted); padding-left: 4px; }
 .cal-cell.exam .more { color: var(--on-strong); }
 .cal-legend { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 10px 2px 4px; font-size: 12.5px; color: var(--muted); }

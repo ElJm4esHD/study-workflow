@@ -16,7 +16,9 @@ const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió ma
 function Form({ item }: { item?: TodoItem }) {
   const { materias, notify } = useCore();
   const nav = useNavigate();
-  const fecha = useSearchParams()[0].get('fecha'); // /todo/nueva?fecha=… (desde el detalle del calendario)
+  const [params] = useSearchParams();
+  const fecha = params.get('fecha');
+  const volver = params.get('volver'); // ruta de origen (solo interna) // /todo/nueva?fecha=… (desde el detalle del calendario)
   const [title, setTitle] = useState(item?.title ?? '');
   const [notes, setNotes] = useState(item?.notes ?? '');
   const [dueDate, setDueDate] = useState(item?.dueDate ?? (!item && isValidDate(fecha) ? fecha : ''));
@@ -26,7 +28,7 @@ function Form({ item }: { item?: TodoItem }) {
   const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
   const { search } = useLocation();
-  const back = () => nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
+  const back = () => volver?.startsWith('/') && !volver.startsWith('//') ? nav(volver, { replace: true }) : nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
 
   async function save(e: FormEvent) {
     e.preventDefault();
