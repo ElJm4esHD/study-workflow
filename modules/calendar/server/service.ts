@@ -135,6 +135,7 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
     },
     listRange(from, to) {
       const events = all(`SELECT * FROM calendar_events WHERE start_date <= ? AND (end_date >= ? OR repeat_weekdays IS NOT NULL) ${ORDER}`, to, from);
+      // shortcut: carga todos los exdates, alcanza para un usuario; filtrar por event_id si crece.
       const exdates = new Map<string, Set<string>>();
       for (const r of db.prepare('SELECT event_id, date FROM calendar_exdates').all() as { event_id: string; date: string }[]) {
         (exdates.get(r.event_id) ?? exdates.set(r.event_id, new Set()).get(r.event_id)!).add(r.date);

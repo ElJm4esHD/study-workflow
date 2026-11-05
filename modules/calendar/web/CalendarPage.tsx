@@ -36,7 +36,7 @@ type Data = { events: Occurrence[]; todos: TodoItem[] };
 type Extra = { occ?: Occurrence; todo?: TodoItem };
 
 export function CalendarPage() {
-  const { materias, settings, notify } = useCore();
+  const { materias, settings } = useCore();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const controller = useCalendarController();
@@ -50,6 +50,8 @@ export function CalendarPage() {
     fecha: params.get('fecha') ?? todayAR(),
   }));
   const seq = useRef(0);
+  const range = useRef('');
+  const [loadError, setLoadError] = useState('');
 
   useSwipe(wrap, { onLeft: () => controller.next(), onRight: () => controller.prev() });
 
@@ -61,12 +63,17 @@ export function CalendarPage() {
     setView(vista);
     setShown(fecha);
     setParams({ vista, fecha }, { replace: true });
+    range.current = `from=${ymd(i.start)}&to=${addDays(ymd(i.end), -1)}`;
+    await load();
+  }
+
+  async function load() {
     const me = ++seq.current; // ignora respuestas viejas si el usuario sigue deslizando
     try {
-      const r = await api<Data>('GET', `/api/calendar/agenda?from=${ymd(i.start)}&to=${addDays(ymd(i.end), -1)}`);
-      if (me === seq.current) setData(r);
+      const r = await api<Data>('GET', `/api/calendar/agenda?${range.current}`);
+      if (me === seq.current) { setData(r); setLoadError(''); }
     } catch (e) {
-      if (me === seq.current) notify(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
+      if (me === seq.current) setLoadError(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
     }
   }
 
@@ -116,6 +123,7 @@ export function CalendarPage() {
         <h1 className="cal-title" aria-live="polite">{title}</h1>
         <button className="btn cal-arrow" onClick={() => controller.next()} aria-label="Siguiente">›</button>
       </div>
+      {loadError && <p className="error" role="alert">{loadError} <button className="btn" onClick={load}>Reintentar</button></p>}
       <div ref={wrap} className="cal-wrap">
         <FullCalendar
           controller={controller}
