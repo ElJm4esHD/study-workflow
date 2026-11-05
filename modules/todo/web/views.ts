@@ -41,3 +41,16 @@ export function groupTodos(items: TodoItem[], view: TodoView, today: string, mat
       return [group('completadas', 'Completadas', items.filter((i) => i.completed).sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? '')), false)];
   }
 }
+
+export const groupMinutes = (items: TodoItem[]) => ({
+  minutes: items.reduce((a, i) => a + (i.durationMin ?? 0), 0),
+  unestimated: items.filter((i) => i.durationMin === null).length,
+});
+
+const LATE_MAX = 5;
+/** Datos de la tarjeta Hoy: vencidas (las 5 más viejas + cuántas sobran) y todas las de hoy. */
+export function hoyCardData(items: TodoItem[], today: string) {
+  const [late, now] = groupTodos(items, 'hoy', today);
+  const all = late?.key === 'vencidas' ? late.items : [];
+  return { late: all.slice(0, LATE_MAX), lateMore: Math.max(0, all.length - LATE_MAX), today: (late?.key === 'vencidas' ? now : late)?.items ?? [] };
+}

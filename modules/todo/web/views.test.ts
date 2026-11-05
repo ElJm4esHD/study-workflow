@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { TodoItem } from '../server/service.ts';
-import { groupTodos, orderBetween, sortDay } from './views.ts';
+import { groupMinutes, groupTodos, hoyCardData, orderBetween, sortDay } from './views.ts';
 
 const today = '2026-11-04';
 let n = 0;
@@ -62,4 +62,18 @@ test('sortDay: con hora primero (por hora), después sin hora por sortOrder', ()
 test('orderBetween', () => {
   expect(orderBetween(1, 2)).toBe(1.5); expect(orderBetween(undefined, 1)).toBe(0);
   expect(orderBetween(3, undefined)).toBe(4); expect(orderBetween(undefined, undefined)).toBe(1);
+});
+
+test('groupMinutes suma minutos y cuenta las sin estimar', () => {
+  expect(groupMinutes([t({ durationMin: 30 }), t({ durationMin: 45 }), t({}), t({})])).toEqual({ minutes: 75, unestimated: 2 });
+  expect(groupMinutes([])).toEqual({ minutes: 0, unestimated: 0 });
+});
+
+test('hoyCardData: 7 vencidas → 5 más viejas y lateMore 2; las de hoy todas', () => {
+  const late = [7, 3, 5, 1, 6, 2, 4].map((d) => t({ dueDate: `2026-10-0${d}` }));
+  const now = [t({ dueDate: today }), t({ dueDate: today }), t({ dueDate: today, completed: true })];
+  const r = hoyCardData([...late, ...now, t({ dueDate: '2026-11-09' })], today);
+  expect(r.late.map((i) => i.dueDate)).toEqual(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05']);
+  expect(r.lateMore).toBe(2);
+  expect(r.today).toHaveLength(2);
 });
