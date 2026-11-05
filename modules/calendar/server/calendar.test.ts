@@ -112,3 +112,26 @@ test('occurrence en un evento sin repetición → 400 no_es_serie; fecha fuera d
   const s = await serie();
   expect((await app.inject({ method: 'DELETE', url: ev(`${s.id}/occurrences/2026-11-03`) })).json().error.code).toBe('fecha_fuera_de_serie');
 });
+
+test('occurrence con fecha mal formada → 400 fecha_fuera_de_serie (no 500)', async () => {
+  const { app, post } = await make();
+  const e = (await post({ title: 'x', kind: 'evento', allDay: true, startDate: '2026-11-02', repeatWeekdays: [1] })).json();
+  const r = await app.inject({ method: 'DELETE', url: ev(`${e.id}/occurrences/basura`) });
+  expect(r.statusCode).toBe(400);
+  expect(r.json().error.code).toBe('fecha_fuera_de_serie');
+});
+
+test('PUT occurrence sobre una ya separada reemplaza completo', async () => {
+  const { app, serie } = await make();
+  const s = await serie();
+  await app.inject({
+    method: 'PUT', url: ev(`${s.id}/occurrences/2026-11-04`),
+    payload: { title: 'Clase', kind: 'evento', allDay: false, startDate: '2026-11-04', startTime: '15:00', endTime: '16:00', notes: 'n' },
+  });
+  const r = await app.inject({
+    method: 'PUT', url: ev(`${s.id}/occurrences/2026-11-04`),
+    payload: { title: 'Clase', kind: 'evento', allDay: true, startDate: '2026-11-04' },
+  });
+  expect(r.statusCode).toBe(200);
+  expect(r.json()).toMatchObject({ allDay: true, startTime: null, endTime: null, notes: null });
+});

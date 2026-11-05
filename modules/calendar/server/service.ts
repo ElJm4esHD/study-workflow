@@ -91,7 +91,7 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
     const s = byId(seriesId);
     if (!s) throw httpError(404, 'no_encontrado', 'El evento no existe.');
     if (s.repeatWeekdays === null) throw httpError(400, 'no_es_serie', 'El evento no se repite.');
-    if (!seriesDates(s, date, date).length) throw httpError(400, 'fecha_fuera_de_serie', 'Esa fecha no es parte de la serie.');
+    if (!isValidDate(date) || !seriesDates(s, date, date).length) throw httpError(400, 'fecha_fuera_de_serie', 'Esa fecha no es parte de la serie.');
   };
 
   const svc: CalendarService = {
@@ -144,7 +144,8 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
     detachOccurrence(seriesId, date, input) {
       checkOccurrence(seriesId, date);
       return ctx.transaction(() => {
-        const solo = { ...input, endDate: input.endDate ?? input.startDate, repeatWeekdays: null, repeatUntil: null };
+        // PUT reemplaza completo: lo omitido queda en null, no hereda del separado previo.
+        const solo = { notes: null, startTime: null, endTime: null, materiaId: null, ...input, endDate: input.endDate ?? input.startDate, repeatWeekdays: null, repeatUntil: null };
         const prev = detached(seriesId, date);
         db.prepare('INSERT OR IGNORE INTO calendar_exdates (event_id, date) VALUES (?, ?)').run(seriesId, date);
         if (prev) return svc.update(prev.id, solo);
