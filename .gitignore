@@ -4,3 +4,7 @@ data/
 .env.deploy
 *.sqlite*
 .superpowers/
+# Llave de firma: vive en %USERPROFILE%\.study-workflow\, nunca acá
+*.jks
+*.keystore
+keystore.properties

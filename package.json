@@ -12,9 +12,12 @@
     "dev": "node scripts/dev.mjs",
     "build": "vite build",
     "deploy": "node scripts/deploy.mjs",
-    "server-setup": "node scripts/deploy.mjs --setup"
+    "server-setup": "node scripts/deploy.mjs --setup",
+    "apk": "node scripts/apk.mjs"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
     "@capacitor/core": "^8.6.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

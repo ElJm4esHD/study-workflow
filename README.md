@@ -89,4 +89,11 @@ El formato JSON que genera Claude está en [docs/formato-importacion.md](docs/fo
 
 ## Compilar el APK
 
-Fase 2 (todavía no hecho).
+Con Android Studio instalado:
+
+```
+npm run apk -- --check   # verifica JDK, SDK y llave de firma
+npm run apk              # arma dist/study-workflow.apk firmado
+```
+
+La llave de firma vive en `%USERPROFILE%\.study-workflow\` (hacele backup). Cómo pasarlo al celu, la primera apertura y problemas comunes: [docs/android.md](docs/android.md).
