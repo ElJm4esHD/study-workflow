@@ -8,6 +8,7 @@ export const importar: WebModule = {
   name: 'Importar',
   icon: ImportIcon,
   nav: { path: '/importar', order: 30 },
+  shareTarget: '/importar',
   requires: ['todo', 'calendar'],
   routes: [
     { path: '/importar', element: <ImportPage /> },

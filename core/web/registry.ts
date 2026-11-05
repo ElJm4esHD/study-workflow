@@ -10,6 +10,8 @@ export interface WebModule {
   settings?: ComponentType;
   dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];
   requires?: string[];
+  /** Ruta que recibe el texto compartido desde Android (Compartir). */
+  shareTarget?: string;
   /** URLs GET que el núcleo pide al arrancar con conexión, para tener copia offline. */
   prefetch?: () => string[];
 }

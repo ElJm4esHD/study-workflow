@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { popShared } from '../../../core/web/shared.ts';
 import { api, ApiError } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { PALETTE } from '../../../core/shared/palette.ts';
@@ -21,6 +22,7 @@ export function ImportPage() {
   const { materias, notify, reloadMaterias } = useCore();
   const { off, block } = useBlock();
   const navigate = useNavigate();
+  const { key } = useLocation();
   const area = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,9 @@ export function ImportPage() {
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [res, setRes] = useState<Record<string, Res>>({});
   const [busy, setBusy] = useState(false);
+
+  // Texto de Compartir: va al campo, sin armar la vista previa. `key` cambia si llega otro con la página abierta.
+  useEffect(() => { const t = popShared(); if (t) setText(t); }, [key]);
 
   async function fromClipboard() {
     if (block()) return;

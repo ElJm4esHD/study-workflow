@@ -127,3 +127,7 @@ export const notasModule: WebModule = {
 - `modules/web.ts`: importar `notasModule` y agregarlo al array `webModules`.
 
 Al arrancar, el server corre las migraciones nuevas del módulo y monta `/api/notas`; el shell agrega "Notas" a la navegación y aparece en Ajustes para activarlo o desactivarlo.
+
+## shareTarget (opcional)
+
+`shareTarget?: string` en el módulo web: ruta que recibe el texto compartido desde el menú Compartir de Android. El núcleo navega a la del primer módulo activo que lo declare; la página toma el texto con `popShared()` (`core/web/shared.ts`). Importar declara `/importar`.

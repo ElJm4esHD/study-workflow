@@ -60,6 +60,14 @@ Cada vez que quieras instalar o actualizar, en la terminal:
 
 La dirección se cambia después en Ajustes → Servidor.
 
+## Compartir un plan desde la app de Claude
+
+1. En la app de Claude (o cualquier app), tocá **Compartir** en el mensaje con el plan.
+2. Elegí **Study Workflow**.
+3. Se abre **Importar** con el texto ya pegado en el campo. Tocá **Vista previa** para revisarlo: no se guarda nada hasta que confirmes.
+
+Anda con la app cerrada o abierta. Si es la primera vez, antes te pide la dirección del servidor.
+
 ## 5. Actualizar
 
 Volvé a correr `npm run apk` e instalá el APK nuevo encima del viejo (camino A o B). No hace falta desinstalar: tus datos están en el servidor y la app sigue configurada.
