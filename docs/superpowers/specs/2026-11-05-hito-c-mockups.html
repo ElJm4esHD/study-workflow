@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Study Workflow · Hito C · mockups v1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ---------- Tokens (tema oscuro; un tema claro solo redefine este bloque) ---------- */
+:root {
+  --bg: #10131a;          /* fondo: tinta azul noche */
+  --surface: #191e28;     /* tarjetas */
+  --surface-2: #222937;   /* filas elevadas, seleccionado */
+  --line: #2b3342;
+  --text: #e6e9f0;
+  --muted: #98a1b3;
+  --faint: #6b7487;
+  --accent: #b7c4ff;      /* foco, hoy, links: lavanda fría */
+  --on-accent: #141a33;
+  --r-card: 12px; --r-chip: 6px; --r-ctl: 10px;
+  --t: 160ms cubic-bezier(.2,.7,.3,1);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-reduced-motion: reduce) { :root { --t: 0ms; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: #0a0c10; color: var(--text); font-size: 15px; line-height: 1.4; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- Página de presentación ---------- */
+.deck { padding: 24px 32px 64px; }
+.deck > header { max-width: 900px; margin-bottom: 20px; }
+.deck h1 { font-size: 22px; font-weight: 650; margin: 0 0 6px; }
+.deck .lead { color: var(--muted); margin: 0 0 16px; max-width: 72ch; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-ctl);
+  min-height: 40px; padding: 0 16px; cursor: pointer; }
+.tabs button[aria-selected=true] { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600; }
+.stage { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.frame-label { color: var(--muted); font-size: 13px; margin: 0 0 8px 4px; }
+.notes { max-width: 900px; margin-top: 28px; color: var(--muted); font-size: 14px; }
+.notes h2 { color: var(--text); font-size: 15px; margin: 18px 0 6px; }
+.notes ul { margin: 0; padding-left: 18px; } .notes li { margin: 4px 0; }
+
+/* ---------- Marcos ---------- */
+.phone { width: 412px; height: 880px; border-radius: 36px; border: 8px solid #2a2f3a; background: var(--bg);
+  overflow: hidden; position: relative; display: flex; flex-direction: column; flex: none; }
+.phone .status { height: 28px; flex: none; display: flex; justify-content: space-between; padding: 6px 22px 0;
+  font-size: 12px; color: var(--muted); }
+.phone .scroll { flex: 1; overflow-y: auto; padding: 4px 12px 16px; scrollbar-width: none; }
+.desk { width: 1280px; height: 800px; zoom: .8; border-radius: 14px; border: 1px solid #2a2f3a; background: var(--bg);
+  overflow: hidden; display: flex; flex: none; }
+.desk .scroll { flex: 1; overflow: auto; padding: 20px 28px; }
+
+/* ---------- Navegación ---------- */
+.bnav { flex: none; height: 64px; display: flex; background: var(--surface); border-top: 1px solid var(--line); }
+.bnav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 11px; color: var(--muted); text-decoration: none; }
+.bnav a.on { color: var(--text); font-weight: 600; }
+.bnav a.on i { background: var(--surface-2); color: var(--accent); }
+.bnav i, .side a i { width: 44px; height: 28px; border-radius: 14px; display: grid; place-items: center; font-style: normal; font-size: 15px; }
+.side { width: 208px; flex: none; background: var(--surface); border-right: 1px solid var(--line); padding: 20px 10px;
+  display: flex; flex-direction: column; gap: 2px; }
+.side .brand { font-weight: 650; padding: 4px 12px 18px; }
+.side a { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border-radius: var(--r-ctl);
+  color: var(--muted); text-decoration: none; }
+.side a.on { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.side a.on i { color: var(--accent); }
+.side .legend { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+
+/* ---------- Piezas comunes ---------- */
+.card { background: var(--surface); border-radius: var(--r-card); padding: 14px; }
+.card + .card { margin-top: 10px; }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.card-head h3 { margin: 0; font-size: 15px; font-weight: 650; }
+.card-head a { color: var(--accent); font-size: 13px; text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+.page-title { font-size: 22px; font-weight: 650; margin: 6px 4px 12px; letter-spacing: -.01em; }
+.page-title small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: var(--r-chip);
+  font-size: 11.5px; font-weight: 650; background: color-mix(in srgb, var(--m) 20%, transparent); color: var(--m); white-space: nowrap; }
+.chip.solid { background: var(--ms); color: #fff; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m); flex: none; display: inline-block; }
+.tag { font-size: 11.5px; color: var(--muted); }
+.tag.entrega { color: #ffd38a; }
+.legend-row { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
+.leg { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+
+/* tarea */
+.task { display: flex; align-items: center; gap: 4px; min-height: 48px; border-radius: 8px; transition: opacity var(--t); }
+.task .body { flex: 1; min-width: 0; padding: 4px 0; }
+.task .title { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t); }
+.task .meta { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.task .dur { font-size: 12.5px; color: var(--muted); flex: none; padding-right: 4px; }
+.task.done .title { color: var(--faint); text-decoration: line-through; }
+.chk { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: none; border: 0; cursor: pointer; padding: 0; }
+.chk span { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--mc, var(--muted)); display: grid; place-items: center;
+  transition: background var(--t), border-color var(--t), transform var(--t); }
+.chk span::after { content: ''; width: 9px; height: 5px; border: solid var(--bg); border-width: 0 0 2px 2px;
+  transform: rotate(-45deg) scale(0); transition: transform var(--t); margin-top: -2px; }
+.task.done .chk span { background: var(--mc, var(--accent)); border-color: transparent; }
+.task.done .chk span::after { transform: rotate(-45deg) scale(1); }
+.chk:active span { transform: scale(.9); }
+
+/* regla de días: el motivo propio de la app */
+.ruler { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+.ruler b { height: 22px; border-radius: 4px; background: var(--surface-2); position: relative; }
+.ruler b[data-l='1'] { background: color-mix(in srgb, var(--m) 28%, var(--surface-2)); }
+.ruler b[data-l='2'] { background: color-mix(in srgb, var(--m) 55%, var(--surface-2)); }
+.ruler b[data-l='3'] { background: color-mix(in srgb, var(--m) 85%, var(--surface-2)); }
+.ruler b.exam { background: var(--ms); }
+.ruler b.today::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: -6px; height: 2px; border-radius: 1px; background: var(--accent); }
+.ruler-days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; margin-top: 8px; font-size: 10.5px; color: var(--faint); text-align: center; }
+
+/* ---------- Dashboard ---------- */
+.exam-card .countdown { display: flex; align-items: baseline; gap: 8px; margin: 2px 0 2px; }
+.exam-card .countdown strong { font-size: 44px; line-height: 1; font-weight: 700; color: var(--m); letter-spacing: -.02em; }
+.exam-card .countdown span { font-size: 16px; color: var(--text); }
+.exam-card .what { font-size: 15px; font-weight: 600; }
+.exam-card .when { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.exam-card .then { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px; }
+.sum-total { font-size: 13px; color: var(--muted); }
+.sub-h { font-size: 12.5px; color: var(--muted); margin: 8px 0 0 4px; }
+.week-row { display: grid; grid-template-columns: 112px 1fr 72px; align-items: center; gap: 10px; min-height: 44px; }
+.week-row .name { display: flex; align-items: center; gap: 8px; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.week-row .ruler b { height: 18px; }
+.week-row .tot { font-size: 12.5px; color: var(--muted); text-align: right; }
+.week-head { display: grid; grid-template-columns: 112px 1fr 72px; gap: 10px; }
+
+/* ---------- Calendario mes ---------- */
+.cal-bar { display: flex; align-items: center; gap: 6px; margin: 2px 0 10px; }
+.cal-bar h2 { flex: 1; margin: 0 4px; font-size: 20px; font-weight: 650; }
+.icon-btn { width: 44px; height: 44px; border-radius: var(--r-ctl); border: 0; background: var(--surface); cursor: pointer; font-size: 18px; }
+.ctl { height: 44px; padding: 0 14px; border-radius: var(--r-ctl); border: 0; background: var(--surface); cursor: pointer; }
+.seg { display: inline-flex; background: var(--surface); border-radius: var(--r-ctl); padding: 3px; }
+.seg button { height: 38px; padding: 0 14px; border: 0; background: none; border-radius: 8px; color: var(--muted); cursor: pointer; }
+.seg button.on { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.month { background: var(--surface); border-radius: var(--r-card); padding: 6px; }
+.dow { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 11.5px; color: var(--faint); text-align: center; padding: 4px 0 6px; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; transition: opacity var(--t); }
+.day { min-height: 76px; border-radius: 8px; padding: 4px 3px 3px; display: flex; flex-direction: column; gap: 2px;
+  background: none; border: 0; text-align: left; cursor: pointer; position: relative; transition: background var(--t); }
+.day:hover { background: var(--surface-2); }
+.day .n { font-size: 12px; color: var(--muted); padding: 0 3px 2px; line-height: 16px; }
+.day.out .n { color: #485062; }
+.day.today .n { color: var(--on-accent); background: var(--accent); border-radius: 8px; align-self: flex-start; padding: 0 5px; font-weight: 700; }
+.day.sel { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.day .chip { height: 17px; font-size: 10.5px; padding: 0 4px; border-radius: 4px; justify-content: space-between; width: 100%; }
+.day .chip.past { opacity: .45; }
+.day.exam { background: var(--ms); }
+.day.exam .n { color: #fff; font-weight: 700; }
+.day.exam .ex { color: #fff; font-size: 11px; font-weight: 700; padding: 0 3px; line-height: 1.15; }
+.day.exam .ex small { display: block; font-weight: 500; opacity: .9; }
+.day.exam .chip { background: rgb(255 255 255 / .2); color: #fff; }
+.more { font-size: 10.5px; color: var(--muted); padding-left: 4px; }
+.desk .day { min-height: 0; padding: 6px; gap: 3px; }
+.desk .day .n { font-size: 13px; }
+.desk .day .chip { height: 20px; font-size: 12px; padding: 0 7px; }
+.desk .day.exam .ex { font-size: 13px; padding: 2px 4px; }
+.desk .grid { grid-auto-rows: 1fr; height: calc(100% - 28px); }
+.desk .month { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+/* ---------- Detalle del día ---------- */
+.sheet-wrap { position: absolute; inset: 28px 0 64px 0; background: rgb(5 7 10 / .55); display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 82%; overflow-y: auto; background: var(--surface); border-radius: 16px 16px 0 0; padding: 8px 14px 16px;
+  animation: up var(--t) both; }
+@keyframes up { from { transform: translateY(24px); opacity: 0; } }
+.grab { width: 36px; height: 4px; border-radius: 2px; background: var(--line); margin: 2px auto 10px; }
+.dd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.dd-head h3 { margin: 0; font-size: 18px; font-weight: 650; }
+.dd-total { font-size: 13px; color: var(--muted); margin: 2px 0 12px; }
+.progress { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; margin: -4px 0 14px; }
+.progress i { display: block; height: 100%; background: var(--accent); transition: width var(--t); }
+.exam-ev { display: flex; align-items: center; gap: 12px; background: var(--ms); color: #fff; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.exam-ev strong { display: block; font-size: 15px; }
+.exam-ev span { font-size: 13px; opacity: .92; }
+.exam-ev .time { margin-left: auto; font-size: 18px; font-weight: 700; }
+.ev { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 12px; font-size: 14px; }
+.ev .time { margin-left: auto; color: var(--muted); font-size: 13px; }
+.group { margin-bottom: 10px; }
+.group-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 650; color: var(--m); padding: 4px 4px 2px; }
+.group-h .gt { margin-left: auto; font-weight: 400; color: var(--muted); }
+.group .task { padding-left: 0; }
+.panel { width: 380px; flex: none; background: var(--surface); border-radius: var(--r-card); padding: 16px; overflow-y: auto; }
+.empty { color: var(--muted); font-size: 14px; padding: 20px 4px; }
+
+/* ---------- To-do ---------- */
+.filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 0 10px; }
+.filters button { flex: none; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; }
+.filters button.on { background: var(--surface-2); color: var(--text); border-color: transparent; font-weight: 600; }
+.quick { display: flex; gap: 8px; margin-bottom: 10px; }
+.quick input { flex: 1; height: 48px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface); color: var(--text); padding: 0 14px; font: inherit; }
+.quick button { width: 48px; height: 48px; border-radius: var(--r-ctl); border: 0; background: var(--accent); color: var(--on-accent); font-size: 22px; cursor: pointer; }
+.list-sec { font-size: 12.5px; color: var(--muted); margin: 12px 4px 4px; display: flex; justify-content: space-between; }
+.list-sec.late { color: #ffadad; }
+.todo-card { background: var(--surface); border-radius: var(--r-card); padding: 2px 6px 2px 2px; }
+.todo-card .task + .task { border-top: 1px solid var(--line); border-radius: 0; }
+.task .bar { width: 3px; align-self: stretch; margin: 10px 0; border-radius: 2px; background: var(--m); flex: none; }
+.task.sel { background: var(--surface-2); }
+
+.form { display: flex; flex-direction: column; gap: 14px; }
+.field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.input { height: 44px; border-radius: var(--r-ctl); background: var(--surface-2); border: 1px solid var(--line); display: flex; align-items: center; padding: 0 12px; font-size: 14.5px; }
+.input.area { height: 72px; align-items: flex-start; padding-top: 10px; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pills span { height: 36px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 18px; border: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
+.pills span.on { background: var(--surface-2); border-color: var(--accent); color: var(--text); font-weight: 600; }
+.btn-primary { height: 48px; border-radius: var(--r-ctl); border: 0; background: var(--accent); color: var(--on-accent); font-weight: 650; }
+</style>
+</head>
+<body>
+<div class="deck">
+  <header>
+    <h1>Hito C: rediseño, mockups v1</h1>
+    <p class="lead">Datos de ejemplo al jueves 05/11/2026. Se puede tocar: los días del calendario abren el detalle, y los checkbox se tildan. El celu es del ancho del S25 Ultra (412 px); la compu está al 80 %.</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-s="dash" aria-selected="true">Inicio</button>
+      <button role="tab" data-s="cal">Calendario y detalle del día</button>
+      <button role="tab" data-s="todo">To-do</button>
+    </div>
+  </header>
+  <div id="stage" class="stage"></div>
+  <div id="notes" class="notes"></div>
+</div>
+
+<script>
+const M = {
+  FIS: { n: 'Física', p: '#9fc3f7', s: '#2f6fd6' },
+  PI:  { n: 'Programación Imperativa', p: '#93dcbf', s: '#1b8a62' },
+  MD:  { n: 'Matemática Discreta', p: '#c7b6f5', s: '#6a4bd6' },
+  AM2: { n: 'Análisis Matemático II', p: '#f5bf93', s: '#b4571a' },
+  ALG: { n: 'Álgebra', p: '#f2a7ba', s: '#c43a62' },
+};
+const TODAY = '2026-11-05';
+// [fecha, materia, título, categoría, minutos, hecha]
+const T = [
+  ['2026-11-02','FIS','Guía 4: ej. 1 a 5','estudio',60,1],['2026-11-02','PI','Leer apunte de punteros','estudio',40,1],
+  ['2026-11-03','ALG','Guía 3: ej. 7 a 12','tarea',50,1],['2026-11-03','ALG','Resumen de autovalores','estudio',30,1],
+  ['2026-11-04','MD','Ejercicios de inducción','tarea',40,0],['2026-11-04','FIS','Problemas de dinámica','estudio',45,1],
+  ['2026-11-05','FIS','Guía 5: ej. 1 a 8','estudio',60,1],['2026-11-05','FIS','Repasar cinemática','estudio',45,0],
+  ['2026-11-05','PI','TP2: función de parseo','entrega',90,0],['2026-11-05','ALG','Guía 4: ej. 1 a 6','tarea',50,0],
+  ['2026-11-06','FIS','Guía 5: ej. 9 a 15','estudio',60,0],['2026-11-06','FIS','Teoría: trabajo y energía','estudio',40,0],['2026-11-06','AM2','Guía 2: derivadas parciales','tarea',45,0],
+  ['2026-11-07','ALG','Guía 4: ej. 7 a 12','tarea',50,0],['2026-11-07','MD','Relaciones de equivalencia','estudio',40,0],['2026-11-07','MD','Práctica 5','tarea',35,0],
+  ['2026-11-08','FIS','Parcial 2025 1er cuatri','estudio',90,0],['2026-11-08','FIS','Corregir parcial 2025','estudio',30,0],['2026-11-08','FIS','Dudas para la consulta','tarea',15,0],
+  ['2026-11-09','FIS','Momento lineal','estudio',50,0],['2026-11-09','FIS','Guía 6: ej. 1 a 6','estudio',50,0],['2026-11-09','PI','TP3: enunciado','tarea',20,0],
+  ['2026-11-10','FIS','Simulacro de parcial','estudio',120,0],['2026-11-10','AM2','Guía 2: ej. 10 a 18','tarea',45,0],
+  ['2026-11-11','FIS','Repaso general','estudio',60,0],['2026-11-11','FIS','Fórmulas en una hoja','estudio',20,0],
+  ['2026-11-13','PI','TP3: estructuras','tarea',60,0],['2026-11-13','ALG','Guía 5: ej. 1 a 6','tarea',50,0],['2026-11-13','ALG','Diagonalización','estudio',40,0],
+  ['2026-11-16','ALG','Guía 5: ej. 7 a 14','tarea',60,0],['2026-11-16','ALG','Parcial 2025','estudio',90,0],['2026-11-16','MD','Grafos: definiciones','estudio',30,0],
+  ['2026-11-17','ALG','Formas cuadráticas','estudio',50,0],['2026-11-17','ALG','Guía 6','tarea',60,0],['2026-11-17','ALG','Dudas','tarea',15,0],
+  ['2026-11-18','ALG','Simulacro','estudio',120,0],['2026-11-18','PI','TP3: entrega','entrega',30,0],
+  ['2026-11-19','ALG','Repaso general','estudio',60,0],['2026-11-19','ALG','Corregir simulacro','estudio',30,0],['2026-11-19','ALG','Hoja de fórmulas','estudio',20,0],
+  ['2026-11-23','MD','Práctica 6','tarea',40,0],['2026-11-23','MD','Árboles','estudio',40,0],
+  ['2026-11-24','MD','Recuperatorio 2025','estudio',90,0],['2026-11-24','MD','Dudas','tarea',15,0],['2026-11-24','AM2','Guía 3','tarea',45,0],
+  ['2026-11-27','AM2','Integrales dobles','estudio',50,0],['2026-11-30','AM2','Guía 4','tarea',60,0],['2026-11-30','AM2','Parcial 2025','estudio',90,0],
+  ['2026-12-01','AM2','Simulacro','estudio',120,0],['2026-12-02','AM2','Repaso','estudio',60,0],
+];
+// [fecha, materia, tipo, título, hora]
+const E = [
+  ['2026-11-06','FIS','evento','Consulta de Física','18:00'],
+  ['2026-11-12','FIS','parcial','1er parcial','09:00'],
+  ['2026-11-20','ALG','parcial','2do parcial','09:00'],
+  ['2026-11-26','MD','recuperatorio','Recuperatorio','14:00'],
+  ['2026-12-03','AM2','parcial','2do parcial','08:00'],
+];
+const KIND = { parcial: 'Parcial', recuperatorio: 'Recuperatorio', final: 'Final', evento: 'Evento' };
+const DOW = ['L','M','X','J','V','S','D'], DOWL = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
+const MON = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+const d = (s) => new Date(s + 'T12:00:00Z');
+const iso = (t) => new Date(t).toISOString().slice(0, 10);
+const add = (s, n) => iso(d(s).getTime() + n * 864e5);
+const wd = (s) => (d(s).getUTCDay() + 6) % 7;
+const dm = (s) => s.slice(8) + '/' + s.slice(5, 7);
+const diff = (a, b) => Math.round((d(b) - d(a)) / 864e5);
+const fmin = (m) => m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') + ' min' : ''}`;
+const mv = (k) => `--m:${M[k].p};--ms:${M[k].s};--mc:${M[k].p}`;
+const tasksOn = (s) => T.filter((t) => t[0] === s);
+const examOn = (s) => E.find((e) => e[0] === s && e[2] !== 'evento');
+const isExam = (e) => e[2] !== 'evento';
+let sel = TODAY;
+
+function task(t, i, o = {}) {
+  const [date, k, title, cat, min, done] = t;
+  const late = date < TODAY && !done;
+  return `<div class="task ${done ? 'done' : ''} ${o.sel ? 'sel' : ''}" style="${mv(k)}" data-i="${T.indexOf(t)}">
+    ${o.bar ? '<i class="bar"></i>' : ''}
+    <button class="chk" aria-label="Completar: ${title}" onclick="tick(this)"><span></span></button>
+    <div class="body"><div class="title">${title}</div>
+      <div class="meta">${o.chip !== false ? `<span class="chip">${k}</span>` : ''}
+        ${cat !== 'tarea' ? `<span class="tag ${cat}">${cat === 'entrega' ? 'Entrega' : 'Estudio'}</span>` : ''}
+        ${late ? `<span class="tag" style="color:#ffadad">venció ${dm(date)}</span>` : ''}${o.date ? `<span class="tag">${dm(date)}</span>` : ''}</div></div>
+    <span class="dur num">${min ? fmin(min) : ''}</span></div>`;
+}
+function tick(b) { const r = b.closest('.task'); T[+r.dataset.i][5] ^= 1; r.classList.toggle('done'); setTimeout(render, 170); }
+
+// ---------- Inicio ----------
+function examCard() {
+  const next = E.filter((e) => isExam(e) && e[0] >= TODAY)[0], after = E.filter((e) => isExam(e) && e[0] > next[0])[0];
+  const n = diff(TODAY, next[0]), k = next[1];
+  const days = Array.from({ length: n + 1 }, (_, i) => add(TODAY, i));
+  const lvl = (s) => { const m = tasksOn(s).filter((t) => t[1] === k).reduce((a, t) => a + t[4], 0); return m ? (m > 90 ? 3 : m > 45 ? 2 : 1) : 0; };
+  return `<div class="card exam-card" style="${mv(k)}">
+    <div class="card-head"><h3>Próximo examen</h3><a href="#">Calendario</a></div>
+    <div class="countdown"><strong class="num">${n}</strong><span>días</span></div>
+    <div class="what">${KIND[next[2]]} de ${M[k].n}</div>
+    <div class="when">${DOWL[wd(next[0])]} ${dm(next[0])}, ${next[4]}</div>
+    <div class="ruler">${days.map((s, i) => `<b class="${i === n ? 'exam' : ''} ${i === 0 ? 'today' : ''}" data-l="${lvl(s)}" title="${dm(s)}"></b>`).join('')}</div>
+    <div class="ruler-days">${days.map((s) => `<span>${DOW[wd(s)]}</span>`).join('')}</div>
+    <div class="then" style="${mv(after[1])}"><span class="dot"></span>Después: ${KIND[after[2]].toLowerCase()} de ${M[after[1]].n} en ${diff(TODAY, after[0])} días</div>
+  </div>`;
+}
+function todayCard() {
+  const late = T.filter((t) => t[0] < TODAY && !t[5]), today = tasksOn(TODAY);
+  const tot = today.reduce((a, t) => a + t[4], 0), left = today.filter((t) => !t[5]).reduce((a, t) => a + t[4], 0);
+  return `<div class="card">
+    <div class="card-head"><h3>Hoy</h3><a href="#">To-do</a></div>
+    <div class="sum-total num">${fmin(left)} pendientes de ${fmin(tot)}</div>
+    ${late.length ? `<div class="sub-h" style="color:#ffadad">Vencidas</div>${late.map((t) => task(t)).join('')}` : ''}
+    <div class="sub-h">Para hoy</div>${today.map((t) => task(t)).join('')}
+  </div>`;
+}
+function weekCard() {
+  const days = Array.from({ length: 7 }, (_, i) => add(TODAY, i + 1));
+  const rows = Object.keys(M).map((k) => {
+    const per = days.map((s) => tasksOn(s).filter((t) => t[1] === k).reduce((a, t) => a + t[4], 0));
+    const ex = days.map((s) => { const e = examOn(s); return e && e[1] === k; });
+    const tot = per.reduce((a, b) => a + b, 0);
+    if (!tot && !ex.some(Boolean)) return '';
+    const n = days.reduce((a, s) => a + tasksOn(s).filter((t) => t[1] === k).length, 0);
+    return `<div class="week-row" style="${mv(k)}"><div class="name"><span class="dot"></span>${M[k].n}</div>
+      <div class="ruler">${per.map((m, i) => `<b class="${ex[i] ? 'exam' : ''}" data-l="${m ? (m > 90 ? 3 : m > 45 ? 2 : 1) : 0}"></b>`).join('')}</div>
+      <div class="tot num">${n} · ${fmin(tot)}</div></div>`;
+  }).join('');
+  return `<div class="card">
+    <div class="card-head"><h3>Próximos 7 días</h3><a href="#">Calendario</a></div>
+    <div class="week-head"><span></span><div class="ruler-days" style="margin:0 0 4px">${days.map((s) => `<span>${DOW[wd(s)]} ${+s.slice(8)}</span>`).join('')}</div><span></span></div>
+    ${rows}</div>`;
+}
+const title = `<div class="page-title">Jueves 5 de noviembre<small>Semana 10 del cuatrimestre</small></div>`;
+
+// ---------- Calendario ----------
+function cell(s, o) {
+  const ts = tasksOn(s), ex = examOn(s), out = s.slice(5, 7) !== '11';
+  const by = {}; ts.forEach((t) => { (by[t[1]] ??= []).push(t); });
+  const keys = Object.keys(by).filter((k) => !ex || k !== ex[1]);
+  const max = o.desk ? 4 : 3, shown = keys.slice(0, ex ? max - 1 : max);
+  const chips = shown.map((k) => { const all = by[k], past = all.every((t) => t[5]);
+    return `<span class="chip ${past ? 'past' : ''}" style="${mv(k)}"><span>${k}</span><span class="num">${all.length}</span></span>`; }).join('');
+  const more = keys.length > shown.length ? `<span class="more">+${keys.length - shown.length}</span>` : '';
+  return `<button class="day ${out ? 'out' : ''} ${s === TODAY ? 'today' : ''} ${s === sel ? 'sel' : ''} ${ex ? 'exam' : ''}"
+    ${ex ? `style="${mv(ex[1])}"` : ''} onclick="pick('${s}', ${!!o.desk})" aria-label="${dm(s)}">
+    <span class="n num">${+s.slice(8)}</span>
+    ${ex ? `<span class="ex">${ex[1]}<small>${KIND[ex[2]]}</small></span>` : ''}${chips}${more}</button>`;
+}
+function month(o) {
+  const start = '2026-10-26', days = Array.from({ length: 42 }, (_, i) => add(start, i));
+  return `<div class="month"><div class="dow">${DOW.map((x) => `<span>${x}</span>`).join('')}</div>
+    <div class="grid">${days.map((s) => cell(s, o)).join('')}</div></div>`;
+}
+function legend() { return `<div class="legend-row">${Object.keys(M).map((k) => `<span class="leg" style="${mv(k)}"><span class="dot"></span>${k} ${M[k].n}</span>`).join('')}</div>`; }
+function calBar(o) {
+  return `<div class="cal-bar"><h2>Noviembre 2026</h2>
+    ${o.desk ? `<div class="seg"><button class="on">Mes</button><button>Semana</button><button>Agenda</button></div>` : ''}
+    <button class="ctl">Hoy</button><button class="icon-btn" aria-label="Mes anterior">‹</button><button class="icon-btn" aria-label="Mes siguiente">›</button></div>
+    ${o.desk ? '' : `<div class="seg" style="margin-bottom:10px;display:flex"><button class="on" style="flex:1">Mes</button><button style="flex:1">Semana</button><button style="flex:1">Agenda</button></div>`}`;
+}
+function dayDetail(s) {
+  const ts = tasksOn(s), evs = E.filter((e) => e[0] === s);
+  const tot = ts.reduce((a, t) => a + t[4], 0), done = ts.filter((t) => t[5]);
+  const by = {}; ts.forEach((t) => { (by[t[1]] ??= []).push(t); });
+  const head = `<div class="dd-head"><h3>${DOWL[wd(s)][0].toUpperCase() + DOWL[wd(s)].slice(1)} ${dm(s)}</h3>${s === TODAY ? '<span class="tag">Hoy</span>' : ''}</div>
+    <div class="dd-total num">${ts.length ? `${fmin(tot)} estimados, ${done.length} de ${ts.length} hechas` : 'Sin tareas'}</div>
+    ${ts.length ? `<div class="progress"><i style="width:${done.length / ts.length * 100}%"></i></div>` : ''}`;
+  const ev = evs.map((e) => isExam(e)
+    ? `<div class="exam-ev" style="${mv(e[1])}"><div><strong>${KIND[e[2]]}: ${M[e[1]].n}</strong><span>${e[3]}</span></div><span class="time num">${e[4]}</span></div>`
+    : `<div class="ev" style="${mv(e[1])}"><span class="dot"></span>${e[3]}<span class="time num">${e[4]}</span></div>`).join('');
+  const groups = Object.keys(by).map((k) => `<div class="group" style="${mv(k)}"><div class="group-h"><span class="dot"></span>${M[k].n}
+      <span class="gt num">${fmin(by[k].reduce((a, t) => a + t[4], 0))}</span></div>${by[k].map((t) => task(t, 0, { chip: false })).join('')}</div>`).join('');
+  return head + ev + (groups || (evs.length ? '' : '<div class="empty">Nada para este día. Tocá + para agregar una tarea o un evento.</div>'));
+}
+let sheetOpen = false;
+function pick(s, desk) { sel = s; if (!desk) sheetOpen = true; render(); }
+function closeSheet() { sheetOpen = false; render(); }
+
+// ---------- To-do ----------
+function todoList(o) {
+  const late = T.filter((t) => t[0] < TODAY && !t[5]), today = tasksOn(TODAY), soon = T.filter((t) => t[0] > TODAY && t[0] <= add(TODAY, 2));
+  const sec = (name, ts, cls = '') => `<div class="list-sec ${cls}"><span>${name}</span><span class="num">${fmin(ts.reduce((a, t) => a + t[4], 0))}</span></div>
+    <div class="todo-card">${ts.map((t, i) => task(t, i, { bar: true, sel: o.desk && t === today[1], date: name === 'Próximos días' })).join('')}</div>`;
+  return `<div class="filters"><button class="on">Hoy</button><button>Próximas</button><button>Sin fecha</button><button>Por materia</button><button>Completadas</button></div>
+    <div class="quick"><input placeholder="Agregar tarea" aria-label="Agregar tarea"><button aria-label="Agregar">+</button></div>
+    ${sec('Vencidas', late, 'late')}${sec('Hoy', today)}${o.desk ? sec('Próximos días', soon) : ''}`;
+}
+function editPanel() {
+  return `<div class="card-head"><h3>Editar tarea</h3><a href="#">Cerrar</a></div><div class="form">
+    <div class="field"><label>Título</label><div class="input">Repasar cinemática</div></div>
+    <div class="field"><label>Materia</label><div class="pills">${Object.keys(M).map((k) => `<span class="${k === 'FIS' ? 'on' : ''}" style="${mv(k)}"><span class="dot" style="margin-right:6px"></span>${k}</span>`).join('')}</div></div>
+    <div class="field"><label>Categoría</label><div class="pills"><span>Tarea</span><span>Entrega</span><span class="on">Estudio</span></div></div>
+    <div class="field"><label>Duración estimada</label><div class="pills"><span>15 min</span><span>30 min</span><span class="on">45 min</span><span>1 h</span><span>1 h 30 min</span><span>Otra…</span></div></div>
+    <div class="two"><div class="field"><label>Fecha</label><div class="input num">05/11/2026</div></div><div class="field"><label>Hora</label><div class="input" style="color:var(--muted)">Sin hora</div></div></div>
+    <div class="field"><label>Notas</label><div class="input area">Movimiento rectilíneo y tiro oblicuo</div></div>
+    <button class="btn-primary">Guardar</button></div>`;
+}
+
+// ---------- Marcos ----------
+const NAV = [['Inicio','⌂','dash'],['To-do','✓','todo'],['Calendario','▦','cal'],['Importar','⇩','imp'],['Ajustes','⚙','aj']];
+const phone = (on, body, extra = '') => `<div><p class="frame-label">Celu</p><div class="phone"><div class="status"><span>9:41</span><span>5G 87%</span></div>
+  <div class="scroll">${body}</div>${extra}<nav class="bnav">${NAV.map(([l, i, k]) => `<a href="#" class="${k === on ? 'on' : ''}"><i>${i}</i>${l}</a>`).join('')}</nav></div></div>`;
+const desk = (on, body, label = 'Compu') => `<div><p class="frame-label">${label}</p><div class="desk"><nav class="side"><div class="brand">Study Workflow</div>
+  ${NAV.map(([l, i, k]) => `<a href="#" class="${k === on ? 'on' : ''}"><i>${i}</i>${l}</a>`).join('')}
+  <div class="legend">${Object.keys(M).map((k) => `<span class="leg" style="${mv(k)}"><span class="dot"></span>${M[k].n}</span>`).join('')}</div></nav>
+  <div class="scroll">${body}</div></div></div>`;
+
+const NOTES = {
+  dash: `<h2>Qué mirar</h2><ul>
+    <li><b>Próximo examen:</b> la cuenta regresiva va arriba de una "regla de días", un casillero por día hasta el examen. Cada casillero se tiñe según cuánto estudio de esa materia tenés planeado ese día, y el del examen va sólido. Así ves de un vistazo si llegás preparado.</li>
+    <li><b>Hoy:</b> se puede tildar desde acá. El total muestra cuánto te falta de lo estimado.</li>
+    <li><b>Próximos 7 días:</b> una fila por materia con la misma regla, más la cantidad de tareas y el tiempo total. Los exámenes aparecen sólidos dentro de la regla.</li>
+    <li>Cada tarjeta lleva a su sección con el link de arriba a la derecha.</li></ul>`,
+  cal: `<h2>Qué mirar</h2><ul>
+    <li>Cada día muestra un chip por materia con la sigla y la cantidad de tareas, no las tareas. Si no entran, aparece "+N". Los días pasados ya completos se ven atenuados.</li>
+    <li>Los exámenes pintan la celda entera con el color fuerte de la materia, con la sigla y el tipo.</li>
+    <li>En el celu, tocar un día abre el detalle desde abajo (probá el 05, el 08 o el 12). En la compu, el detalle queda fijo a la derecha y la grilla usa todo el ancho.</li>
+    <li>El detalle agrupa por materia, con el total del día, el subtotal por materia y una barra de progreso.</li></ul>`,
+  todo: `<h2>Qué mirar</h2><ul>
+    <li>Filas compactas de 48 px: barra de color de la materia, sigla, categoría (solo se marca si es entrega o estudio) y duración a la derecha.</li>
+    <li>Cada sección suma su tiempo estimado.</li>
+    <li>En la compu, la edición se abre al lado de la lista en vez de en otra pantalla. Ahí se ven los campos nuevos: categoría y duración, con valores rápidos y "Otra…" para escribirla a mano.</li></ul>`,
+};
+let screen = 'dash';
+function render() {
+  const st = document.getElementById('stage');
+  if (screen === 'dash') {
+    st.innerHTML = phone('dash', title + examCard() + todayCard() + weekCard())
+      + desk('dash', `${title}<div style="display:grid;grid-template-columns:5fr 7fr;gap:12px;align-items:start">
+        <div>${examCard()}${weekCard()}</div><div>${todayCard()}</div></div>`);
+  } else if (screen === 'cal') {
+    const sheet = sheetOpen ? `<div class="sheet-wrap" onclick="if(event.target===this)closeSheet()"><div class="sheet"><div class="grab"></div>${dayDetail(sel)}</div></div>` : '';
+    st.innerHTML = phone('cal', calBar({}) + month({}) + `<div style="margin-top:10px">${legend()}</div>`, sheet)
+      + desk('cal', `<div style="display:flex;gap:16px;height:100%"><div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        ${calBar({ desk: true })}${month({ desk: true })}</div><aside class="panel">${dayDetail(sel)}</aside></div>`);
+  } else {
+    st.innerHTML = phone('todo', `<div class="page-title">To-do</div>` + todoList({}))
+      + desk('todo', `<div style="display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start">
+        <div><div class="page-title">To-do</div>${todoList({ desk: true })}</div><div class="card" style="margin-top:52px">${editPanel()}</div></div>`);
+  }
+  document.getElementById('notes').innerHTML = NOTES[screen];
+}
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  screen = b.dataset.s; sheetOpen = screen === 'cal'; sel = TODAY;
+  document.querySelectorAll('.tabs button').forEach((x) => x.setAttribute('aria-selected', x === b));
+  render();
+});
+render();
+</script>
+</body>
+</html>
