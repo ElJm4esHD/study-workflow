@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { registerAuth } from './auth.ts';
+import { registerCors } from './cors.ts';
 import { openDb } from './db.ts';
 import { HttpError } from './errors.ts';
 import { backfillSiglas, makeMaterias } from './materias.ts';
@@ -43,6 +44,7 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   for (const m of mods) if (m.service) services.set(m.id, m.service(ctx));
 
   const app = Fastify({ logger: !process.env.VITEST });
+  registerCors(app, ['https://localhost']);
   registerAuth(app);
 
   app.setErrorHandler((err: Error & { statusCode?: number; validation?: unknown[] }, req, reply) => {
