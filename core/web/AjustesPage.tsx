@@ -7,6 +7,8 @@ import { api, ApiError } from './api.ts';
 import { BLOCKED, useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
 import { ChevronIcon } from './icons.tsx';
+import { ServerForm } from './ConnectScreen.tsx';
+import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
 
 const msg = (err: unknown) => (err instanceof ApiError ? err.message : 'Algo salió mal.');
@@ -161,6 +163,7 @@ export function AjustesPage() {
       <h1>Ajustes</h1>
       <Materias />
       <Modulos />
+      {isNative() && <section className="card-group"><h2>Servidor</h2><ServerForm onDone={() => location.reload()} /></section>}
       {enabledModules.flatMap((m) => (m.settings ? [{ id: m.id, name: m.name, Panel: m.settings }] : [])).map(({ id, name, Panel }) => (
         <section key={id} className="card-group"><h2>{name}</h2><Panel /></section>
       ))}
