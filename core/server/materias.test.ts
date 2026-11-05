@@ -1,5 +1,12 @@
+import { copyFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { expect, test } from 'vitest';
 import { PALETTE } from '../shared/palette.ts';
+import { openDb } from './db.ts';
+import { backfillSiglas, makeMaterias } from './materias.ts';
+import { runMigrations } from './migrate.ts';
 import { makeTestApp } from './testing.ts';
 
 const c = PALETTE[0]!.hex;
@@ -58,4 +65,52 @@ test('POST con el mismo id dos veces devuelve la misma materia', async () => {
   const b = await post(app, { id: 'm1', name: 'X', color: c });
   expect(b.json()).toEqual(a);
   expect((await app.inject('/api/materias')).json()).toHaveLength(1);
+});
+
+test('create sin sigla la genera; con sigla la normaliza a mayúsculas', async () => {
+  const app = await makeTestApp();
+  expect((await post(app, { name: 'Análisis Matemático II', color: c })).json().sigla).toBe('AM2');
+  expect((await post(app, { name: 'Física', color: c, sigla: ' fis1 ' })).json().sigla).toBe('FIS1');
+});
+
+test('PATCH sigla inválida → 400 sigla_invalida', async () => {
+  const app = await makeTestApp();
+  const m = (await post(app, { name: 'X', color: c })).json();
+  for (const sigla of ['', 'ABCDEF', 'A-B']) {
+    const r = await app.inject({ method: 'PATCH', url: `/api/materias/${m.id}`, payload: { sigla } });
+    expect([r.statusCode, r.json().error.code]).toEqual([400, 'sigla_invalida']);
+  }
+  const ok = await app.inject({ method: 'PATCH', url: `/api/materias/${m.id}`, payload: { sigla: 'ab1' } });
+  expect(ok.json().sigla).toBe('AB1');
+});
+
+function oldDb() {
+  const d = mkdtempSync(join(tmpdir(), 'core-'));
+  copyFileSync(new URL('./migrations/001_core.sql', import.meta.url), join(d, '001_core.sql'));
+  const db = openDb(':memory:');
+  runMigrations(db, [{ module: 'core', dir: pathToFileURL(d + '/') }]);
+  const ins = db.prepare("INSERT INTO materias VALUES (?, ?, ?, ?, 0, 'x', 'x')");
+  ins.run('a', 'Álgebra', 'algebra', '#e5484d');
+  ins.run('b', 'Física', 'fisica', '#e5484e'); // fuera de paleta, casi rojo
+  return db;
+}
+const migrate = (db: ReturnType<typeof openDb>) =>
+  runMigrations(db, [{ module: 'core', dir: new URL('./migrations/', import.meta.url) }]);
+
+test('migración: colores viejos pasan al pastel del mismo nombre y el backfill completa siglas', () => {
+  const db = oldDb();
+  migrate(db);
+  backfillSiglas(db);
+  const m = makeMaterias(db);
+  expect(m.get('a')).toMatchObject({ color: PALETTE[0]!.hex, sigla: 'ALG' });
+  expect(m.get('b')).toMatchObject({ color: PALETTE[0]!.hex, sigla: 'FIS' });
+});
+
+test('backfill idempotente: no pisa una sigla editada al reiniciar', () => {
+  const db = oldDb();
+  migrate(db);
+  backfillSiglas(db);
+  makeMaterias(db).update('a', { sigla: 'AL1' });
+  backfillSiglas(db);
+  expect(makeMaterias(db).get('a')!.sigla).toBe('AL1');
 });

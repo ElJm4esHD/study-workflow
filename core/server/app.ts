@@ -3,7 +3,7 @@ import fastifyStatic from '@fastify/static';
 import { registerAuth } from './auth.ts';
 import { openDb } from './db.ts';
 import { HttpError } from './errors.ts';
-import { makeMaterias } from './materias.ts';
+import { backfillSiglas, makeMaterias } from './materias.ts';
 import { runMigrations } from './migrate.ts';
 import { makeSettings } from './settings.ts';
 import { orderModules, type CoreContext, type ServerModule } from './registry.ts';
@@ -18,6 +18,7 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
     { module: 'core', dir: new URL('./migrations/', import.meta.url) },
     ...mods.map((m) => ({ module: m.id, dir: m.migrationsDir })),
   ]);
+  backfillSiglas(db);
 
   const settings = makeSettings(db);
   const services = new Map<string, object>();
@@ -61,11 +62,11 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   app.get('/api/materias', async () => ctx.materias.list());
   app.post('/api/materias', {
     schema: { body: { type: 'object', required: ['name', 'color'], properties: {
-      id: { type: 'string', minLength: 1 }, name: { type: 'string' }, color: { type: 'string' } } } },
-  }, async (req, reply) => reply.status(201).send(ctx.materias.create(req.body as { id?: string; name: string; color: string })));
+      id: { type: 'string', minLength: 1 }, name: { type: 'string' }, color: { type: 'string' }, sigla: { type: 'string' } } } },
+  }, async (req, reply) => reply.status(201).send(ctx.materias.create(req.body as { id?: string; name: string; color: string; sigla?: string })));
   app.patch('/api/materias/:id', {
     schema: { body: { type: 'object', properties: {
-      name: { type: 'string' }, color: { type: 'string' }, archived: { type: 'boolean' } } } },
+      name: { type: 'string' }, color: { type: 'string' }, sigla: { type: 'string' }, archived: { type: 'boolean' } } } },
   }, async (req) => ctx.materias.update((req.params as { id: string }).id, req.body as object));
   app.get('/api/settings', async () => ctx.settings.getAll());
   app.patch('/api/settings', { schema: { body: { type: 'object' } } }, async (req) => {

@@ -2,15 +2,15 @@ import type { FastifyInstance } from 'fastify';
 import type { DatabaseSync } from 'node:sqlite';
 
 export type Materia = {
-  id: string; name: string; color: string; archived: boolean; createdAt: string; updatedAt: string;
+  id: string; name: string; color: string; sigla: string; archived: boolean; createdAt: string; updatedAt: string;
 };
 
 export interface MateriasService {
   list(): Materia[];
   get(id: string): Materia | undefined;
   findByNameKey(key: string): Materia | undefined;
-  create(input: { id?: string; name: string; color: string }): Materia;
-  update(id: string, patch: { name?: string; color?: string; archived?: boolean }): Materia;
+  create(input: { id?: string; name: string; color: string; sigla?: string | null }): Materia;
+  update(id: string, patch: { name?: string; color?: string; archived?: boolean; sigla?: string }): Materia;
 }
 
 export interface SettingsService {

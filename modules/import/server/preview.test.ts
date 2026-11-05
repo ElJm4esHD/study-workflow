@@ -5,7 +5,7 @@ import type { TodoItem } from '../../todo/server/service.ts';
 import { buildPreview } from './preview.ts';
 import type { ParsedItem } from './parser.ts';
 
-const mat = (id: string, name: string, archived = false): Materia => ({ id, name, color: '#000000', archived, createdAt: '', updatedAt: '' });
+const mat = (id: string, name: string, archived = false): Materia => ({ id, name, color: '#000000', sigla: 'X', archived, createdAt: '', updatedAt: '' });
 const item = (o: Partial<ParsedItem> = {}): ParsedItem => ({
   index: 0, tipo: 'tarea', fecha: '2026-11-10', hora: null, titulo: 'Leer', notas: null, materiaName: 'Álgebra', errors: [], ...o,
 });
