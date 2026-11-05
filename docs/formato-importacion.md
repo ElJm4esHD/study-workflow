@@ -71,7 +71,7 @@ Un ítem es duplicado si coincide **fecha + título (sin mayúsculas ni tildes) 
 
 ## Cambios de v1 a v2
 
-- `version` pasa a `2`. La app sigue leyendo planes con `version: 1`.
+- `version` pasa a `2`. La app sigue leyendo planes con `version: 1`; si uno trae `duracion` o `categoria`, también se leen (es el mismo parser).
 - Nuevo campo opcional `duracion` en los ítems `tarea`: minutos estimados, número entero entre 1 y 1440 (por ejemplo `45`; no `"45"` ni `45.5`).
 - Nuevo campo opcional `categoria` en los ítems `tarea`: `"tarea"` (default si falta), `"entrega"` o `"estudio"`. Cualquier otro valor es un error del ítem.
 - En `evento`, `parcial`, `recuperatorio` y `final`, `duracion` y `categoria` se ignoran.

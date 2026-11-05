@@ -59,7 +59,7 @@ describe('summary', () => {
     const d = dayDetail(data([ev({}), ev({ id: 'p', kind: 'parcial' })], [
       td({ id: '1', materiaId: 'a', durationMin: 30, dueTime: '10:00', title: 'z' }),
       td({ id: '2', materiaId: 'a', durationMin: null, completed: true, dueTime: '09:00' }),
-      td({ id: '3', materiaId: null, durationMin: 60 }),
+      td({ id: '3', materiaId: null, durationMin: 60, dueTime: '07:00' }),
       td({ id: '4', dueDate: null }),
     ]), D);
     expect(d.exams.map((e) => e.id)).toEqual(['p']);

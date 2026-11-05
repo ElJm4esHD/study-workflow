@@ -5,7 +5,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import type { TodoItem } from '../server/service.ts';
-import { hoyCardData } from './views.ts';
+import { groupMinutes, hoyCardData } from './views.ts';
 import './todo.css';
 
 export function HoyCard() {
@@ -42,11 +42,14 @@ export function HoyCard() {
   if (!data) return <section className="card">{head}<p className="muted">Cargando…</p></section>;
 
   const { late, lateMore, today: now } = hoyCardData(data, today);
-  const total = now.length + data.filter((i) => i.dueDate === today && i.completed).length;
+  const all = data.filter((i) => i.dueDate === today);
+  const left = groupMinutes(now), tot = groupMinutes(all);
   return (
     <section className="card">
       {head}
-      <p className="hoy-sub">{now.length} {now.length === 1 ? "pendiente" : "pendientes"} de {total}</p>
+      {(tot.minutes > 0 || tot.unestimated > 0) && (
+        <p className="hoy-sub">{fmtDuration(left.minutes)} pendientes de {fmtDuration(tot.minutes)}{tot.unestimated > 0 && `, ${tot.unestimated} sin estimar`}</p>
+      )}
       {late.length + now.length === 0 && <p className="muted">Nada pendiente para hoy.</p>}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         {late.map(row)}

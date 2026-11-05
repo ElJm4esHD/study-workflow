@@ -61,7 +61,7 @@ p { margin: 0 0 .75rem; }
 .icon-btn { width: 44px; height: 44px; border-radius: var(--r-ctl); border: 0; background: var(--surface); cursor: pointer; display: inline-grid; place-items: center; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .seg { display: inline-flex; background: var(--surface); border-radius: var(--r-ctl); padding: 3px; }
-.seg button { height: 38px; min-width: 44px; padding: 0 14px; border: 0; background: none; border-radius: 8px; color: var(--muted); cursor: pointer; }
+.seg button { height: 44px; min-width: 44px; padding: 0 14px; border: 0; background: none; border-radius: 8px; color: var(--muted); cursor: pointer; }
 .seg button.on, .seg button[aria-pressed='true'] { background: var(--surface-2); color: var(--text); font-weight: 600; }
 .pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .pill { min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 22px; border: 1px solid var(--line);

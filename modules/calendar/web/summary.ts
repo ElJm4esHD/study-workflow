@@ -55,7 +55,8 @@ export function dayDetail(data: AgendaData, date: string) {
   return {
     exams: evs.filter(isExam).sort(byTime),
     events: evs.filter((e) => !isExam(e)).sort(byTime),
-    groups: [...byMateria].map(([materiaId, ts]) => ({ materiaId, todos: ts, minutes: minutesOf(ts) })),
+    groups: [...byMateria].map(([materiaId, ts]) => ({ materiaId, todos: ts, minutes: minutesOf(ts) }))
+      .sort((a, b) => Number(a.materiaId === null) - Number(b.materiaId === null)), // "Sin materia" al final
     minutes: minutesOf(todos),
     unestimated: todos.filter((t) => t.durationMin === null).length,
     done: todos.filter((t) => t.completed).length,
