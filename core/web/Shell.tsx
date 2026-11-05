@@ -7,9 +7,9 @@ import { HomeIcon, SettingsIcon } from './icons.tsx';
 
 const stamp = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
 function offlineText({ copyAt, pending }: Connection) {
-  const [d, t] = copyAt ? stamp.format(new Date(copyAt)).split(', ') : [];
+  const when = copyAt ? ` Datos del ${stamp.format(new Date(copyAt)).replace(',', '')}` : '';
   const n = pending ? `, ${pending} ${pending === 1 ? 'cambio' : 'cambios'} por sincronizar` : '';
-  return `Sin conexión. Datos del ${d} ${t}${n}.`;
+  return `Sin conexión.${when}${n}.`;
 }
 
 export function Shell() {

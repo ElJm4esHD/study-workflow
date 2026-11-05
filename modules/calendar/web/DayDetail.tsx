@@ -79,7 +79,7 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
       {!d.total && !d.exams.length && !d.events.length && <p className="muted dd-empty">Nada para este día.</p>}
       <div className="row dd-add">
         {enabledModules.some((m) => m.id === 'todo') && (
-          <Link className="btn" to={`/todo/nueva?fecha=${date}&volver=${encodeURIComponent(pathname + search)}`}>Agregar tarea</Link>
+          <Link className="btn" to={`/todo/nueva?fecha=${date}&volver=${encodeURIComponent(pathname + search)}`} aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}>Agregar tarea</Link>
         )}
         <Link className="btn" to={`/calendario/evento/nuevo?fecha=${date}`} aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}>Agregar evento</Link>
       </div>

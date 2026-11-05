@@ -214,6 +214,7 @@ export function CalendarPage() {
               eventContent={content}
               datesSet={onDatesSet}
               dateClick={(i) => {
+                if (block()) return;
                 const q = new URLSearchParams({ fecha: i.dateStr.slice(0, 10) });
                 if (!i.allDay) q.set('hora', i.dateStr.slice(11, 16));
                 nav(`/calendario/evento/nuevo?${q}`);
