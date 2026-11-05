@@ -72,6 +72,13 @@ rm -f /srv/study-workflow/study.sqlite-wal /srv/study-workflow/study.sqlite-shm
 docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 ```
 
+## Qué cambió de uso (Hito C)
+
+- **Inicio**: pantalla de entrada con tarjetas de Hoy (tiempo pendiente de tiempo total), próximo examen y próximos 7 días.
+- **Sigla**: cada materia tiene una sigla de hasta 5 letras (se sugiere sola; editable en Ajustes) que se usa en los chips.
+- **Duración y categoría**: cada to-do puede llevar duración estimada y categoría (tarea, entrega, estudio); el tiempo se suma por día y por materia.
+- **Importar**: la vista previa muestra duración y categoría; el formato pasó a v2 (ver [docs/formato-importacion.md](docs/formato-importacion.md)).
+
 ## Agregar un módulo
 
 Una carpeta en `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`. Contrato y ejemplo en [docs/modulos.md](docs/modulos.md).
