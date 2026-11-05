@@ -69,23 +69,31 @@ export const nextExams = (events: Occurrence[], today: string): Occurrence[] =>
 
 export function weekSummary(data: AgendaData, from: string, days: number) {
   const dates = Array.from({ length: days }, (_, i) => addDays(from, i));
-  const rows = new Map<string | null, { perDay: { minutes: number; unestimated: boolean; exam: boolean }[]; count: number; minutes: number }>();
+  const rows = new Map<string | null, { perDay: { minutes: number; unestimated: boolean; exam: boolean; any: boolean }[]; count: number; minutes: number }>();
   const row = (id: string | null) => {
-    if (!rows.has(id)) rows.set(id, { perDay: dates.map(() => ({ minutes: 0, unestimated: false, exam: false })), count: 0, minutes: 0 });
+    if (!rows.has(id)) rows.set(id, { perDay: dates.map(() => ({ minutes: 0, unestimated: false, exam: false, any: false })), count: 0, minutes: 0 });
     return rows.get(id)!;
   };
   dates.forEach((d, i) => {
     for (const t of todosOn(data.todos, d)) {
       const r = row(t.materiaId);
       const m = t.durationMin ?? 0;
-      r.count++; r.minutes += m; r.perDay[i].minutes += m;
+      r.count++; r.minutes += m; r.perDay[i].minutes += m; r.perDay[i].any = true;
       if (t.durationMin === null) r.perDay[i].unestimated = true;
     }
     for (const e of data.events.filter((x) => onDay(x, d))) {
       const r = row(e.materiaId);
-      r.count++;
+      r.count++; r.perDay[i].any = true;
       if (isExam(e)) r.perDay[i].exam = true;
     }
   });
   return [...rows].map(([materiaId, r]) => ({ materiaId, ...r }));
 }
+
+/** Nivel de un casillero de regla: algo ese día (aunque sea un evento sin minutos) pinta al menos 1. */
+export const cellLevel = (p: { minutes: number; unestimated: boolean; any: boolean }): 0 | 1 | 2 | 3 =>
+  Math.max(levelOf(p.minutes, p.unestimated), p.any ? 1 : 0) as 0 | 1 | 2 | 3;
+
+export const daysUntil = (from: string, to: string): number => Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);
+
+export const countdownLabel = (n: number): string => (n <= 0 ? 'Hoy' : n === 1 ? '1 día' : `${n} días`);

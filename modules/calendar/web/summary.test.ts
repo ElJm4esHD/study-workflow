@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayCell, dayDetail, examColor, levelOf, nextExams, weekSummary } from './summary.ts';
+import { cellLevel, countdownLabel, daysUntil, dayCell, dayDetail, examColor, levelOf, nextExams, weekSummary } from './summary.ts';
 import type { AgendaData } from './summary.ts';
 import type { Occurrence } from '../server/recurrence.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
@@ -85,7 +85,13 @@ describe('summary', () => {
     expect(w.map((r) => r.materiaId)).toEqual(['a', 'b']);
     expect(w[0]).toMatchObject({ count: 2, minutes: 20 });
     expect(w[0].perDay).toHaveLength(7);
-    expect(w[0].perDay[0]).toEqual({ minutes: 20, unestimated: true, exam: false });
-    expect(w[1].perDay[1]).toEqual({ minutes: 0, unestimated: false, exam: true });
+    expect(w[0].perDay[0]).toEqual({ minutes: 20, unestimated: true, exam: false, any: true });
+    expect(w[1].perDay[1]).toEqual({ minutes: 0, unestimated: false, exam: true, any: true });
+  });
+
+  it('cellLevel, daysUntil, countdownLabel', () => {
+    expect([cellLevel({ minutes: 0, unestimated: false, any: true }), cellLevel({ minutes: 100, unestimated: false, any: true }), cellLevel({ minutes: 0, unestimated: false, any: false })]).toEqual([1, 3, 0]);
+    expect(daysUntil('2026-11-05', '2026-11-20')).toBe(15);
+    expect([0, 1, 15].map(countdownLabel)).toEqual(['Hoy', '1 día', '15 días']);
   });
 });

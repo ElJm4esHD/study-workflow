@@ -3,6 +3,7 @@ import { CalendarIcon } from '../../../core/web/icons.tsx';
 import { CalendarPage } from './CalendarPage.tsx';
 import { EventEditPage } from './EventEditPage.tsx';
 import { CalendarSettings } from './CalendarSettings.tsx';
+import { ExamCard, WeekCard } from './cards.tsx';
 
 export const calendar: WebModule = {
   id: 'calendar',
@@ -15,4 +16,5 @@ export const calendar: WebModule = {
     { path: '/calendario/evento/nuevo', element: <EventEditPage /> },
     { path: '/calendario/evento/:id', element: <EventEditPage /> },
   ],
+  dashboard: [{ id: 'examen', order: 10, column: 'left', Card: ExamCard }, { id: 'semana', order: 30, column: 'left', Card: WeekCard }],
 };
