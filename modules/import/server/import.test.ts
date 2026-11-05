@@ -128,3 +128,10 @@ test('commit: sigla no string al crear materia es 400, no 500', async () => {
   const r = await commit({ text: planText(), include: [0], materias: { algebra: { create: { name: 'Álgebra', color: '#f4a3a3', sigla: 5 } } } });
   expect(r.statusCode).toBe(400);
 });
+
+test('commit: la tarea importada guarda durationMin y category', async () => {
+  const { todos, commit, create } = await make();
+  const text = planText([{ tipo: 'tarea', fecha: '2026-11-10', titulo: 'Leer', duracion: 45, categoria: 'estudio' }]).replace('"version":1', '"version":2');
+  expect((await commit({ text, include: [0], materias: create })).statusCode).toBe(201);
+  expect(todos.list()[0]).toMatchObject({ durationMin: 45, category: 'estudio' });
+});

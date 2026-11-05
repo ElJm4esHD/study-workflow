@@ -30,11 +30,33 @@ describe('parsePlanText', () => {
   test('objeto sin studyWorkflow → error sin plan', () => {
     expect(parsePlanText('{"items":[]}')).toEqual({ ok: false, error: 'No encontré un plan en el texto pegado.' });
   });
-  test('version 2', () => {
-    expect(parsePlanText(plan([item()], { version: 2 }))).toEqual({
+  test('version 2 se acepta; version 3 no', () => {
+    expect(ok(plan([item()], { version: 2 })).items).toHaveLength(1);
+    expect(parsePlanText(plan([item()], { version: 3 }))).toEqual({
       ok: false,
-      error: 'Versión de plan no soportada (2). Actualizá la app.',
+      error: 'Versión de plan no soportada (3). Actualizá la app.',
     });
+  });
+  test('duracion y categoria en una tarea', () => {
+    const r = ok(plan([item({ duracion: 45, categoria: 'estudio' }), item()], { version: 2 }));
+    expect(r.items[0]).toMatchObject({ duracion: 45, categoria: 'estudio', errors: [] });
+    expect(r.items[1]).toMatchObject({ duracion: null, categoria: 'tarea' });
+  });
+  test('duracion inválida', () => {
+    for (const duracion of ['45', 45.5, 0, 1441]) {
+      expect(ok(plan([item({ duracion })], { version: 2 })).items[0]!.errors).toEqual(['Duración inválida (minutos enteros entre 1 y 1440).']);
+    }
+  });
+  test('categoria inválida en una tarea', () => {
+    expect(ok(plan([item({ categoria: 'examen' })], { version: 2 })).items[0]!.errors).toEqual(['Categoría inválida: "examen".']);
+  });
+  test('duracion/categoria en un parcial se ignoran', () => {
+    const it = ok(plan([item({ tipo: 'parcial', duracion: 'x', categoria: 'examen' })], { version: 2 })).items[0]!;
+    expect(it.errors).toEqual([]);
+    expect(it).toMatchObject({ duracion: null, categoria: 'tarea' });
+  });
+  test('plan v1 con duracion se lee igual', () => {
+    expect(ok(plan([item({ duracion: 30 })])).items[0]).toMatchObject({ duracion: 30, errors: [] });
   });
   test('items vacío o ausente', () => {
     const e = { ok: false, error: 'El plan no tiene ítems.' };

@@ -1,3 +1,4 @@
+import { TODO_CATEGORIES, type TodoCategory } from '../../todo/shared.ts';
 import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
 
 export const ITEM_TIPOS = ['tarea', 'evento', 'parcial', 'recuperatorio', 'final'] as const;
@@ -9,6 +10,8 @@ export type ParsedItem = {
   hora: string | null;
   titulo: string;
   notas: string | null;
+  duracion: number | null;
+  categoria: TodoCategory;
   materiaName: string | null;
   errors: string[];
 };
@@ -46,7 +49,7 @@ export function findPlanObject(text: string): Record<string, unknown> | null {
 }
 
 function parseItem(raw: unknown, index: number, planMateria: string | null): ParsedItem {
-  const out: ParsedItem = { index, tipo: '', fecha: '', hora: null, titulo: '', notas: null, materiaName: null, errors: [] };
+  const out: ParsedItem = { index, tipo: '', fecha: '', hora: null, titulo: '', notas: null, duracion: null, categoria: 'tarea', materiaName: null, errors: [] };
   if (!isObj(raw)) {
     out.errors.push('El ítem no es un objeto.');
     return out;
@@ -70,6 +73,19 @@ function parseItem(raw: unknown, index: number, planMateria: string | null): Par
     if (typeof raw.notas === 'string') out.notas = raw.notas;
     else out.errors.push('Las notas tienen que ser texto.');
   }
+  // Solo las tareas usan duración y categoría; en el resto se ignoran.
+  if (raw.tipo === 'tarea') {
+    if (raw.duracion != null) {
+      const d = raw.duracion;
+      if (typeof d === 'number' && Number.isInteger(d) && d >= 1 && d <= 1440) out.duracion = d;
+      else out.errors.push('Duración inválida (minutos enteros entre 1 y 1440).');
+    }
+    if (raw.categoria != null) {
+      const c = TODO_CATEGORIES.find((x) => x.id === raw.categoria);
+      if (c) out.categoria = c.id;
+      else out.errors.push(`Categoría inválida: "${raw.categoria}".`);
+    }
+  }
   if (raw.materia != null && typeof raw.materia !== 'string') out.errors.push('La materia tiene que ser texto.');
   out.materiaName = typeof raw.materia === 'string' ? raw.materia : planMateria;
   return out;
@@ -78,7 +94,7 @@ function parseItem(raw: unknown, index: number, planMateria: string | null): Par
 export function parsePlanText(text: string): ParseResult {
   const obj = findPlanObject(text);
   if (!obj) return { ok: false, error: 'No encontré un plan en el texto pegado.' };
-  if (obj.version !== 1) return { ok: false, error: `Versión de plan no soportada (${obj.version}). Actualizá la app.` };
+  if (obj.version !== 1 && obj.version !== 2) return { ok: false, error: `Versión de plan no soportada (${obj.version}). Actualizá la app.` };
   if (!Array.isArray(obj.items) || obj.items.length === 0) return { ok: false, error: 'El plan no tiene ítems.' };
   const title = typeof obj.titulo === 'string' ? obj.titulo : null;
   const materia = typeof obj.materia === 'string' ? obj.materia : null;
