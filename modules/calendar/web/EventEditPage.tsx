@@ -78,7 +78,9 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   // Toda la serie: la fecha solo se manda si el usuario la cambió (si no, correría el inicio de la serie a la ocurrencia).
   function seriesPatch() {
     const { startDate: s, endDate: _e, ...rest } = body(repeat);
-    return s === ocurrencia ? rest : { ...rest, startDate: s, endDate: repeat ? s : endDate };
+    // Sin repetición la serie pasa a ser un evento común: se manda la fecha y el fin elegidos.
+    if (!repeat) return { ...rest, startDate: s, endDate };
+    return s === ocurrencia ? rest : { ...rest, startDate: s, endDate: s };
   }
   function scoped(solo: boolean) {
     dlg.current?.close();
