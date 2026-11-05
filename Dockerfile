@@ -9,7 +9,6 @@ FROM node:24-bookworm-slim
 WORKDIR /app
 ARG APP_VERSION=dev
 ENV NODE_ENV=production \
-    PORT=8080 \
     HOST=0.0.0.0 \
     DB_PATH=/data/study.sqlite \
     WEB_DIST=/app/dist/web \

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Setup inicial del server (idempotente). Se corre con: npm run server-setup
 set -euo pipefail
-PORT=${1:-8080}
+PORT=${1:?falta el puerto}
+HTTPS_PORT=${2:?falta el puerto HTTPS}
 DATA=/srv/study-workflow
 
 git init --bare -q -b main "$HOME/git/study-workflow.git"
@@ -19,5 +20,6 @@ if ss -ltn | grep -q ":$PORT "; then echo "AVISO: el puerto $PORT ya está en us
 
 echo
 echo "Último paso (una sola vez, necesita sudo y una terminal interactiva):"
-echo "  sudo tailscale serve --bg --https=443 http://127.0.0.1:$PORT"
-echo "Después queda en https://<host>.ts.net y sobrevive a los reinicios."
+echo "  sudo tailscale serve --bg --https=$HTTPS_PORT http://127.0.0.1:$PORT"
+echo "No toca lo que ya publica tailscale serve en otros puertos (miralo con: tailscale serve status)."
+echo "Después queda en https://<host>:$HTTPS_PORT y sobrevive a los reinicios."

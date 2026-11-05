@@ -31,7 +31,7 @@ ssh tu-usuario@<host> echo ok
 
 ### 2. Configuración y setup inicial
 
-Copiá `.env.deploy.example` a `.env.deploy` (no se commitea) y completá `DEPLOY_HOST`. Después:
+Copiá `.env.deploy.example` a `.env.deploy` (no se commitea) y completá `DEPLOY_HOST`, `PORT` (puerto local del contenedor) y `HTTPS_PORT` (puerto de `tailscale serve`). Es la única configuración del puerto: compose, el health check del deploy y el setup la leen de ahí. Después:
 
 ```
 npm run server-setup
@@ -41,13 +41,15 @@ Crea el repo bare `~/git/study-workflow.git`, `~/apps/study-workflow/` y `/srv/s
 
 ### 3. HTTPS con `tailscale serve`
 
-El setup imprime el comando; correlo una vez en el server (con sudo):
+El setup imprime el comando con tus puertos; correlo una vez en el server (con sudo):
 
 ```
-ssh -t tu-usuario@<host> sudo tailscale serve --bg --https=443 http://127.0.0.1:8080
+ssh -t tu-usuario@<host> sudo tailscale serve --bg --https=<HTTPS_PORT> http://127.0.0.1:<PORT>
 ```
 
-Requiere MagicDNS y HTTPS certificates habilitados en el admin de Tailscale. Con `--bg` queda persistente y se retoma solo después de un reinicio. La app queda en `https://<host>.ts.net`. El contenedor solo escucha en `127.0.0.1`: sin exposición a internet.
+Solo agrega ese puerto: lo que `tailscale serve` ya publica en otros puertos (por ejemplo otra app en 443) no se toca. Revisalo antes y después con `tailscale serve status`.
+
+Requiere MagicDNS y HTTPS certificates habilitados en el admin de Tailscale. Con `--bg` queda persistente y se retoma solo después de un reinicio. La app queda en `https://<host>:<HTTPS_PORT>`. El contenedor solo escucha en `127.0.0.1`: sin exposición a internet.
 
 ### 4. Deployar
 
@@ -63,11 +65,11 @@ Antes de cada deploy se guarda `/srv/study-workflow/backups/pre-deploy-<fecha>.s
 
 ```
 cd ~/apps/study-workflow
-V=$(cat .deployed)
-IMAGE_TAG=$V docker compose -p study-workflow -f releases/$V/compose.yaml stop app
+V=$(cat .deployed)   # el .env de cada release ya trae PORT e IMAGE_TAG
+docker compose -p study-workflow -f releases/$V/compose.yaml stop app
 cp /srv/study-workflow/backups/<backup>.sqlite /srv/study-workflow/study.sqlite
 rm -f /srv/study-workflow/study.sqlite-wal /srv/study-workflow/study.sqlite-shm
-IMAGE_TAG=$V docker compose -p study-workflow -f releases/$V/compose.yaml up -d
+docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 ```
 
 ## Agregar un módulo
