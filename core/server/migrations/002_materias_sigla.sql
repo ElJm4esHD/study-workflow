@@ -1,5 +1,5 @@
 ALTER TABLE materias ADD COLUMN sigla TEXT NOT NULL DEFAULT '';
--- colores viejos -> pastel del mismo nombre (mismo índice de PALETTE)
+-- colores viejos -> pastel del mismo nombre (mismo Ã­ndice de PALETTE)
 UPDATE materias SET color = CASE color
   WHEN '#e5484d' THEN '#f4a3a3'
   WHEN '#e8590c' THEN '#f5bf93'

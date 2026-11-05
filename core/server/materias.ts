@@ -38,7 +38,7 @@ export function makeMaterias(db: DatabaseSync): MateriasService {
       if (id) { const ex = svc.get(id); if (ex) return ex; }
       const n = checkName(name);
       checkColor(color);
-      const sg = sigla?.trim() ? checkSigla(sigla) : makeSigla(n);
+      const sg = sigla == null || (typeof sigla === 'string' && !sigla.trim()) ? makeSigla(n) : checkSigla(sigla);
       if (svc.findByNameKey(nameKey(n))) throw dup();
       const now = new Date().toISOString();
       const newId = id ?? randomUUID();

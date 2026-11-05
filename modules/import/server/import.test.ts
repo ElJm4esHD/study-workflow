@@ -122,3 +122,9 @@ test('progreso excluye ítems borrados a mano', async () => {
   todos.remove(todos.list().find((t) => t.title === 'b')!.id);
   expect(await plans(app)).toMatchObject([{ id: plan.id, tasksTotal: 1, tasksDone: 1 }]);
 });
+
+test('commit: sigla no string al crear materia es 400, no 500', async () => {
+  const { commit } = await make();
+  const r = await commit({ text: planText(), include: [0], materias: { algebra: { create: { name: 'Álgebra', color: '#f4a3a3', sigla: 5 } } } });
+  expect(r.statusCode).toBe(400);
+});
