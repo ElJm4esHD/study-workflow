@@ -151,3 +151,23 @@ test('I6: si no se puede guardar en la cola → ApiError para que el caller revi
   const e = (await api('PATCH', '/api/todo/a', { completed: true }).catch((x) => x)) as ApiError;
   expect([e.code, e.message]).toEqual(['sin_conexion', 'No se pudo guardar el cambio sin conexión.']);
 });
+
+test('N1: un PATCH que siempre da 500 no genera un bucle de pedidos', async () => {
+  memStore();
+  saveCopy('/api/todo/a', t1, 't0');
+  netDown();
+  await api('PATCH', '/api/todo/a', { completed: true });
+  const f = vi.fn(async (url: string, init: RequestInit) =>
+    init.method === 'PATCH' ? res(500, {}) : res(200, url === '/api/todo/a' ? t1 : url === '/api/todo' ? [t1] : { ok: true }));
+  vi.stubGlobal('fetch', f);
+  let reloads = 0;
+  const off = onReload(() => reloads++);
+  await api('GET', '/api/todo'); // vuelve online y dispara un resync
+  await resync();
+  for (let i = 0; i < 3; i++) await api('GET', '/api/todo'); // lo que haría la recarga
+  await new Promise((r) => setTimeout(r, 20));
+  off();
+  expect(f.mock.calls.length).toBeLessThan(15);
+  expect(reloads).toBe(0);
+  expect(pending()).toHaveLength(1);
+});

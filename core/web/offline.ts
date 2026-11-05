@@ -141,6 +141,7 @@ export async function flush(req: Req, s: Store = ls()): Promise<{ sent: number; 
         else {
           sent++;
           if (isObj(r.json) && typeof r.json.updatedAt === 'string') rebase = r.json.updatedAt;
+          if (isObj(r.json)) mergeCopies(op.id, r.json, s); // un nuevo tilde de esta tarea parte de la base fresca
         }
       }
     } catch {

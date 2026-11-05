@@ -87,10 +87,11 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   if (native) {
     const j = r.json;
     if (method === 'GET' && j !== undefined) {
+      const wasOffline = offline;
       applyPending(j);
       saveCopy(path, j, new Date().toISOString());
       if (offline) setOffline(false);
-      if (pending().length > 0) void resync();
+      if (wasOffline && pending().length > 0) void resync(); // solo al volver; si no, un 5xx persistente haría un bucle
     } else if (method !== 'GET' && j && typeof j === 'object' && typeof j.id === 'string' && typeof j.updatedAt === 'string') {
       // Las copias no se enteran de los cambios online: mantenerlas al día evita bases viejas.
       mergeCopies(j.id, j);
@@ -106,12 +107,12 @@ export function resync(): Promise<void> {
   inflight ??= (async () => {
     try {
       if ((await raw('GET', '/api/health')).status !== 200) return;
-      await flush(raw);
+      const f = await flush(raw);
+      setOffline(false);
+      if (f.sent + f.dropped > 0 || f.remaining === 0) reloadListeners.forEach((fn) => fn());
     } catch {
       return;
     }
-    setOffline(false);
-    reloadListeners.forEach((f) => f());
   })().finally(() => { inflight = null; });
   return inflight;
 }

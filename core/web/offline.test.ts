@@ -156,3 +156,17 @@ test('appendCopy agrega a la copia de lista', () => {
   appendCopy('/api/todo', todo('n'), s);
   expect(readCopy<any[]>('/api/todo', s)!.data.map((t) => t.id)).toEqual(['a', 'n']);
 });
+
+test('N2: tras un PATCH exitoso las copias toman su updatedAt; un re-tilde parte de esa base', async () => {
+  const s = setup('a', 'b');
+  let retapped = false;
+  await flush(async (m, p) => {
+    if (m === 'GET' && p === '/api/todo/b' && !retapped) {
+      retapped = true;
+      expect(enqueue('a', false, 't2', s).baseUpdatedAt).toBe('u9');
+    }
+    const id = p.split('/')[3];
+    return { status: 200, json: { ...todo(id), updatedAt: m === 'PATCH' ? 'u9' : 'u1' } };
+  }, s);
+  expect(pending(s).map((o) => [o.id, o.baseUpdatedAt])).toEqual([['a', 'u9']]);
+});
