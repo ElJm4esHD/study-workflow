@@ -1,6 +1,9 @@
 import { Link } from 'react-router';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useApi } from '../../../core/web/api.ts';
+import { onReload } from '../../../core/web/api.ts';
+import type { ApiError } from '../../../core/web/api.ts';
+import { loadAgenda } from './agenda.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
@@ -15,8 +18,16 @@ const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'D
 const dm = (d: string) => formatDate(d).slice(0, 5);
 
 /** Tarjeta de Inicio con encabezado, carga y error con "Reintentar". */
-function useCard(path: string, title: string, className: string) {
-  const { data, error, reload } = useApi<AgendaData>(path);
+function useCard(from: string, to: string, title: string, className: string) {
+  const [{ data, error }, setState] = useState<{ data?: AgendaData; error?: ApiError }>({});
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    let live = true;
+    loadAgenda(from, to).then((d) => live && setState({ data: d }), (e: ApiError) => live && setState((s) => ({ data: s.data, error: e })));
+    return () => { live = false; };
+  }, [from, to, tick]);
+  const reload = useCallback(() => setTick((t) => t + 1), []);
+  useEffect(() => onReload(reload), [reload]);
   const wrap = (body: ReactNode, link = '/calendario?vista=mes') => (
     <section className={`card ${className}`}><div className="card-head"><h3>{title}</h3><Link to={link}>Calendario</Link></div>{body}</section>
   );
@@ -29,7 +40,7 @@ function useCard(path: string, title: string, className: string) {
 export function ExamCard() {
   const { materias } = useCore();
   const today = todayAR();
-  const { data, state, wrap } = useCard(`/api/calendar/agenda?from=${today}&to=${addDays(today, 120)}`, 'Próximo examen', 'exam-card');
+  const { data, state, wrap } = useCard(today, addDays(today, 120), 'Próximo examen', 'exam-card');
   if (state || !data) return state;
   const [next, after] = nextExams(data.events, today);
   if (!next) return wrap(<p className="muted">Sin exámenes en los próximos 4 meses.</p>);
@@ -59,7 +70,7 @@ export function WeekCard() {
   const { materias } = useCore();
   const today = todayAR();
   const from = addDays(today, 1);
-  const { data, state, wrap } = useCard(`/api/calendar/agenda?from=${from}&to=${addDays(from, 6)}`, 'Próximos 7 días', '');
+  const { data, state, wrap } = useCard(from, addDays(from, 6), 'Próximos 7 días', '');
   if (state || !data) return state;
   const rows = weekSummary(data, from, 7);
   if (!rows.length) return wrap(<p className="muted">Nada en los próximos 7 días.</p>);

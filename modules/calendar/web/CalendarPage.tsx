@@ -11,7 +11,8 @@ import es from '@fullcalendar/react/locales/es';
 import '@fullcalendar/react/skeleton.css';
 import '@fullcalendar/react/themes/classic/theme.css';
 import '@fullcalendar/react/themes/classic/palette.css';
-import { api, ApiError } from '../../../core/web/api.ts';
+import { ApiError } from '../../../core/web/api.ts';
+import { loadAgenda } from './agenda.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { PlusIcon } from '../../../core/web/icons.tsx';
@@ -102,7 +103,7 @@ export function CalendarPage() {
     if (!range) return;
     const me = ++seq.current; // ignora respuestas viejas si el usuario sigue deslizando
     try {
-      const r = await api<AgendaData>('GET', `/api/calendar/agenda?${range}`);
+      const r = await loadAgenda(...range.match(/\d{4}-\d{2}-\d{2}/g) as [string, string]);
       if (me === seq.current) { setData(r); setLoadError(''); }
     } catch (e) {
       if (me === seq.current) setLoadError(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
