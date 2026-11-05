@@ -7,6 +7,8 @@ const nullableStr = { type: ['string', 'null'] };
 const fields = {
   title: { type: 'string' }, notes: nullableStr, dueDate: nullableStr, dueTime: nullableStr,
   materiaId: nullableStr, sortOrder: { type: 'number' },
+  durationMin: {}, // sin type: Ajv coerciona "45" a 45; el service valida entero 1–1440
+  category: { type: 'string' },
 };
 
 export const todo: ServerModule = {

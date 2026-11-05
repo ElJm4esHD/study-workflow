@@ -117,3 +117,35 @@ test('service.deleteByIds ignora ids inexistentes', async () => {
   expect(svc.deleteByIds(['x', 'y'], { includeCompleted: true })).toBe(0);
   expect(svc.deleteByIds([], { includeCompleted: true })).toBe(0);
 });
+
+test('create sin campos nuevos → category tarea, durationMin null', async () => {
+  const { post } = await make();
+  expect((await post({ title: 'a' })).json()).toMatchObject({ category: 'tarea', durationMin: null });
+});
+
+test('create con durationMin 45 y category estudio', async () => {
+  const { post } = await make();
+  const r = await post({ title: 'a', durationMin: 45, category: 'estudio' });
+  expect([r.statusCode, r.json()]).toEqual([201, expect.objectContaining({ durationMin: 45, category: 'estudio' })]);
+});
+
+test('PATCH parcial no toca durationMin/category; durationMin null la borra', async () => {
+  const { post, patch } = await make();
+  const t = (await post({ title: 'a', durationMin: 30, category: 'entrega' })).json();
+  expect((await patch(t.id, { title: 'b' })).json()).toMatchObject({ durationMin: 30, category: 'entrega' });
+  expect((await patch(t.id, { durationMin: null })).json()).toMatchObject({ durationMin: null, category: 'entrega' });
+});
+
+test('durationMin 0, 1441, 45.5 y "45" → 400 duracion_invalida', async () => {
+  const { post } = await make();
+  for (const durationMin of [0, 1441, 45.5, '45']) {
+    const r = await post({ title: 'a', durationMin });
+    expect([r.statusCode, r.json().error.code]).toEqual([400, 'duracion_invalida']);
+  }
+});
+
+test('category "examen" → 400 categoria_invalida', async () => {
+  const { post } = await make();
+  const r = await post({ title: 'a', category: 'examen' });
+  expect([r.statusCode, r.json().error.code]).toEqual([400, 'categoria_invalida']);
+});

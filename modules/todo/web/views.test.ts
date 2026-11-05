@@ -6,7 +6,7 @@ const today = '2026-11-04';
 let n = 0;
 const t = (o: Partial<TodoItem>): TodoItem => ({
   id: `i${++n}`, title: 't', notes: null, dueDate: null, dueTime: null, materiaId: null, completed: false,
-  completedAt: null, sortOrder: 0, createdAt: '', updatedAt: '', ...o,
+  completedAt: null, sortOrder: 0, createdAt: '', updatedAt: '', durationMin: null, category: 'tarea', ...o,
 });
 const ids = (items: TodoItem[]) => items.map((i) => i.id);
 
