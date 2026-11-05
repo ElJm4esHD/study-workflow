@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import type { CalendarEvent, EventInput } from '../server/service.ts';
@@ -24,6 +24,7 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 
 function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string | null }) {
   const { materias, notify } = useCore();
+  const { off, block } = useBlock();
   const nav = useNavigate();
   const [q] = useSearchParams();
   const isSeries = !!item?.repeatWeekdays;
@@ -60,10 +61,12 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   });
 
   async function run(fn: () => Promise<unknown>) {
+    if (block()) return;
     try { await fn(); back(); } catch (err) { notify(msg(err)); }
   }
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (block()) return;
     if (asksScope && repChanged) { run(() => api('PATCH', url, seriesPatch())); return; }
     if (asksScope) { setAction('save'); dlg.current?.showModal(); return; }
     run(() => {
@@ -73,6 +76,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
     });
   }
   function remove() {
+    if (block()) return;
     if (asksScope) { setAction('delete'); dlg.current?.showModal(); return; }
     if (confirm(`¿Borrar "${item!.title}"?`)) run(() => api('DELETE', url));
   }
@@ -158,9 +162,9 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
           </>
         )}
         <div className="row">
-          {item && <button type="button" className="btn danger" onClick={remove}>Borrar</button>}
+          {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off}>Borrar</button>}
           <button type="button" className="btn" onClick={back}>Cancelar</button>
-          <button className="btn primary">Guardar</button>
+          <button className="btn primary" aria-disabled={off}>Guardar</button>
         </div>
       </form>
       <dialog ref={dlg} className="cal-dialog" aria-labelledby="cal-scope">

@@ -10,6 +10,8 @@ export interface WebModule {
   settings?: ComponentType;
   dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];
   requires?: string[];
+  /** URLs GET que el núcleo pide al arrancar con conexión, para tener copia offline. */
+  prefetch?: () => string[];
 }
 
 /** Módulos activos: los habilitados más sus `requires` registrados; un `requires` sin parte web se ignora. */
@@ -30,4 +32,9 @@ export type DashboardCard = NonNullable<WebModule['dashboard']>[number];
 export function dashboardCards(mods: WebModule[]): { left: DashboardCard[]; right: DashboardCard[]; all: DashboardCard[] } {
   const all = mods.flatMap((m) => m.dashboard ?? []).sort((a, b) => a.order - b.order);
   return { all, left: all.filter((c) => c.column === 'left'), right: all.filter((c) => c.column === 'right') };
+}
+
+/** URLs a precargar: las de los módulos más las del núcleo, sin repetir. */
+export function prefetchUrls(mods: WebModule[]): string[] {
+  return [...new Set([...mods.flatMap((m) => m.prefetch?.() ?? []), '/api/materias', '/api/settings'])];
 }

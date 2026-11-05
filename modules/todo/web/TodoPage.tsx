@@ -4,7 +4,7 @@ import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSen
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { PlusIcon } from '../../../core/web/icons.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -49,6 +49,7 @@ function Row({ item, today, view, sigla, color, selected, sortable, onToggle }: 
 
 export function TodoPage() {
   const { materias, notify } = useCore();
+  const { off, block } = useBlock();
   const [params, setParams] = useSearchParams();
   const view = VIEWS.find((v) => v.id === params.get('vista'))?.id ?? 'hoy';
   const materiaId = params.get('materia');
@@ -100,7 +101,7 @@ export function TodoPage() {
   }
 
   function onDragEnd(list: TodoItem[], { active, over }: DragEndEvent) {
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id || block()) return;
     const from = list.findIndex((i) => i.id === active.id), to = list.findIndex((i) => i.id === over.id);
     const moved = arrayMove(list, from, to);
     const sortOrder = orderBetween(moved[to - 1]?.sortOrder, moved[to + 1]?.sortOrder);
@@ -112,7 +113,7 @@ export function TodoPage() {
   async function quickAdd(e: FormEvent) {
     e.preventDefault();
     const t = title.trim();
-    if (!t) return;
+    if (!t || block()) return;
     const body = {
       title: t,
       dueDate: view === 'hoy' ? today : null,
@@ -149,7 +150,7 @@ export function TodoPage() {
       <form className="todo-quick" onSubmit={quickAdd}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="Agregar tarea…"
           aria-label="Agregar tarea rápido" enterKeyHint="send" />
-        <button className="icon-btn" aria-label="Agregar"><PlusIcon /></button>
+        <button className="icon-btn" aria-label="Agregar" aria-disabled={off}><PlusIcon /></button>
       </form>
       {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
       {data && empty && <p className="muted pad">{view === 'completadas' ? 'Todavía no completaste nada.' : 'Nada pendiente por acá.'}</p>}
@@ -174,7 +175,7 @@ export function TodoPage() {
           </section>
         );
       })}
-      {!editing && <Link to={{ pathname: "/todo/nueva", search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea"><PlusIcon /></Link>}
+      {!editing && <Link to={{ pathname: "/todo/nueva", search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>}
     </>
   );
 }

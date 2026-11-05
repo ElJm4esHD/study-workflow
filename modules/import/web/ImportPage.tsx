@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { api, ApiError } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { PALETTE } from '../../../core/shared/palette.ts';
 import { formatDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -19,6 +19,7 @@ const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió ma
 
 export function ImportPage() {
   const { materias, notify, reloadMaterias } = useCore();
+  const { off, block } = useBlock();
   const navigate = useNavigate();
   const area = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState('');
@@ -29,6 +30,7 @@ export function ImportPage() {
   const [busy, setBusy] = useState(false);
 
   async function fromClipboard() {
+    if (block()) return;
     let t: string;
     try {
       t = await navigator.clipboard.readText();
@@ -43,6 +45,7 @@ export function ImportPage() {
   }
 
   async function doPreview(t = text) {
+    if (block()) return;
     setBusy(true); setError(null); setPreview(null);
     try {
       const p = await api<Preview>('POST', '/api/import/preview', { text: t });
@@ -57,6 +60,7 @@ export function ImportPage() {
   const ready = needed.every((u) => { const r = res[u.key]; return r && (r.mode === 'create' || r.materiaId); });
 
   async function save() {
+    if (block()) return;
     setBusy(true);
     try {
       const materiasBody = Object.fromEntries(needed.map((u) => {
@@ -87,12 +91,12 @@ export function ImportPage() {
     <>
       <h1>Importar</h1>
       <div className="card-group">
-        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy}>Importar desde portapapeles</button>
+        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy} aria-disabled={off}>Importar desde portapapeles</button>
         <label className="form" style={{ display: 'flex' }}>
           O pegalo acá
           <textarea ref={area} className="imp-text" value={text} onChange={(e) => setText(e.target.value)} />
         </label>
-        <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()}>Ver vista previa</button>
+        <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()} aria-disabled={off}>Ver vista previa</button>
         <Link to="/importar/planes" className="imp-planes-link">Ver planes importados</Link>
       </div>
       {error && <div className="imp-err" role="alert">{error}</div>}
@@ -146,7 +150,7 @@ export function ImportPage() {
               </ul>
             </section>
           ))}
-          <button className="btn primary imp-save" disabled={busy || !checked.size || !ready} onClick={save}>
+          <button className="btn primary imp-save" disabled={busy || !checked.size || !ready} aria-disabled={off} onClick={save}>
             Guardar {checked.size} ítems
           </button>
         </>

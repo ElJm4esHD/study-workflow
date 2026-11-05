@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import type { PlanSummary } from '../server/index.ts';
 import { deleteCounts } from './logic.ts';
@@ -8,6 +8,7 @@ import './import.css';
 
 export function PlansPage() {
   const { notify } = useCore();
+  const { off, block } = useBlock();
   const { data, error, reload } = useApi<PlanSummary[]>('/api/import/plans');
   const [target, setTarget] = useState<PlanSummary | null>(null);
   const [incl, setIncl] = useState(false);
@@ -16,7 +17,7 @@ export function PlansPage() {
 
   useEffect(() => { if (target) dlg.current?.showModal(); else dlg.current?.close(); }, [target]);
 
-  function ask(p: PlanSummary) { setIncl(false); setKeep(true); setTarget(p); }
+  function ask(p: PlanSummary) { if (block()) return; setIncl(false); setKeep(true); setTarget(p); }
   async function remove() {
     if (!target) return;
     try {
@@ -42,7 +43,7 @@ export function PlansPage() {
             </div>
             <p className="muted">{p.tasksDone}/{p.tasksTotal} tareas</p>
             <p className="muted">{p.eventsCount} eventos ({p.examsCount} exámenes)</p>
-            <button className="btn" onClick={() => ask(p)}>Borrar</button>
+            <button className="btn" onClick={() => ask(p)} aria-disabled={off}>Borrar</button>
           </div>
         ))}
       </div>

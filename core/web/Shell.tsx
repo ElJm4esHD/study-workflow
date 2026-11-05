@@ -1,11 +1,19 @@
 import type { ComponentType } from 'react';
 import { NavLink, Outlet } from 'react-router';
+import type { Connection } from './api.ts';
 import { useCore } from './CoreContext.tsx';
 import { materiaVars } from './MateriaChip.tsx';
 import { HomeIcon, SettingsIcon } from './icons.tsx';
 
+const stamp = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+function offlineText({ copyAt, pending }: Connection) {
+  const [d, t] = copyAt ? stamp.format(new Date(copyAt)).split(', ') : [];
+  const n = pending ? `, ${pending} ${pending === 1 ? 'cambio' : 'cambios'} por sincronizar` : '';
+  return `Sin conexión. Datos del ${d} ${t}${n}.`;
+}
+
 export function Shell() {
-  const { enabledModules, materias } = useCore();
+  const { enabledModules, materias, connection } = useCore();
   const items: { key: string; to: string; label: string; Icon: ComponentType }[] = [{ key: 'inicio', to: '/', label: 'Inicio', Icon: HomeIcon }];
   enabledModules
     .filter((m) => m.nav)
@@ -14,6 +22,7 @@ export function Shell() {
   items.push({ key: 'ajustes', to: '/ajustes', label: 'Ajustes', Icon: SettingsIcon });
   return (
     <div className="shell">
+      {connection.offline && <div className="offline-bar" role="status">{offlineText(connection)}</div>}
       <nav className="nav" aria-label="Principal">
         <div className="brand">Study Workflow</div>
         <div className="nav-links">

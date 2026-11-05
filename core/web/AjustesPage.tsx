@@ -4,7 +4,7 @@ import { PALETTE } from '../shared/palette.ts';
 import type { Materia } from '../server/registry.ts';
 import { webModules } from '../../modules/web.ts';
 import { api, ApiError } from './api.ts';
-import { useCore } from './CoreContext.tsx';
+import { BLOCKED, useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
 import { ChevronIcon } from './icons.tsx';
 import { MateriaChip } from './MateriaChip.tsx';
@@ -154,7 +154,8 @@ function Modulos() {
 }
 
 export function AjustesPage() {
-  const { enabledModules } = useCore();
+  const { enabledModules, connection } = useCore();
+  if (connection.offline) return <><h1>Ajustes</h1><p className="muted pad" role="alert">{BLOCKED}</p></>;
   return (
     <>
       <h1>Ajustes</h1>

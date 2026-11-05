@@ -58,6 +58,8 @@ dashboard: [{ id: 'notas-resumen', order: 40, column: 'right', Card: () => (
 ) }],
 ```
 
+`prefetch?: () => string[]` declara las URLs GET que el núcleo pide una vez al arrancar con conexión (junto con `/api/materias` y `/api/settings`), para que el APK tenga copia sin red. Ejemplo: `prefetch: () => ['/api/notas']`. Sin conexión solo se pueden tildar tareas: usá `useBlock()` (`core/web/CoreContext.tsx`) en las acciones que escriben, para deshabilitarlas con `aria-disabled` y avisar al tocar.
+
 Todo pedido HTTP pasa por `api()` de `core/web/api.ts`; los módulos nunca llaman a `fetch`.
 
 ## Ejemplo mínimo: módulo `notas`

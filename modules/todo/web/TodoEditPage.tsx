@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { isValidDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
@@ -15,6 +15,7 @@ const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió ma
 
 function Form({ item }: { item?: TodoItem }) {
   const { materias, notify } = useCore();
+  const { off, block } = useBlock();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const fecha = params.get('fecha');
@@ -32,6 +33,7 @@ function Form({ item }: { item?: TodoItem }) {
 
   async function save(e: FormEvent) {
     e.preventDefault();
+    if (block()) return;
     const body = {
       title, notes: notes.trim() || null, dueDate: dueDate || null, dueTime: dueDate && dueTime ? dueTime : null,
       materiaId: materiaId || null, category, durationMin,
@@ -42,7 +44,7 @@ function Form({ item }: { item?: TodoItem }) {
     } catch (err) { notify(msg(err)); }
   }
   async function remove() {
-    if (!item || !confirm(`¿Borrar "${item.title}"?`)) return;
+    if (!item || block() || !confirm(`¿Borrar "${item.title}"?`)) return;
     try { await api('DELETE', `/api/todo/${item.id}`); back(); } catch (err) { notify(msg(err)); }
   }
   // Las archivadas no se ofrecen, salvo la que ya tiene el ítem, para no perderla al guardar.
@@ -97,9 +99,9 @@ function Form({ item }: { item?: TodoItem }) {
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </label>
       <div className="row">
-        {item && <button type="button" className="btn danger" onClick={remove}>Borrar</button>}
+        {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off}>Borrar</button>}
         <button type="button" className="btn" onClick={back}>Cancelar</button>
-        <button className="btn primary">Guardar</button>
+        <button className="btn primary" aria-disabled={off}>Guardar</button>
       </div>
     </form>
   );

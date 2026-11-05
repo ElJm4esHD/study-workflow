@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { api, ApiError } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { formatDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -17,6 +17,7 @@ const time = (o: Occurrence) => (o.allDay ? 'Todo el día' : o.startTime);
 
 export function DayDetail({ data, date, reload }: { data: AgendaData; date: string; reload(): void }) {
   const { materias, notify, enabledModules } = useCore();
+  const { off, block } = useBlock();
   const { pathname, search } = useLocation();
   const d = dayDetail(data, date);
   const mat = (id: string | null) => materias.find((m) => m.id === id);
@@ -80,7 +81,7 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
         {enabledModules.some((m) => m.id === 'todo') && (
           <Link className="btn" to={`/todo/nueva?fecha=${date}&volver=${encodeURIComponent(pathname + search)}`}>Agregar tarea</Link>
         )}
-        <Link className="btn" to={`/calendario/evento/nuevo?fecha=${date}`}>Agregar evento</Link>
+        <Link className="btn" to={`/calendario/evento/nuevo?fecha=${date}`} aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}>Agregar evento</Link>
       </div>
     </>
   );

@@ -12,7 +12,7 @@ import '@fullcalendar/react/skeleton.css';
 import '@fullcalendar/react/themes/classic/theme.css';
 import '@fullcalendar/react/themes/classic/palette.css';
 import { api, ApiError } from '../../../core/web/api.ts';
-import { useCore } from '../../../core/web/CoreContext.tsx';
+import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { PlusIcon } from '../../../core/web/icons.tsx';
 import { addDays, formatDate, isValidDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
@@ -51,6 +51,7 @@ type Extra = { occ?: Occurrence; todo?: TodoItem };
 
 export function CalendarPage() {
   const { materias, settings } = useCore();
+  const { off, block } = useBlock();
   const nav = useNavigate();
   const wide = useWide();
   const [params, setParams] = useSearchParams();
@@ -243,7 +244,7 @@ export function CalendarPage() {
         </div>
       )}
       {!(month && wide) && (
-        <Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento"><PlusIcon /></Link>
+        <Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>
       )}
     </div>
   );
