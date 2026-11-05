@@ -1,0 +1,38 @@
+.cal-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
+.cal-tabs { display: flex; gap: 6px; }
+.cal-tab {
+  min-height: 48px; padding: 0 16px; border-radius: 24px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--text); font: inherit; cursor: pointer;
+}
+.cal-tab[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-title { font-size: 1.15rem; margin: 0; text-align: center; text-transform: capitalize; }
+.cal-arrow { width: 48px; padding: 0; font-size: 1.5rem; }
+.cal-wrap {
+  margin-top: 8px; touch-action: pan-y; padding-bottom: 80px;
+  /* La paleta de FullCalendar sigue los colores de la app (claro/oscuro) en vez de su data-color-scheme. */
+  --fc-classic-background: var(--surface); --fc-classic-foreground: var(--text);
+  --fc-classic-muted-foreground: var(--muted); --fc-classic-faint-foreground: var(--muted);
+  --fc-classic-border: var(--line); --fc-classic-strong-border: var(--off);
+  --fc-classic-today: var(--accent-soft); --fc-classic-primary: var(--accent);
+}
+.cal-wrap [class~='cal-soft'] { background: color-mix(in srgb, var(--fc-event-color) 22%, var(--surface)) !important; border: 1px solid var(--fc-event-color) !important; color: var(--text) !important; }
+.cal-wrap [class~='cal-exam'] { background: var(--fc-event-color) !important; color: var(--fc-event-contrast-color) !important; font-weight: 700; }
+.cal-wrap [class~='cal-todo'] { background: transparent !important; border: 1px dashed var(--fc-event-color) !important; color: var(--text) !important; }
+.cal-wrap [class~='cal-done'] { text-decoration: line-through; opacity: .75; }
+.cal-fab {
+  position: fixed; right: 16px; bottom: calc(var(--nav-h) + 16px); width: 56px; height: 56px; border-radius: 28px; z-index: 9;
+  background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+}
+@media (min-width: 768px) { .cal-fab { bottom: 24px; } }
+.cal-radio { display: flex; align-items: center; gap: 12px; min-height: 48px; }
+.cal-radio input { width: 24px; height: 24px; accent-color: var(--accent); }
+.cal-days { display: flex; gap: 6px; flex-wrap: wrap; }
+.cal-day {
+  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; cursor: pointer;
+}
+.cal-day[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 700; }
+.form label.cal-check { flex-direction: row; align-items: center; justify-content: space-between; min-height: 48px; }
+.cal-dialog { border: 0; border-radius: var(--r); background: var(--surface); color: var(--text); padding: 20px; max-width: 360px; }
+.cal-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+.cal-dialog .row { margin-top: 16px; }

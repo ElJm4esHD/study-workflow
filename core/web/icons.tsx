@@ -8,3 +8,4 @@ export const ChevronIcon = () => <Svg><path d="m6 9 6 6 6-6" /></Svg>;
 export const PlusIcon = () => <Svg><path d="M12 5v14M5 12h14" /></Svg>;
 export const ChecklistIcon = () => <Svg><path d="m4 6 2 2 3-3M4 14l2 2 3-3M13 7h7M13 15h7" /></Svg>;
 export const ImportIcon = () => <Svg><path d="M12 3v12M7 10l5 5 5-5M4 20h16" /></Svg>;
+export const CalendarIcon = () => <Svg><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></Svg>;
