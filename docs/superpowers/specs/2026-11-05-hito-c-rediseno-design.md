@@ -95,7 +95,7 @@ Ideas tomadas de referencias **[usuario]**: celdas teñidas con color y sigla, e
   - Debajo, una línea "Después: <tipo> de <materia> en N días" si hay un segundo examen.
   - Link "Calendario" que abre el día del examen.
 - **Tarjeta "Hoy"** (del módulo To-do):
-  - Vencidas sin completar y las tareas de hoy, tildables.
+  - Vencidas sin completar y las tareas de hoy, tildables. **[usuario]** Las vencidas se muestran como máximo 5, las más viejas primero; si hay más, un link "Ver N más" abre el To-do en la vista Hoy. Las de hoy se muestran todas.
   - Línea de total: "<pendiente> pendientes de <total>".
   - Link "To-do" que abre la vista Hoy.
 - **Tarjeta "Próximos 7 días"** (del módulo Calendario):
