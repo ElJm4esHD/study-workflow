@@ -18,6 +18,7 @@ import { addDays, todayAR } from '../../../core/shared/dates.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
 import type { Occurrence } from '../server/recurrence.ts';
 import { EXAM_KINDS } from '../shared.ts';
+import type { AgendaData } from './summary.ts';
 import { KIND_LABELS, VIEWS } from './views.ts';
 import { useSwipe } from './useSwipe.ts';
 import './calendar.css';
@@ -32,7 +33,6 @@ function contrastOn(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18 ? '#000' : '#fff';
 }
 
-type Data = { events: Occurrence[]; todos: TodoItem[] };
 type Extra = { occ?: Occurrence; todo?: TodoItem };
 
 export function CalendarPage() {
@@ -41,7 +41,7 @@ export function CalendarPage() {
   const [params, setParams] = useSearchParams();
   const controller = useCalendarController();
   const wrap = useRef<HTMLDivElement>(null);
-  const [data, setData] = useState<Data>({ events: [], todos: [] });
+  const [data, setData] = useState<AgendaData>({ events: [], todos: [] });
   const [title, setTitle] = useState('');
   const [view, setView] = useState('');
   const [shown, setShown] = useState('');
@@ -70,7 +70,7 @@ export function CalendarPage() {
   async function load() {
     const me = ++seq.current; // ignora respuestas viejas si el usuario sigue deslizando
     try {
-      const r = await api<Data>('GET', `/api/calendar/agenda?${range.current}`);
+      const r = await api<AgendaData>('GET', `/api/calendar/agenda?${range.current}`);
       if (me === seq.current) { setData(r); setLoadError(''); }
     } catch (e) {
       if (me === seq.current) setLoadError(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
