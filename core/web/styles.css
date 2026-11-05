@@ -82,7 +82,7 @@ p { margin: 0 0 .75rem; }
 .dash-all, .dash-col { display: flex; flex-direction: column; gap: 10px; }
 .dash-col { display: none; }
 @media (min-width: 768px) {
-  .dash { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+  .dash { display: grid; grid-template-columns: 5fr 7fr; gap: 10px; align-items: start; }
   .dash-col { display: flex; }
   .dash-all { display: none; }
 }
