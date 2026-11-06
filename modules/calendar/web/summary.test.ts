@@ -6,7 +6,7 @@ import type { TodoItem } from '../../todo/server/service.ts';
 import type { Materia } from '../../../core/server/registry.ts';
 import { NEUTRAL, PALETTE } from '../../../core/shared/palette.ts';
 
-const mat = (id: string, i: number): Materia => ({ id, name: id, color: PALETTE[i].hex, sigla: id.toUpperCase(), archived: false, createdAt: '', updatedAt: '' });
+const mat = (id: string, i: number): Materia => ({ id, name: id, color: PALETTE[i].hex, colorStrong: PALETTE[i].strong, sigla: id.toUpperCase(), archived: false, createdAt: '', updatedAt: '' });
 const materias = ['a', 'b', 'c', 'd', 'e'].map(mat);
 const ev = (o: Partial<Occurrence>): Occurrence => ({
   id: 'e', title: 'ev', notes: null, kind: 'evento', materiaId: null, allDay: true, startDate: '2026-11-10', startTime: null,

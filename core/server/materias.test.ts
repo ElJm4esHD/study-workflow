@@ -114,3 +114,10 @@ test('backfill idempotente: no pisa una sigla editada al reiniciar', () => {
   backfillSiglas(db);
   expect(makeMaterias(db).get('a')!.sigla).toBe('AL1');
 });
+
+test('materias incluyen colorStrong del par de la paleta', async () => {
+  const app = await makeTestApp();
+  await post(app, { name: 'Física', color: PALETTE[0]!.hex });
+  const [m] = (await app.inject('/api/materias')).json();
+  expect(m.colorStrong).toBe(PALETTE[0]!.strong);
+});

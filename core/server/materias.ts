@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { nameKey } from '../shared/normalize.ts';
-import { PALETTE } from '../shared/palette.ts';
+import { PALETTE, strongOf } from '../shared/palette.ts';
 import { makeSigla, normalizeSigla } from '../shared/sigla.ts';
 import { httpError } from './errors.ts';
 import type { Materia, MateriasService } from './registry.ts';
 
 type Row = { id: string; name: string; color: string; sigla: string; archived: number; created_at: string; updated_at: string };
 const toMateria = (r: Row): Materia => ({
-  id: r.id, name: r.name, color: r.color, sigla: r.sigla, archived: r.archived === 1, createdAt: r.created_at, updatedAt: r.updated_at,
+  id: r.id, name: r.name, color: r.color, colorStrong: strongOf(r.color), sigla: r.sigla, archived: r.archived === 1, createdAt: r.created_at, updatedAt: r.updated_at,
 });
 
 function checkName(name: string): string {
