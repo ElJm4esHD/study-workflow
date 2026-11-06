@@ -68,6 +68,16 @@ La dirección se cambia después en Ajustes → Servidor.
 
 Anda con la app cerrada o abierta. Si es la primera vez, antes te pide la dirección del servidor.
 
+## Widgets (To-do y Agenda)
+
+1. Abrí la app una vez con conexión (si no, el widget dice "Abrí Study Workflow para conectar.").
+2. Mantené apretada la pantalla de inicio → **Widgets** → **Study Workflow** → arrastrá "To-do" o "Agenda". Para redimensionarlo, mantenelo apretado y tirá de los bordes.
+3. **Batería (importante en Samsung):** **Ajustes → Aplicaciones → Study Workflow → Batería → Sin restricciones**. Sin esto, One UI puede frenar los refrescos y la sincronización de los tildes hechos sin señal.
+
+Se actualizan al cambiar algo en la app, al salir de la app, al tildar desde el widget y cada 30 minutos. Un tilde hecho sin señal se sube solo al volver la red; si la tarea se cambió desde la compu mientras tanto, gana ese cambio.
+
+Si un tilde sin señal no se sube: revisá la batería "Sin restricciones" y abrí la app una vez.
+
 ## 5. Actualizar
 
 Volvé a correr `npm run apk` e instalá el APK nuevo encima del viejo (camino A o B). No hace falta desinstalar: tus datos están en el servidor y la app sigue configurada.

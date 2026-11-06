@@ -93,7 +93,7 @@ Con Android Studio instalado:
 
 ```
 npm run apk -- --check   # verifica JDK, SDK y llave de firma
-npm run apk              # arma dist/study-workflow.apk firmado
+npm run apk              # arma dist/study-workflow.apk firmado (incluye los widgets: ver docs/android.md)
 ```
 
 La llave de firma vive en `%USERPROFILE%\.study-workflow\` (hacele backup). Cómo pasarlo al celu, la primera apertura y problemas comunes: [docs/android.md](docs/android.md).
