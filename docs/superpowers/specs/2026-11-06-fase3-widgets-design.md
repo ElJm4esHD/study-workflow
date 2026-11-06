@@ -169,6 +169,7 @@ Federico usaba el widget de Samsung Reminder y quiere lo mismo para su app: mira
   - Checkbox con el componente de Glance y un callback de acción.
   - Los toques en filas, con `actionStartActivity` hacia `MainActivity` con el extra `route`.
   - El builder confirma con Context7 los nombres y firmas exactos de la versión actual.
+- **Plan B del tachado [usuario]:** si Glance no permite la espera de 3 s de forma confiable, la tarea queda tachada hasta el próximo redibujo (tocarla de nuevo la destilda) y desaparece en el siguiente refresco. Se decide sin preguntar y se anota en el plan.
 - **Tachado de 3 s:** el estado "tachado hasta" vive en la copia local, por ejemplo un mapa `id → hasta`, y se limpia al pasar el tiempo. El builder elige el mecanismo, por ejemplo `delay` en el callback y después `update`, y verifica que Glance permite esa espera.
 - Nombres de los widgets en el selector: "Study Workflow · To-do" y "Study Workflow · Agenda".
 
@@ -178,6 +179,7 @@ Federico usaba el widget de Samsung Reminder y quiere lo mismo para su app: mira
 - La prueba real la hace Federico en el S25 con la checklist de la sección 8.
 - **Accesibilidad:** cada checkbox con `contentDescription` "Completar <título>" y el "+" con "Nueva tarea".
 - **Docs:** `docs/android.md` suma "Agregar los widgets" (mantener apretada la pantalla de inicio → Widgets → Study Workflow). El README lo menciona en una línea.
+- **Batería en Samsung [usuario]:** One UI puede frenar los refrescos periódicos y WorkManager. `docs/android.md` y la checklist explican cómo poner Study Workflow en batería "Sin restricciones" (Ajustes → Aplicaciones → Study Workflow → Batería).
 
 ## 7. Queda para el que construye
 - Versiones exactas de Kotlin, Compose compiler y Glance compatibles con AGP 8.13. Se verifican con Context7.
