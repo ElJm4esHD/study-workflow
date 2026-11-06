@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { appendCopy, applyPending, enqueue, flush, isQueueable, lastCopyAt, mergeCopies, patchCopies, pending, readCopy, saveCopy } from './offline.ts';
 import { apiBase, isNative } from './server.ts';
+import { refreshWidgets } from './widgets.ts';
 
 export class ApiError extends Error {
   status: number;
@@ -98,6 +99,7 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
       if (method === 'POST' && path === '/api/todo') appendCopy('/api/todo', j);
     }
   }
+  if (method !== 'GET') refreshWidgets();
   return r.json as T;
 }
 
@@ -109,6 +111,7 @@ export function resync(): Promise<void> {
       if ((await raw('GET', '/api/health')).status !== 200) return;
       const f = await flush(raw);
       setOffline(false);
+      if (f.sent > 0) refreshWidgets();
       if (f.sent + f.dropped > 0 || f.remaining === 0) reloadListeners.forEach((fn) => fn());
     } catch {
       return;

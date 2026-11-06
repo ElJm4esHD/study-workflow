@@ -4,6 +4,7 @@ import { webModules } from '../../modules/web.ts';
 import { api, getConnection, onConnection, resync, useApi, type Connection } from './api.ts';
 import { prefetchUrls, resolveEnabled, type WebModule } from './registry.ts';
 import { isNative } from './server.ts';
+import { refreshWidgets } from './widgets.ts';
 
 type Core = {
   materias: Materia[];
@@ -45,7 +46,7 @@ export function CoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isNative()) return;
     const on = () => void resync();
-    const vis = () => { if (document.visibilityState === 'visible' && (getConnection().offline || getConnection().pending > 0)) void resync(); };
+    const vis = () => { if (document.visibilityState === 'hidden') refreshWidgets(); if (document.visibilityState === 'visible' && (getConnection().offline || getConnection().pending > 0)) void resync(); };
     window.addEventListener('online', on);
     document.addEventListener('visibilitychange', vis);
     const t = connection.offline ? window.setInterval(on, 30_000) : undefined;

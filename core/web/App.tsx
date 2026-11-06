@@ -8,6 +8,7 @@ import { AjustesPage } from './AjustesPage.tsx';
 import { ConnectScreen } from './ConnectScreen.tsx';
 import { getServerUrl, isNative } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
+import { onWidgetRoute, setWidgetServer, takeWidgetRoute } from './widgets.ts';
 
 function Routes() {
   const { enabledModules } = useCore();
@@ -33,11 +34,19 @@ function Routes() {
     void takeSharedText().then(got);
     return onSharedText(got);
   }, [router]); // eslint-disable-line
+  // Ruta pedida desde un widget (tocar una tarea, un día o el "+").
+  useEffect(() => {
+    const go = (r: string | null) => { if (r) void router.navigate(r); };
+    void takeWidgetRoute().then(go);
+    return onWidgetRoute(go);
+  }, [router]);
   return <RouterProvider router={router} />;
 }
 
 export function App() {
   const [connected, setConnected] = useState(!isNative() || !!getServerUrl());
+  // Instalaciones ya configuradas: el nativo todavía no conoce la URL.
+  useEffect(() => { setWidgetServer(getServerUrl()); }, []);
   if (!connected) return <ConnectScreen onDone={() => setConnected(true)} />;
   return <ErrorBoundary><CoreProvider><Routes /></CoreProvider></ErrorBoundary>;
 }
