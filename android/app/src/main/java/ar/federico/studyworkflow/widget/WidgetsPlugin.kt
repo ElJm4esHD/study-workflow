@@ -25,6 +25,8 @@ class WidgetsPlugin : Plugin() {
     }
 
     fun deliver() {
+        // Sin listener (app en Conectar o rutas sin montar) la ruta se queda para takeRoute().
+        if (!hasListeners("route")) return
         val r = pending ?: return
         pending = null
         notifyListeners("route", JSObject().put("route", r))

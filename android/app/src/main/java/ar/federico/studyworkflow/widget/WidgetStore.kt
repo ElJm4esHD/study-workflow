@@ -71,6 +71,11 @@ object WidgetStore {
         else JSONObject(json).also { fix(it.getJSONArray("todos")) }.toString()
     }
 
+    /** Saca de la cola el op ya enviado, salvo que el usuario haya vuelto a tocar (otro `at`). */
+    @Synchronized
+    fun dropOp(ctx: Context, op: QueueOp) = setQueue(ctx, queue(ctx).filterNot { it.id == op.id && it.at == op.at })
+
+    @Synchronized
     fun toggle(ctx: Context, id: String, completed: Boolean) {
         val base = (todos(ctx).orEmpty() + agenda(ctx)?.second.orEmpty()).firstOrNull { it.id == id }?.updatedAt
         setQueue(ctx, enqueueOp(queue(ctx), QueueOp(id, completed, base, java.time.Instant.now().toString())))
@@ -88,6 +93,7 @@ object WidgetStore {
     }
 
     /** Guarda lo bajado; los tildes todavía en cola ganan sobre lo que dice el servidor. */
+    @Synchronized
     fun saveAll(ctx: Context, todoJson: String, agendaJson: String, matsJson: String) {
         var t = todoJson
         var a = agendaJson

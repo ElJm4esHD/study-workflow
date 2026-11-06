@@ -12,16 +12,22 @@ import java.io.IOException
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 // shortcut: la cola del widget y la de la app son independientes; un tilde offline del widget
 // no se ve en la app offline hasta que vuelva la red. Unificar solo si molesta en el uso real.
+private val SYNC_LOCK = Any()
+
 class SyncWorker(private val ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         try {
-            withContext(Dispatchers.IO) { sync() }
+            // Un solo sync a la vez: si no, uno viejo podría guardar datos anteriores al PATCH del nuevo.
+            withContext(Dispatchers.IO) { synchronized(SYNC_LOCK) { sync() } }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // un widget nunca debe romper: se reintenta en el próximo disparo
         }
@@ -44,8 +50,9 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
                 WidgetStore.saveAll(ctx, t.body, a.body, m.body)
                 WidgetStore.setOffline(ctx, false)
             } else retry = true
-        } catch (_: IOException) {
-            WidgetStore.setOffline(ctx, true)
+        } catch (e: Exception) {
+            // IOException = sin red; cualquier otra cosa (p. ej. un proxy que devuelve HTML) también se reintenta.
+            if (e is IOException) WidgetStore.setOffline(ctx, true)
             retry = true
         }
         if (retry || WidgetStore.queue(ctx).isNotEmpty()) scheduleOnNetwork(ctx)
@@ -65,7 +72,7 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
                 }
             }
             // Si el usuario volvió a tocar mientras tanto, el op nuevo (otro `at`) se conserva.
-            WidgetStore.setQueue(ctx, WidgetStore.queue(ctx).filterNot { it.id == op.id && it.at == op.at })
+            WidgetStore.dropOp(ctx, op)
         }
         return true
     }
@@ -76,10 +83,13 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
             WorkManager.getInstance(ctx).enqueueUniqueWork(name, ExistingWorkPolicy.REPLACE, req)
         }
 
+        // REPLACE (no KEEP): el reintento se encola desde el propio worker "sw-sync-net" y KEEP lo descartaba.
+        // El minuto de espera evita un bucle contra un servidor caído.
         fun scheduleOnNetwork(ctx: Context) {
             val req = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setInitialDelay(1, TimeUnit.MINUTES)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
-            WorkManager.getInstance(ctx).enqueueUniqueWork("sw-sync-net", ExistingWorkPolicy.KEEP, req)
+            WorkManager.getInstance(ctx).enqueueUniqueWork("sw-sync-net", ExistingWorkPolicy.REPLACE, req)
         }
     }
 }
