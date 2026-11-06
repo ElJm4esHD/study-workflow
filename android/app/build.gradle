@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 // Keystore fuera del repo; lo crea scripts/apk.mjs.
 def keystoreProps = new Properties()
@@ -17,6 +19,7 @@ android {
         }
     }
     namespace = "ar.federico.studyworkflow"
+    buildFeatures { compose true }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "ar.federico.studyworkflow"
@@ -41,6 +44,10 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21 }
+}
+
 repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
@@ -53,6 +60,8 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation 'androidx.glance:glance-appwidget:1.1.1'
+    implementation 'androidx.work:work-runtime-ktx:2.10.1'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
