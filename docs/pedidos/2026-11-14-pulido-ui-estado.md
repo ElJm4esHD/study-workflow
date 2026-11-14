@@ -9,6 +9,7 @@ Pedido: `docs/pedidos/2026-11-14-pulido-ui.md`. Diseño: `docs/superpowers/specs
 | 1. Auditoría + sistema de diseño + mockup | Hecha y aprobada (decisiones 1, 2, 4, 5 tal cual; la 3 cambió a Motion) | `63f1118`, `22a7762`, `45c2424` |
 | 2. Base (tokens, íconos, Motion, navegación, ajustes, componentes) | Hecha, commiteada. Falta que el usuario la pruebe | `a2060ef` |
 | 3. Pantallas, de a grupos con un commit por grupo | Hecha. Falta que el usuario la pruebe (y probar gestos en el celu real) | `90934d6` (To-do e Inicio), `b37cf3b` (Calendario), `6392488` (Finales, Importar, Planes, Ajustes) |
+| 3b. Correcciones tras probar (portal para lo fijo, deslizar entre secciones, sidebar sin grupos, animaciones en la compu, subtareas desde la lista) | Hecha, probada en el celu | ver `git log` |
 | 4. Widget y detalles nativos (hápticos con `@capacitor/haptics`, gestos, widget Glance) | Pendiente | — |
 
 Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales, Importar, Planes y Ajustes. El usuario pidió "dale con la etapa 3" y dejó el celu enchufado con depuración USB.
@@ -18,7 +19,7 @@ Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales,
 - Navegación del celu: Inicio, To-do, Calendario y **Más** (hoja con Finales, Importar, Ajustes). Compu: barra lateral agrupada, atajos `1…n` y `N`.
 - Íconos: `lucide-react`, siempre vía `core/web/icons.tsx` (los módulos no importan de lucide directo).
 - Animaciones: **Motion** (`motion/react`), no solo CSS. Resortes interrumpibles, gestos con velocidad, layout, fallback sin animación.
-- Ajustes por dispositivo (localStorage `sw.prefs`, no van al servidor): velocidad de animaciones (lenta/normal/rápida/sin animaciones; arranca en "sin" si el sistema reduce movimiento), vibración (apagada/suave/media/fuerte, solo APK, default media), tamaño de letra (chica/normal/grande).
+- Ajustes por dispositivo (localStorage `sw.prefs`, no van al servidor): velocidad de animaciones (lenta/normal/rápida/sin animaciones; arranca en "sin" si el sistema reduce movimiento), vibración (apagada/suave/media/fuerte, solo APK, default media). **Cambio 3b:** la velocidad arranca siempre en "normal" (Windows del usuario tiene los efectos apagados y eso apagaba todo), tamaño de letra (chica/normal/grande).
 - Extra pendiente: tirar para refrescar en To-do y Calendario (celu), con vibración al soltar. Deslizar fila: derecha completa, izquierda borra, con "Deshacer". Hoja del día arrastrable. Ver mockup para el comportamiento exacto (umbral 40 %, fling > 700 px/s).
 - Reglas de trabajo (CLAUDE.md): sin subagentes, una sola revisión al final de cada etapa, Context7 una vez por librería (ya se consultó Motion), respuestas cortas, frenar al final de cada etapa con checklist, deploy y APK.
 
@@ -49,6 +50,9 @@ Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales,
 - Calendario: mes con puntos de color (celu) / ítems cortos con hora (compu), exámenes con el día pintado de color fuerte, leyenda con `.cal-legend`, panel del día en la compu; ver mockup.
 
 ## Trampas ya encontradas
+
+- Todo lo `position: fixed` dentro de una pantalla (botón +, hojas) va con `Floating` (portal al body): la pantalla se anima y se desliza con transform, que corre a los fijos.
+- Deslizar entre secciones (`Shell.tsx`) ignora gestos que empiezan en `.row-inner`, `.cal-wrap`, campos, tiras con scroll horizontal o `[data-noswipe]`.
 
 - Choques de nombres de clase global: `.grab` (lo usa `calendar.css`) y `.pill` (filtros). Por eso la manija de la hoja es `.sheet-grab` y la píldora de la barra de abajo `.nav-pill`. Antes de crear una clase, `grep` en `modules/*/web/*.css`.
 - En `CoreContext.tsx` la variable `m` es la lista de materias: Motion se importa como `mo`.

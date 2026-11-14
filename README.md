@@ -82,7 +82,7 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 ## Qué cambió de uso (observaciones 14/11)
 
 - **Finales** (pantalla nueva): cargás las fechas posibles de cada materia (a mano o pegando el JSON de la skill, ver [docs/formato-finales.md](docs/formato-finales.md)), filtrás y ordenás las combinaciones y elegís una. Elegir crea los eventos `final` en el calendario; "Deshacer" los borra.
-- **Subtareas**: una tarea puede tener subtareas. En las listas y en el widget se ve el progreso (`2/4`); se tildan abriendo la tarea, y tildarlas todas completa la principal. Sin conexión solo se tilda la principal.
+- **Subtareas**: una tarea puede tener subtareas. En las listas y en el widget se ve el progreso (`2/4`); tocando ese contador (en To-do y en Inicio › Hoy) se despliegan debajo de la tarea y se tildan ahí mismo (o abriendo la tarea), y tildarlas todas completa la principal. Sin conexión solo se tilda la principal.
 - **Recordatorios**: tareas (con fecha) y eventos pueden sonar en el celu a la hora, 15 min, 1 h o 1 día antes, o un tiempo a elección. Con "Insistente" sigue sonando hasta que la atiendas. Detalles en [docs/android.md](docs/android.md).
 - **Atrás en el celu**: vuelve dentro de la app; sin historial va a la pantalla padre y recién desde una pantalla principal minimiza.
 - **Compu**: To-do tiene siempre el panel de la derecha (editar o nueva tarea) y las pantallas usan el ancho.
@@ -91,8 +91,8 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 
 ## Qué cambió de uso (pulido UX/UI)
 
-- **Navegación del celu**: abajo quedan Inicio, To-do, Calendario y **Más** (Finales, Importar y Ajustes). En la compu, barra lateral agrupada.
-- **Gestos (celu)**: deslizar una tarea a la derecha la completa y a la izquierda la borra (con "Deshacer" unos segundos). Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
+- **Navegación del celu**: abajo quedan Inicio, To-do, Calendario y **Más** (Finales, Importar y Ajustes). En la compu, barra lateral con todas las secciones y Ajustes abajo.
+- **Gestos (celu)**: deslizar a los costados (fuera de las tareas y de la grilla del calendario) pasa entre Inicio, To-do y Calendario. Deslizar una tarea a la derecha la completa y a la izquierda la borra (con "Deshacer" unos segundos). Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
 - **Atajos (compu)**: `1`…`n` cambian de pantalla (el número aparece al pasar el mouse por la barra lateral), `N` nueva tarea, `Esc` cierra hojas.
 - **Agregar tarea**: en el celu, con el botón flotante; en la compu, con el campo de arriba de la lista (Enter) o el panel.
 - **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"; arranca así si el sistema tiene "reducir movimiento"), vibración (solo APK) y tamaño de letra.

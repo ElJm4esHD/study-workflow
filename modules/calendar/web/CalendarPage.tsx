@@ -17,7 +17,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { AnimatePresence, m } from 'motion/react';
 import { useMotion } from '../../../core/web/motion.tsx';
-import { PullToRefresh, Segmented, Sheet } from '../../../core/web/ui.tsx';
+import { Floating, PullToRefresh, Segmented, Sheet } from '../../../core/web/ui.tsx';
 import { addDays, formatDate, isValidDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import { NEUTRAL, strongOf } from '../../../core/shared/palette.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
@@ -250,7 +250,7 @@ export function CalendarPage() {
       {month && wide && <aside className="cal-panel" aria-label="Detalle del día"><DayDetail data={data} date={selected} reload={() => void load()} /></aside>}
       {!wide && <Sheet open={sheet} onClose={close} label="Detalle del día">{lastDia.current && <DayDetail data={data} date={lastDia.current} reload={() => void load()} />}</Sheet>}
       {!(month && wide) && (
-        <Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>
+        <Floating><Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></Floating>
       )}
     </div>
     </PullToRefresh>

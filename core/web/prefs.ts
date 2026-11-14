@@ -15,9 +15,9 @@ const KEY = 'sw.prefs';
 function load(): Prefs {
   let saved: Partial<Prefs> = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { /* sin storage: valores por defecto */ }
-  const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // No se sigue "reducir movimiento" del sistema: Windows lo activa al apagar sus efectos y la app quedaba sin animaciones.
   return {
-    speed: saved.speed && saved.speed in SPEED_K ? saved.speed : reduce ? 'off' : 'normal',
+    speed: saved.speed && saved.speed in SPEED_K ? saved.speed : 'normal',
     vibration: saved.vibration && saved.vibration in VIBRATION_K ? saved.vibration : 'media',
     font: saved.font && saved.font in FONT_K ? saved.font : 'normal',
   };

@@ -42,7 +42,7 @@ p { margin: 0 0 .75rem; }
 .page-head .sub { font-size: var(--t-sec); color: var(--muted); font-weight: 500; margin-top: 2px; }
 .page-head .actions { display: flex; gap: var(--s2); align-items: center; }
 
-.shell { min-height: 100dvh; padding-top: var(--sat); }
+.shell { min-height: 100dvh; padding-top: var(--sat); overflow-x: clip; } /* clip: la pantalla que se desliza no agrega scroll horizontal */
 .shell::before { content: ''; position: fixed; inset: 0 0 auto 0; height: var(--sat); background: var(--bg); z-index: 16; } /* tapa lo que pasa por debajo de la barra de estado */
 .offline-bar { position: sticky; top: var(--sat); z-index: 15; padding: 6px 12px; font-size: var(--t-sec); text-align: center; background: var(--surface-2); color: var(--text); border-bottom: 1px solid var(--line); }
 @media (min-width: 768px) { .offline-bar { margin-left: var(--side-w); } }
@@ -88,7 +88,7 @@ p { margin: 0 0 .75rem; }
 .sheet-title { padding: 4px 8px 8px; }
 .more-list { list-style: none; margin: 0; padding: 0; }
 .more-list a { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 8px; border-radius: var(--r-ctl); color: var(--text); text-decoration: none; font-weight: 500; }
-.more-list a svg:last-child { margin-left: auto; color: var(--faint); }
+.more-list a > svg:last-child { margin-left: auto; color: var(--faint); }
 .more-list a:active { background: var(--surface-2); }
 .more-list a[aria-current='page'] { color: var(--accent); }
 .mi { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; color: var(--accent); flex: none; }
@@ -283,7 +283,7 @@ html[data-motion='off'] .skel { animation: none; }
 .toast > span { padding: 8px 12px 8px 0; }
 .toast button { margin-left: auto; min-height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: #3a4ba8; font-weight: 700; cursor: pointer; }
 @media (min-width: 768px) { .toast-zone { bottom: 24px; left: var(--side-w); } }
-/* "Sin animaciones" (o sistema con reducir movimiento y sin elegir otra cosa): prefs.ts pone data-motion="off" y --k: 0 */
+/* "Sin animaciones": prefs.ts pone data-motion="off" y --k: 0 */
 html[data-motion='off'] *, html[data-motion='off'] *::before, html[data-motion='off'] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 
 /* Input sin caja propia (va dentro de un contenedor que ya dibuja el campo). */

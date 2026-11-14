@@ -1,6 +1,7 @@
-﻿import { useEffect, useState, type ComponentType } from 'react';
+﻿import { useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { m } from 'motion/react';
+import { animate, m, useMotionValue } from 'motion/react';
+import { vibrate } from './haptics.ts';
 import type { Connection } from './api.ts';
 import { useCore } from './CoreContext.tsx';
 import { BookIcon, ChevronRightIcon, HomeIcon, MoreIcon, SettingsIcon } from './icons.tsx';
@@ -32,12 +33,69 @@ export function Shell() {
   items.push({ key: 'ajustes', to: '/ajustes', label: 'Ajustes', Icon: SettingsIcon, more: true });
 
   const main = items.filter((i) => !i.more);
-  const faculty = items.filter((i) => i.more && i.key !== 'ajustes');
   const settings = items[items.length - 1]!;
   const moreItems = items.filter((i) => i.more);
   const inMore = moreItems.some((i) => pathname.startsWith(i.to));
   const hasTodo = enabledModules.some((x) => x.id === 'todo');
   const section = pathname.split('/')[1] ?? '';
+
+  // Deslizar entre las secciones de la barra de abajo (celu): la pantalla sigue al dedo y la siguiente entra desde ese lado.
+  const x = useMotionValue(0);
+  const enter = useRef(0);
+  const mainRef = useRef<HTMLElement>(null);
+  const live = useRef({ idx: -1, tos: [] as string[], spring });
+  live.current = { idx: main.findIndex((i) => i.to === pathname), tos: main.map((i) => i.to), spring };
+  const from = enter.current;
+  useLayoutEffect(() => { x.jump(0); enter.current = 0; }, [section, x]);
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el || !matchMedia('(pointer: coarse)').matches) return;
+    let x0 = 0, y0 = 0, st: 'off' | 'maybe' | 'on' = 'off', v = 0, last = { x: 0, t: 0 };
+    // Gestos horizontales que ya tienen dueño: deslizar fila, cambiar de mes/semana, campos y tiras con scroll horizontal.
+    const owned = (t: EventTarget | null) => {
+      for (let n = t instanceof HTMLElement ? t : null; n && n !== el; n = n.parentElement) {
+        if (n.matches('input, textarea, select, .row-inner, .cal-wrap, [data-noswipe]')) return true;
+        if (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true;
+      }
+      return false;
+    };
+    const start = (e: TouchEvent) => {
+      st = live.current.idx < 0 || e.touches.length > 1 || document.querySelector('.sheet') || owned(e.target) ? 'off' : 'maybe';
+      x0 = e.touches[0]!.clientX; y0 = e.touches[0]!.clientY; v = 0; last = { x: x0, t: e.timeStamp };
+    };
+    const move = (e: TouchEvent) => {
+      if (st === 'off') return;
+      const cx = e.touches[0]!.clientX, dx = cx - x0, dy = e.touches[0]!.clientY - y0;
+      if (st === 'maybe') {
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        if (Math.abs(dx) < Math.abs(dy) * 1.5) { st = 'off'; return; }
+        st = 'on';
+      }
+      e.preventDefault();
+      const { idx, tos } = live.current, to = idx - Math.sign(dx);
+      x.set(to < 0 || to >= tos.length ? dx * 0.2 : dx); // en los extremos, con resistencia
+      if (e.timeStamp > last.t) v = ((cx - last.x) / (e.timeStamp - last.t)) * 1000;
+      last = { x: cx, t: e.timeStamp };
+    };
+    const end = () => {
+      if (st !== 'on') { st = 'off'; return; }
+      st = 'off';
+      const { idx, tos, spring: s } = live.current, dx = x.get(), dir = dx < 0 ? 1 : -1, to = idx + dir, w = el.offsetWidth;
+      const go = to >= 0 && to < tos.length && (Math.abs(dx) > w * 0.3 || (Math.abs(v) > 500 && Math.sign(v) === -dir));
+      if (!go) { void animate(x, 0, s('snappy', { velocity: v })); return; }
+      vibrate('tick');
+      enter.current = dir * w + dx; // la nueva arranca donde estaría pegada a la actual
+      navigate(tos[to]!);
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start); el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end); el.removeEventListener('touchcancel', end);
+    };
+  }, [x, navigate]);
 
   // Atajos de teclado (compu): 1…n pantallas, N tarea nueva.
   useEffect(() => {
@@ -62,9 +120,7 @@ export function Shell() {
       {connection.offline && <div className="offline-bar" role="status">{offlineText(connection)}</div>}
       <aside className="side" aria-label="Principal">
         <div className="brand"><i><BookIcon size={16} /></i>Study Workflow</div>
-        <div className="eyebrow">Principal</div>
-        {main.map(side)}
-        {faculty.length > 0 && <><div className="eyebrow">Facultad</div>{faculty.map(side)}</>}
+        {items.slice(0, -1).map(side)}
         <div className="bottom">{side(settings)}</div>
       </aside>
       <nav className="nav" aria-label="Principal">
@@ -87,9 +143,11 @@ export function Shell() {
           ))}
         </ul>
       </Sheet>
-      <main className="main">
-        <m.div key={section} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring('gentle')}>
-          <Outlet />
+      <main className="main" ref={mainRef}>
+        <m.div style={{ x }}>
+          <m.div key={section} initial={from ? { x: from } : { opacity: 0, y: 10 }} animate={{ opacity: 1, x: 0, y: 0 }} transition={spring(from ? 'snappy' : 'gentle')}>
+            <Outlet />
+          </m.div>
         </m.div>
       </main>
     </div>
