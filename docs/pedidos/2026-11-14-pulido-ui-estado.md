@@ -8,7 +8,7 @@ Pedido: `docs/pedidos/2026-11-14-pulido-ui.md`. Diseño: `docs/superpowers/specs
 |---|---|---|
 | 1. Auditoría + sistema de diseño + mockup | Hecha y aprobada (decisiones 1, 2, 4, 5 tal cual; la 3 cambió a Motion) | `63f1118`, `22a7762`, `45c2424` |
 | 2. Base (tokens, íconos, Motion, navegación, ajustes, componentes) | Hecha, commiteada. Falta que el usuario la pruebe | `a2060ef` |
-| 3. Pantallas, de a grupos con un commit por grupo | **Empezada, sin tocar código todavía** (solo se leyeron `TodoPage.tsx`, `todo.css`, `HoyCard.tsx`) | — |
+| 3. Pantallas, de a grupos con un commit por grupo | Hecha. Falta que el usuario la pruebe (y probar gestos en el celu real) | `90934d6` (To-do e Inicio), `b37cf3b` (Calendario), `6392488` (Finales, Importar, Planes, Ajustes) |
 | 4. Widget y detalles nativos (hápticos con `@capacitor/haptics`, gestos, widget Glance) | Pendiente | — |
 
 Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales, Importar, Planes y Ajustes. El usuario pidió "dale con la etapa 3" y dejó el celu enchufado con depuración USB.
@@ -29,7 +29,16 @@ Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales,
 - `Shell.tsx` (barra de abajo 4 ítems + hoja Más, sidebar agrupada, atajos, entrada animada de pantalla por primer segmento de la ruta), `CoreContext.tsx` (toast con Motion, skeleton de carga), `App.tsx` (`MotionRoot`), `AjustesPage.tsx` (sección `Dispositivo`), `registry.ts` (`nav.more`; marcado en finales e import).
 - Dependencias nuevas: `lucide-react`, `motion` (14.x). Falta `@capacitor/haptics` (etapa 4).
 
-## Para la etapa 3 (ideas concretas)
+## Etapa 3: qué quedó
+
+- Core nuevo en `ui.tsx`: `TaskRow` (fila única con deslizar completar/borrar vía `drag="x"` de Motion, entrada/salida/reacomodo con `m.li layout`, compatible con dnd-kit pasando `dndRef/dndProps/dndStyle`; `noLayout` justo después de soltar un reorden) y `PullToRefresh` (solo `pointer: coarse`, llama `reloadAll()`; no se activa si se mantuvo apretado > 220 ms, para no pisar el reorden). `notify(msg, undo?)` muestra "Deshacer".
+- To-do: borrar deslizando oculta ya y manda el DELETE a los 6 s (o al salir de la pantalla); "Deshacer" lo cancela. Completar deslizando no usa el "linger" de 1,5 s, usa el toast.
+- Arreglado: filas atenuadas en To-do › Hoy (dnd-kit ponía `aria-disabled` en las tareas con hora).
+- Calendario: hoja del día = `Sheet` del core; el mes entra deslizándose según la dirección; celu con puntos, compu con chips.
+- Global: checkbox/radio propios (`appearance: none`), `dialog` con un solo estilo, `.btn` con ícono, `input.bare`.
+- Quedan nativos: los selectores de fecha/hora (solo se tiñó el ícono) y los `select`. Un date picker propio sería trabajo aparte.
+
+## Para la etapa 3 (ideas que se usaron)
 
 - Cambiar en cada pantalla: título → `PageHeader`; pills de vista → `Segmented` (o mantener `.pill` para filtros múltiples como materias); estados vacíos → `EmptyState`; "Cargando…" → `Skeleton`; checkbox y filas con el mismo diseño; hoja del día (calendario celu) → `Sheet`; íconos en tipos de evento y categorías (tarea `Check`, entrega `Upload`, estudio `BookOpen`; evento `CalendarClock`, parcial `PenLine`, recuperatorio `RotateCcw`, final `GraduationCap`; ver tabla en el diseño); un solo botón de agregar tarea en el celu (hoy hay campo rápido + `+` + FAB `.todo-fab`).
 - To-do usa `@dnd-kit` para reordenar (`useSortable`, activación con delay 250 ms) y el deslizar-fila del mockup puede chocar: probar en celu real. Si choca, deslizar con `drag="x"` de Motion en la fila y dejar el reorden por mantener apretado.

@@ -89,6 +89,16 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - **Agenda**: se sacaron el widget Agenda y la vista Agenda del calendario (quedan Mes y Semana).
 - **Importar**: el formato pasó a v3 (subtareas).
 
+## Qué cambió de uso (pulido UX/UI)
+
+- **Navegación del celu**: abajo quedan Inicio, To-do, Calendario y **Más** (Finales, Importar y Ajustes). En la compu, barra lateral agrupada.
+- **Gestos (celu)**: deslizar una tarea a la derecha la completa y a la izquierda la borra (con "Deshacer" unos segundos). Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
+- **Atajos (compu)**: `1`…`n` cambian de pantalla (el número aparece al pasar el mouse por la barra lateral), `N` nueva tarea, `Esc` cierra hojas.
+- **Agregar tarea**: en el celu, con el botón flotante; en la compu, con el campo de arriba de la lista (Enter) o el panel.
+- **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"; arranca así si el sistema tiene "reducir movimiento"), vibración (solo APK) y tamaño de letra.
+- **Finales**: los filtros y el orden van plegados en "Filtros y orden"; el resumen muestra lo aplicado.
+- **Ajustes › Materias**: tocar la fila edita; el ícono de la derecha archiva.
+
 ## Agregar un módulo
 
 Una carpeta en `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`. Contrato y ejemplo en [docs/modulos.md](docs/modulos.md).
