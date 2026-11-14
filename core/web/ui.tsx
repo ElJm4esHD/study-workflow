@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type HTMLAttributes, type ReactNode, type Ref } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, type To } from 'react-router';
 import { animate, AnimatePresence, m, useDragControls, useMotionValue, useTransform } from 'motion/react';
 import { useMotion } from './motion.tsx';
@@ -78,7 +79,7 @@ export function Sheet({ open, onClose, label, children }: { open: boolean; onClo
     return () => { document.removeEventListener('keydown', esc); prev?.focus?.({ preventScroll: true }); };
   }, [open]);
   return (
-    <AnimatePresence>
+    <Floating><AnimatePresence>
       {open && (
         <>
           <m.div className="scrim" key="scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={fade(0.2)} onClick={onClose} />
@@ -93,9 +94,12 @@ export function Sheet({ open, onClose, label, children }: { open: boolean; onClo
           </m.section>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence></Floating>
   );
 }
+
+/** Lo `position: fixed` (hojas, botón +) va al body: la pantalla se anima con transform y lo correría de lugar. */
+export const Floating = ({ children }: { children: ReactNode }) => createPortal(children, document.body);
 
 type TaskRowProps = {
   title: ReactNode;
@@ -118,6 +122,9 @@ type TaskRowProps = {
   dragging?: boolean;
   /** Apaga la animación de layout (por ejemplo, justo después de soltar un reordenamiento de dnd-kit). */
   noLayout?: boolean;
+  /** Control extra al final de la fila y contenido desplegable debajo (por ejemplo, subtareas). */
+  trailing?: ReactNode;
+  below?: ReactNode;
 };
 
 /** Fila de tarea única (To-do, Inicio, Calendario). El `m.li` anima entrada/salida y reacomodo (layout). */
@@ -169,8 +176,10 @@ export function TaskRow(p: TaskRowProps) {
             {p.meta && <div className="meta">{p.meta}</div>}
           </Link>
           <span className="dur">{p.duration}</span>
+          {p.trailing}
         </m.div>
       </div>
+      {p.below && <div style={p.colorVars}>{p.below}</div>}
     </m.li>
   );
 }

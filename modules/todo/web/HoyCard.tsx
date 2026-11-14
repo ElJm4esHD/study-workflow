@@ -11,11 +11,22 @@ import { useMotion } from '../../../core/web/motion.tsx';
 import { EmptyState, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
 import type { TodoItem } from '../server/service.ts';
 import { TaskMeta } from './TodoPage.tsx';
+import { useSubtasks } from './Subtasks.tsx';
 import { groupMinutes, hoyCardData } from './views.ts';
 import './todo.css';
 
+function HoyRow({ item: i, today, onToggle, onSaved }: { item: TodoItem; today: string; onToggle(): void; onSaved(): void }) {
+  const mat = useCore().materias.find((x) => x.id === i.materiaId);
+  return (
+    <TaskRow {...useSubtasks(i, onSaved)} title={i.title} colorVars={mat ? materiaVars(mat.color) : undefined} to={`/todo/${i.id}`}
+      meta={<TaskMeta item={i} today={today} sigla={mat?.sigla} showDate={false} />}
+      duration={i.durationMin ? fmtDuration(i.durationMin) : ''}
+      toggleLabel={`Completar: ${i.title}`} onToggle={onToggle} />
+  );
+}
+
 export function HoyCard() {
-  const { materias, notify } = useCore();
+  const { notify } = useCore();
   const { data, error, reload } = useApi<TodoItem[]>('/api/todo');
   const { spring } = useMotion();
   const today = todayAR();
@@ -26,15 +37,7 @@ export function HoyCard() {
     reload();
   }
 
-  const row = (i: TodoItem) => {
-    const mat = materias.find((x) => x.id === i.materiaId);
-    return (
-      <TaskRow key={i.id} title={i.title} colorVars={mat ? materiaVars(mat.color) : undefined} to={`/todo/${i.id}`}
-        meta={<TaskMeta item={i} today={today} sigla={mat?.sigla} showDate={false} />}
-        duration={i.durationMin ? fmtDuration(i.durationMin) : ''}
-        toggleLabel={`Completar: ${i.title}`} onToggle={() => void toggle(i)} />
-    );
-  };
+  const row = (i: TodoItem) => <HoyRow key={i.id} item={i} today={today} onToggle={() => void toggle(i)} onSaved={reload} />;
 
   const head = <div className="card-head"><h3><ChecklistIcon size={18} />Hoy</h3><Link to="/todo?vista=hoy">To-do<ChevronRightIcon size={16} /></Link></div>;
   if (error && !data) return <section className="card">{head}<p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p></section>;

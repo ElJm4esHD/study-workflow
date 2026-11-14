@@ -6,12 +6,13 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
-import { BookIcon, ClockIcon, InboxIcon, PartyIcon, PlusIcon, SubtasksIcon, UploadIcon } from '../../../core/web/icons.tsx';
+import { BookIcon, ClockIcon, InboxIcon, PartyIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
-import { EmptyState, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
+import { EmptyState, Floating, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
+import { useSubtasks } from './Subtasks.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
@@ -27,11 +28,9 @@ const DELETE_DELAY = 6000; // lo que dura el "Deshacer": el borrado real se mand
 export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; today: string; sigla?: string; showDate: boolean }) {
   const late = !item.completed && item.dueDate !== null && item.dueDate < today;
   const cat = TODO_CATEGORIES.find((c) => c.id === item.category)!;
-  const subs = item.subtasks ?? [];
   return <>
     {sigla && <span className="chip">{sigla}</span>}
     {item.category !== 'tarea' && <span className={`tag mi-tag ${item.category}`}>{item.category === 'entrega' ? <UploadIcon /> : <BookIcon />}{cat.label}</span>}
-    {subs.length > 0 && <span className="tag mi-tag"><SubtasksIcon />{subs.filter((s) => s.done).length}/{subs.length}</span>}
     {late && <span className="tag late mi-tag"><ClockIcon />venció {dm(item.dueDate!)}</span>}
     {item.dueTime && !late && <span className="tag mi-tag"><ClockIcon />{item.dueTime}</span>}
     {!late && showDate && item.dueDate !== null && <span className="tag">{dm(item.dueDate)}</span>}
@@ -39,12 +38,12 @@ export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; tod
 }
 
 type RowProps = { item: TodoItem; today: string; view: TodoView; sigla?: string; color?: string; selected: boolean; sortable: boolean; layout: boolean;
-  onToggle(): void; onSwipeDone(): void; onDelete(): void };
-function Row({ item, today, view, sigla, color, selected, sortable, layout, onToggle, onSwipeDone, onDelete }: RowProps) {
+  onToggle(): void; onSwipeDone(): void; onDelete(): void; onSaved(i: TodoItem): void };
+function Row({ item, today, view, sigla, color, selected, sortable, layout, onToggle, onSwipeDone, onDelete, onSaved }: RowProps) {
   const s = useSortable({ id: item.id, disabled: !sortable });
   const { search } = useLocation();
   return (
-    <TaskRow
+    <TaskRow {...useSubtasks(item, onSaved)}
       title={item.title} done={item.completed} selected={selected} colorVars={color ? materiaVars(color) : undefined}
       meta={<TaskMeta item={item} today={today} sigla={sigla} showDate={view !== 'hoy'} />}
       duration={item.durationMin ? fmtDuration(item.durationMin) : ''}
@@ -234,7 +233,8 @@ export function TodoPage() {
                       const m = materiaOf(i.materiaId);
                       return <Row key={i.id} item={real.get(i.id) ?? i} today={today} view={view} sigla={m?.sigla} color={m?.color}
                         selected={editing === i.id} sortable={g.reorderable && !i.dueTime} layout={!dndBusy}
-                        onToggle={() => toggle(i.id)} onSwipeDone={() => swipeDone(i.id)} onDelete={() => remove(i.id)} />;
+                        onToggle={() => toggle(i.id)} onSwipeDone={() => swipeDone(i.id)} onDelete={() => remove(i.id)}
+                        onSaved={(n) => setItems((xs) => xs.map((x) => (x.id === n.id ? n : x)))} />;
                     })}
                   </AnimatePresence>
                 </ul>
@@ -245,7 +245,7 @@ export function TodoPage() {
       })}
       </div>
     </PullToRefresh>
-      {!editing && <Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>}
+      {!editing && <Floating><Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></Floating>}
     </>
   );
 }
