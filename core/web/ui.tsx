@@ -1,6 +1,10 @@
-﻿import { useEffect, useRef, type ComponentType, type ReactNode } from 'react';
-import { AnimatePresence, m, useDragControls } from 'motion/react';
+﻿import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type HTMLAttributes, type ReactNode, type Ref } from 'react';
+import { Link, type To } from 'react-router';
+import { animate, AnimatePresence, m, useDragControls, useMotionValue, useTransform } from 'motion/react';
 import { useMotion } from './motion.tsx';
+import { reloadAll } from './api.ts';
+import { vibrate } from './haptics.ts';
+import { CheckIcon, RefreshIcon, TrashIcon } from './icons.tsx';
 
 /** Componentes base compartidos. Las pantallas de los módulos usan estos y no variantes propias. */
 
@@ -87,5 +91,149 @@ export function Sheet({ open, onClose, label, children }: { open: boolean; onClo
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+type TaskRowProps = {
+  title: ReactNode;
+  meta?: ReactNode;
+  duration?: ReactNode;
+  done?: boolean;
+  selected?: boolean;
+  /** Variables de la materia (`materiaVars`) para la barra y el checkbox. */
+  colorVars?: CSSProperties;
+  to: To;
+  toggleLabel: string;
+  onToggle(): void;
+  /** Deslizar a la derecha (completar) / a la izquierda (borrar). Sin ellos la fila no se desliza. */
+  onSwipeRight?(): void;
+  onSwipeLeft?(): void;
+  /** Para reordenar con dnd-kit: ref, atributos, listeners y estilo van al elemento `.task-row`. */
+  dndRef?: Ref<HTMLDivElement>;
+  dndProps?: HTMLAttributes<HTMLDivElement>;
+  dndStyle?: CSSProperties;
+  dragging?: boolean;
+  /** Apaga la animación de layout (por ejemplo, justo después de soltar un reordenamiento de dnd-kit). */
+  noLayout?: boolean;
+};
+
+/** Fila de tarea única (To-do, Inicio, Calendario). El `m.li` anima entrada/salida y reacomodo (layout). */
+export function TaskRow(p: TaskRowProps) {
+  const { spring } = useMotion();
+  const x = useMotionValue(0);
+  const inner = useRef<HTMLDivElement>(null);
+  const moved = useRef(false);
+  const [side, setSide] = useState<'done' | 'del' | null>(null);
+  const [armed, setArmed] = useState(false);
+  const swipe = !!(p.onSwipeRight || p.onSwipeLeft);
+  const width = () => inner.current?.offsetWidth ?? 360;
+  return (
+    <m.li layout={p.noLayout ? false : 'position'} className="row-wrap" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }} transition={spring('gentle')}>
+      <div ref={p.dndRef} {...p.dndProps} style={{ ...p.colorVars, ...p.dndStyle }} data-swipe={side ?? undefined}
+        className={`task-row${p.done ? ' done' : ''}${p.selected ? ' sel' : ''}${p.dragging ? ' dragging' : ''}${armed ? ' armed' : ''}`}>
+        {swipe && <div className="swipe-bg" aria-hidden="true"><span className="sb-done"><CheckIcon size={18} />Completar</span><span className="sb-del">Borrar<TrashIcon size={18} /></span></div>}
+        <m.div ref={inner} className="row-inner" style={{ x }}
+          drag={swipe ? 'x' : false} dragDirectionLock dragMomentum={false}
+          onDragStart={() => { moved.current = true; }}
+          onDrag={(_, i) => {
+            const dir = i.offset.x > 0 ? 'done' : 'del';
+            const allowed = dir === 'done' ? p.onSwipeRight : p.onSwipeLeft;
+            if (!allowed) { x.set(0); return; }
+            if (side !== dir) setSide(dir);
+            const a = Math.abs(i.offset.x) > width() * 0.4;
+            if (a !== armed) { setArmed(a); if (a) vibrate('tick'); }
+          }}
+          onDragEnd={(_, i) => {
+            const dx = x.get(), v = i.velocity.x, dir = Math.sign(dx);
+            const fling = Math.abs(v) > 700 && Math.sign(v) === dir && Math.abs(dx) > 30;
+            const act = dir > 0 ? p.onSwipeRight : p.onSwipeLeft;
+            setArmed(false);
+            setTimeout(() => { moved.current = false; }, 0);
+            if (act && (Math.abs(dx) > width() * 0.4 || fling)) {
+              void animate(x, dir * width() * 1.05, spring('snappy', { velocity: v, bounce: 0 })).then(() => {
+                act();
+                // Si la fila no se fue (por ejemplo, sin conexión), vuelve a su lugar.
+                setTimeout(() => { x.set(0); setSide(null); }, 700);
+              });
+            } else {
+              void animate(x, 0, spring('snappy', { velocity: v })).then(() => setSide(null));
+            }
+          }}>
+          <button type="button" className="chk" onClick={p.onToggle} aria-pressed={!!p.done} aria-label={p.toggleLabel}><span /></button>
+          <Link to={p.to} className="body" draggable={false} onClickCapture={(e) => { if (moved.current) e.preventDefault(); }}>
+            <div className="title">{p.title}</div>
+            {p.meta && <div className="meta">{p.meta}</div>}
+          </Link>
+          <span className="dur">{p.duration}</span>
+        </m.div>
+      </div>
+    </m.li>
+  );
+}
+
+/** Tirar para refrescar (solo táctil): el indicador baja con resistencia, se arma a los 64 px y al soltar recarga todo. */
+export function PullToRefresh({ children }: { children: ReactNode }) {
+  const { spring } = useMotion();
+  const y = useMotionValue(0);
+  const contentY = useTransform(y, (v) => v * 0.5);
+  const rotate = useTransform(y, (v) => v * 3);
+  const opacity = useTransform(y, [0, 48], [0, 1]);
+  const [state, setState] = useState<'idle' | 'armed' | 'loading'>('idle');
+  const ref = useRef<HTMLDivElement>(null);
+  const springRef = useRef(spring);
+  springRef.current = spring;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !matchMedia('(pointer: coarse)').matches) return;
+    let y0: number | null = null, x0 = 0, t0 = 0, active = false, armed = false, busy = false;
+    const start = (e: TouchEvent) => {
+      if (busy || window.scrollY > 0 || e.touches.length > 1 || document.querySelector('.sheet')) return;
+      y0 = e.touches[0]!.clientY; x0 = e.touches[0]!.clientX; t0 = performance.now(); active = false;
+    };
+    const move = (e: TouchEvent) => {
+      if (y0 === null) return;
+      const dy = e.touches[0]!.clientY - y0, dx = e.touches[0]!.clientX - x0;
+      if (!active) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        // Horizontal (deslizar fila), hacia arriba o después de mantener apretado (reordenar): no es para nosotros.
+        if (dy <= 0 || Math.abs(dx) > dy || performance.now() - t0 > 220) { y0 = null; return; }
+        active = true;
+      }
+      e.preventDefault();
+      const pull = 110 * (1 - Math.exp(-Math.max(0, dy) / 200));
+      y.set(pull);
+      const a = pull >= 64;
+      if (a !== armed) { armed = a; setState(a ? 'armed' : 'idle'); if (a) vibrate('tick'); }
+    };
+    const end = async () => {
+      if (y0 === null) return;
+      y0 = null;
+      if (!active) return;
+      active = false;
+      const s = springRef.current;
+      if (!armed) { void animate(y, 0, s('snappy')); return; }
+      armed = false; busy = true;
+      vibrate('release'); setState('loading');
+      void animate(y, 64, s('snappy'));
+      reloadAll();
+      await new Promise((r) => setTimeout(r, 700));
+      setState('idle'); busy = false;
+      void animate(y, 0, springRef.current('gentle'));
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start); el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end); el.removeEventListener('touchcancel', end);
+    };
+  }, [y]);
+  return (
+    <div ref={ref}>
+      <m.div className={`ptr ${state}`} style={{ y, opacity }} aria-hidden="true"><m.span style={{ rotate }}><RefreshIcon size={18} /></m.span></m.div>
+      <m.div style={{ y: contentY }}>{children}</m.div>
+    </div>
   );
 }

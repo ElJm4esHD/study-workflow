@@ -15,7 +15,8 @@ type Core = {
   enabledModules: WebModule[];
   reloadMaterias(): void;
   patchSettings(p: Record<string, unknown>): Promise<void>;
-  notify(msg: string): void;
+  /** Aviso abajo; con `undo` muestra "Deshacer" (6 s). */
+  notify(msg: string, undo?: () => void): void;
   connection: Connection;
 };
 const Ctx = createContext<Core | null>(null);
@@ -39,7 +40,7 @@ export function CoreProvider({ children }: { children: ReactNode }) {
   const m = useApi<Materia[]>('/api/materias');
   const s = useApi<Record<string, unknown>>('/api/settings');
   const [patched, setPatched] = useState<Record<string, unknown> | undefined>();
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; undo?: () => void; id: number } | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const { spring } = useMotion();
   const [connection, setConnection] = useState(getConnection);
@@ -57,10 +58,10 @@ export function CoreProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener('online', on); document.removeEventListener('visibilitychange', vis); clearInterval(t); };
   }, [connection.offline]);
 
-  const notify = useCallback((msg: string) => {
-    setToast(msg);
+  const notify = useCallback((msg: string, undo?: () => void) => {
+    setToast({ msg, undo, id: Date.now() });
     clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setToast(null), 4000);
+    timer.current = window.setTimeout(() => setToast(null), undo ? 6000 : 4000);
   }, []);
   const patchSettings = useCallback(async (p: Record<string, unknown>) => {
     setPatched(await api<Record<string, unknown>>('PATCH', '/api/settings', p));
@@ -100,8 +101,11 @@ export function CoreProvider({ children }: { children: ReactNode }) {
       <div className="toast-zone" role="status">
         <AnimatePresence>
           {toast && (
-            <mo.div key={toast} className="toast" initial={{ y: 24, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 12, opacity: 0 }} transition={spring('sheet')}>{toast}</mo.div>
+            <mo.div key={toast.id} className="toast" initial={{ y: 24, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 12, opacity: 0 }} transition={spring('sheet')}>
+              <span>{toast.msg}</span>
+              {toast.undo && <button type="button" onClick={() => { toast.undo!(); setToast(null); }}>Deshacer</button>}
+            </mo.div>
           )}
         </AnimatePresence>
       </div>

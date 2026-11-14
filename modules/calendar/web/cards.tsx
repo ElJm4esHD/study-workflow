@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+﻿import { Link } from 'react-router';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { onReload } from '../../../core/web/api.ts';
@@ -11,6 +11,8 @@ import { fmtDuration } from '../../../core/shared/duration.ts';
 import type { AgendaData } from './summary.ts';
 import { cellLevel, countdownLabel, daysUntil, examColor, examWhat, nextExams, weekSummary, whenLabel } from './summary.ts';
 import { KIND_LABELS } from './views.ts';
+import { CalendarIcon, ChevronRightIcon, FinalIcon, InboxIcon } from '../../../core/web/icons.tsx';
+import { EmptyState, Skeleton } from '../../../core/web/ui.tsx';
 import './calendar.css';
 
 const LETTER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -18,7 +20,7 @@ const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'D
 const dm = (d: string) => formatDate(d).slice(0, 5);
 
 /** Tarjeta de Inicio con encabezado, carga y error con "Reintentar". */
-function useCard(from: string, to: string, title: string, className: string) {
+function useCard(from: string, to: string, title: string, className: string, icon: ReactNode) {
   const [{ data, error }, setState] = useState<{ data?: AgendaData; error?: ApiError }>({});
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -29,31 +31,32 @@ function useCard(from: string, to: string, title: string, className: string) {
   const reload = useCallback(() => setTick((t) => t + 1), []);
   useEffect(() => onReload(reload), [reload]);
   const wrap = (body: ReactNode, link = '/calendario?vista=mes') => (
-    <section className={`card ${className}`}><div className="card-head"><h3>{title}</h3><Link to={link}>Calendario</Link></div>{body}</section>
+    <section className={`card ${className}`}><div className="card-head"><h3>{icon}{title}</h3><Link to={link}>Calendario<ChevronRightIcon size={16} /></Link></div>{body}</section>
   );
   const state = error && !data
     ? wrap(<p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>)
-    : !data ? wrap(<p className="muted">Cargando…</p>) : null;
+    : !data ? wrap(<div className="skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={36} /><Skeleton w="60%" /><Skeleton h={22} /></div>) : null;
   return { data, state, wrap };
 }
 
 export function ExamCard() {
   const { materias } = useCore();
   const today = todayAR();
-  const { data, state, wrap } = useCard(today, addDays(today, 120), 'Próximo examen', 'exam-card');
+  const { data, state, wrap } = useCard(today, addDays(today, 120), 'Próximo examen', 'exam-card', <FinalIcon size={18} />);
   if (state || !data) return state;
   const [next, after] = nextExams(data.events, today);
-  if (!next) return wrap(<p className="muted">Sin exámenes en los próximos 4 meses.</p>);
+  if (!next) return wrap(<EmptyState icon={FinalIcon} title="Sin exámenes cerca">No hay exámenes en los próximos 4 meses.</EmptyState>);
 
   const what = (o: typeof next) => examWhat(KIND_LABELS[o.kind], materias.find((m) => m.id === o.materiaId)?.name);
   const n = daysUntil(today, next.occurrenceDate);
   const row = n <= 28 ? weekSummary(data, today, n + 1).find((r) => r.materiaId === next.materiaId) : undefined;
   const dates = Array.from({ length: n + 1 }, (_, i) => addDays(today, i));
   const c = examColor(materias, next.materiaId);
+  const sigla = (id: string | null) => materias.find((m) => m.id === id)?.sigla;
   const nextC = after && examColor(materias, after.materiaId);
   return wrap(<>
     <div className="countdown" style={materiaVars(c.pastel)}><strong>{countdownLabel(n)}</strong></div>
-    <div className="what">{what(next)}</div>
+    <div className="what" style={materiaVars(c.pastel)}>{sigla(next.materiaId) && <span className="chip solid">{sigla(next.materiaId)}</span>}{what(next)}</div>
     <div className="when">{DOW[weekdayOf(next.occurrenceDate) - 1]} {dm(next.occurrenceDate)}, {next.startTime ?? 'todo el día'}</div>
     {n <= 28 && <div style={materiaVars(c.pastel)}>
       <div className="ruler">{dates.map((d, i) => {
@@ -70,10 +73,10 @@ export function WeekCard() {
   const { materias } = useCore();
   const today = todayAR();
   const from = addDays(today, 1);
-  const { data, state, wrap } = useCard(from, addDays(from, 6), 'Próximos 7 días', '');
+  const { data, state, wrap } = useCard(from, addDays(from, 6), 'Próximos 7 días', '', <CalendarIcon size={18} />);
   if (state || !data) return state;
   const rows = weekSummary(data, from, 7);
-  if (!rows.length) return wrap(<p className="muted">Nada en los próximos 7 días.</p>);
+  if (!rows.length) return wrap(<EmptyState icon={InboxIcon} title="Semana libre">Nada cargado para los próximos 7 días.</EmptyState>);
 
   const dates = Array.from({ length: 7 }, (_, i) => addDays(from, i));
   return wrap(<>
@@ -82,7 +85,7 @@ export function WeekCard() {
       const c = examColor(materias, r.materiaId);
       return (
         <Link key={r.materiaId ?? 'none'} className="week-row" to={`/calendario?vista=semana&fecha=${from}`} style={materiaVars(c.pastel)}>
-          <div className="name"><span className="dot" />{materias.find((m) => m.id === r.materiaId)?.name ?? 'Sin materia'}</div>
+          <div className="name"><span className="dot" /><span>{materias.find((m) => m.id === r.materiaId)?.name ?? 'Sin materia'}</span></div>
           <div className="ruler">{r.perDay.map((p, i) => <b key={dates[i]} className={p.exam ? 'exam' : ''} data-l={cellLevel(p)} />)}</div>
           <div className="tot">{r.count}{r.minutes ? ` · ${fmtDuration(r.minutes)}` : ''}</div>
         </Link>

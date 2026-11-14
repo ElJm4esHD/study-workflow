@@ -1,4 +1,4 @@
-/* Barra: título, Hoy, ‹ ›; el selector de vista baja a su propia fila en el celu. */
+﻿/* Barra: título, Hoy, ‹ ›; el selector de vista baja a su propia fila en el celu. */
 .cal-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 10px; }
 .cal-title { flex: 1; margin: 0 4px; font-size: 20px; font-weight: 650; }
 .cal-title::first-letter { text-transform: uppercase; }
@@ -111,15 +111,19 @@
 
 /* ---------- Tarjetas de Inicio ---------- */
 .exam-card .countdown { display: flex; align-items: baseline; gap: 8px; margin: 2px 0; }
-.exam-card .countdown strong { font-size: 44px; line-height: 1; font-weight: 700; color: var(--m); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.exam-card .what { font-size: 15px; font-weight: 600; }
-.exam-card .when { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
-.exam-card .then { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
-.week-row, .week-head { display: grid; grid-template-columns: 112px 1fr 72px; align-items: center; gap: 10px; }
-.week-row { min-height: 44px; color: inherit; text-decoration: none; }
-.week-row .name { display: flex; align-items: center; gap: 8px; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.week-row .ruler b { height: 18px; }
-.week-row .tot { font-size: 12.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.exam-card .countdown strong { font-size: calc(40px * var(--fs)); line-height: 1; font-weight: 700; color: var(--m); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.exam-card .what { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: var(--t-card); font-weight: 650; }
+.exam-card .when { font-size: var(--t-sec); color: var(--muted); margin: 2px 0 16px; font-weight: 500; }
+.exam-card .then { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--t-sec); color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.exam-card .ruler b, .week-row .ruler b { transform-origin: bottom; animation: grow calc(.42s * var(--k)) cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes grow { from { transform: scaleY(.2); opacity: 0; } }
+.week-row, .week-head { display: grid; grid-template-columns: minmax(0, 1.4fr) 5fr auto; align-items: center; gap: 10px; }
+.week-row { min-height: 44px; color: inherit; text-decoration: none; border-radius: 8px; }
+.week-row .name { display: flex; align-items: center; gap: 8px; font-size: var(--t-sec); min-width: 0; }
+.week-row .name span:last-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.week-row .ruler b { height: 20px; border-radius: 5px; }
+.week-row .tot { font-size: var(--t-meta); color: var(--faint); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (hover: hover) { .week-row:hover .name { color: var(--accent); } }
 @media (min-width: 1024px) {
   .cal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; align-items: start; }
   .cal-form > .row, .cal-form > .cal-days { grid-column: 1 / -1; }

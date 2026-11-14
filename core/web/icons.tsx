@@ -1,7 +1,8 @@
 import { createElement } from 'react';
 import {
-  BookOpen, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Download, Ellipsis, Flag, Gauge, House,
-  Inbox, List, ListChecks, Plus, RefreshCw, Settings, Trash2, Type, Vibrate, X, type LucideIcon, type LucideProps,
+  BookOpen, Calendar, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Ellipsis, Flag, Gauge,
+  GraduationCap, House, Inbox, List, ListChecks, ListTree, PartyPopper, PenLine, Plus, RefreshCw, RotateCcw, Settings, Trash2,
+  Type, Upload, Vibrate, X, type LucideIcon, type LucideProps,
 } from 'lucide-react';
 
 /** Set único de íconos (Lucide: trazo de 2 px, grilla de 24). Los módulos importan de acá, nunca de lucide-react. */
@@ -28,3 +29,11 @@ export const RefreshIcon = make(RefreshCw);
 export const GaugeIcon = make(Gauge);
 export const VibrateIcon = make(Vibrate);
 export const TypeIcon = make(Type);
+export const UploadIcon = make(Upload);
+export const ClockIcon = make(Clock);
+export const SubtasksIcon = make(ListTree);
+export const PartyIcon = make(PartyPopper);
+export const EventIcon = make(CalendarClock);
+export const ParcialIcon = make(PenLine);
+export const RecuperatorioIcon = make(RotateCcw);
+export const FinalIcon = make(GraduationCap);

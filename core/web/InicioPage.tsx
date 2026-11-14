@@ -1,6 +1,9 @@
 import { weekdayOf, todayAR } from '../shared/dates.ts';
 import { useCore } from './CoreContext.tsx';
 import { dashboardCards } from './registry.ts';
+import { Link } from 'react-router';
+import { SettingsIcon } from './icons.tsx';
+import { EmptyState, PageHeader } from './ui.tsx';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -17,8 +20,8 @@ export function InicioPage() {
   const { all, left, right } = dashboardCards(enabledModules);
   return (
     <>
-      <h1 className="page-title">{longDate(todayAR())}</h1>
-      {all.length === 0 ? <p className="muted">Activá módulos en Ajustes.</p> : (
+      <PageHeader title={longDate(todayAR())} />
+      {all.length === 0 ? <EmptyState icon={SettingsIcon} title="Inicio vacío" action={<Link className="btn" to="/ajustes">Ir a Ajustes</Link>}>Activá módulos para ver tus tarjetas.</EmptyState> : (
         <div className="dash">
           <div className="dash-all">{all.map(({ id, Card }) => <Card key={id} />)}</div>
           <div className="dash-col">{left.map(({ id, Card }) => <Card key={id} />)}</div>

@@ -1,59 +1,73 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+﻿import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useMatch, useOutlet, useSearchParams } from 'react-router';
+import { AnimatePresence } from 'motion/react';
 import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
-import { PlusIcon } from '../../../core/web/icons.tsx';
+import { BookIcon, ClockIcon, InboxIcon, PartyIcon, PlusIcon, SubtasksIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
+import { vibrate } from '../../../core/web/haptics.ts';
+import { EmptyState, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
 import { TodoEditPage } from './TodoEditPage.tsx';
 import './todo.css';
 
-const VIEWS: { id: TodoView; label: string }[] = [
-  { id: 'hoy', label: 'Hoy' }, { id: 'proximas', label: 'Próximas' }, { id: 'sin-fecha', label: 'Sin fecha' },
-  { id: 'materia', label: 'Por materia' }, { id: 'completadas', label: 'Completadas' },
-];
+const VIEWS = [['hoy', 'Hoy'], ['proximas', 'Próximas'], ['sin-fecha', 'Sin fecha'], ['materia', 'Por materia'], ['completadas', 'Completadas']] as const;
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
+const dm = (d: string) => formatDate(d).slice(0, 5);
+const DELETE_DELAY = 6000; // lo que dura el "Deshacer": el borrado real se manda después
 
-type RowProps = { item: TodoItem; today: string; view: TodoView; sigla?: string; color?: string; selected: boolean; sortable: boolean; onToggle(i: TodoItem): void };
-function Row({ item, today, view, sigla, color, selected, sortable, onToggle }: RowProps) {
-  const s = useSortable({ id: item.id, disabled: !sortable });
+/** Meta de una tarea (materia, categoría, subtareas, vencida/hora/fecha). Compartida con la tarjeta Hoy. */
+export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; today: string; sigla?: string; showDate: boolean }) {
   const late = !item.completed && item.dueDate !== null && item.dueDate < today;
   const cat = TODO_CATEGORIES.find((c) => c.id === item.category)!;
-  const dm = (d: string) => formatDate(d).slice(0, 5);
+  const subs = item.subtasks ?? [];
+  return <>
+    {sigla && <span className="chip">{sigla}</span>}
+    {item.category !== 'tarea' && <span className={`tag mi-tag ${item.category}`}>{item.category === 'entrega' ? <UploadIcon /> : <BookIcon />}{cat.label}</span>}
+    {subs.length > 0 && <span className="tag mi-tag"><SubtasksIcon />{subs.filter((s) => s.done).length}/{subs.length}</span>}
+    {late && <span className="tag late mi-tag"><ClockIcon />venció {dm(item.dueDate!)}</span>}
+    {item.dueTime && !late && <span className="tag mi-tag"><ClockIcon />{item.dueTime}</span>}
+    {!late && showDate && item.dueDate !== null && <span className="tag">{dm(item.dueDate)}</span>}
+  </>;
+}
+
+type RowProps = { item: TodoItem; today: string; view: TodoView; sigla?: string; color?: string; selected: boolean; sortable: boolean; layout: boolean;
+  onToggle(): void; onSwipeDone(): void; onDelete(): void };
+function Row({ item, today, view, sigla, color, selected, sortable, layout, onToggle, onSwipeDone, onDelete }: RowProps) {
+  const s = useSortable({ id: item.id, disabled: !sortable });
+  const { search } = useLocation();
   return (
-    <li ref={s.setNodeRef} className={`task-row${s.isDragging ? ' dragging' : ''}${item.completed ? ' done' : ''}${selected ? ' sel' : ''}`}
-      style={{ ...(color ? materiaVars(color) : {}), transform: CSS.Transform.toString(s.transform), transition: s.transition }}
-      {...s.attributes} {...s.listeners}>
-      <button type="button" className="chk" onClick={() => onToggle(item)} aria-pressed={item.completed}
-        aria-label={`${item.completed ? 'Destildar' : 'Completar'}: ${item.title}`}><span /></button>
-      <Link to={{ pathname: `/todo/${item.id}`, search: keepSearch(useLocation().search) }} className="body" draggable={false}>
-        <div className="title">{item.title}</div>
-        <div className="meta">
-          {sigla && <span className="chip">{sigla}</span>}
-          {item.category !== 'tarea' && <span className={`tag ${item.category}`}>{cat.label}</span>}
-          {item.subtasks?.length > 0 && <span className="tag">{item.subtasks.filter((s) => s.done).length}/{item.subtasks.length}</span>}
-          {late && <span className="tag late">venció {dm(item.dueDate!)}</span>}
-          {item.dueTime && <span className="tag">{item.dueTime}</span>}
-          {!late && item.dueDate !== null && view !== 'hoy' && <span className="tag">{dm(item.dueDate)}</span>}
-        </div>
-      </Link>
-      <span className="dur">{item.durationMin ? fmtDuration(item.durationMin) : ''}</span>
-    </li>
+    <TaskRow
+      title={item.title} done={item.completed} selected={selected} colorVars={color ? materiaVars(color) : undefined}
+      meta={<TaskMeta item={item} today={today} sigla={sigla} showDate={view !== 'hoy'} />}
+      duration={item.durationMin ? fmtDuration(item.durationMin) : ''}
+      to={{ pathname: `/todo/${item.id}`, search: keepSearch(search) }}
+      toggleLabel={`${item.completed ? 'Destildar' : 'Completar'}: ${item.title}`}
+      noLayout={!layout} onToggle={onToggle} onSwipeRight={item.completed ? undefined : onSwipeDone} onSwipeLeft={onDelete}
+      dndRef={s.setNodeRef} dndProps={{ ...s.attributes, 'aria-disabled': undefined, ...s.listeners }} /* con hora no se reordena, pero la fila no está deshabilitada */ dragging={s.isDragging}
+      dndStyle={{ transform: CSS.Transform.toString(s.transform), transition: s.transition }}
+    />
   );
+}
+
+function ListSkeleton() {
+  return <div className="card todo-skel" role="status" aria-label="Cargando">{[0, 1, 2, 3].map((i) => (
+    <div key={i} className="skel-row"><Skeleton w="22px" h={22} r={6} /><div><Skeleton w={`${70 - i * 8}%`} /><Skeleton w="30%" h={10} /></div></div>
+  ))}</div>;
 }
 
 export function TodoPage() {
   const { materias, notify } = useCore();
   const { off, block } = useBlock();
   const [params, setParams] = useSearchParams();
-  const view = VIEWS.find((v) => v.id === params.get('vista'))?.id ?? 'hoy';
+  const view: TodoView = VIEWS.find(([v]) => v === params.get('vista'))?.[0] ?? 'hoy';
   const materiaId = params.get('materia');
   const { data, error, reload } = useApi<TodoItem[]>('/api/todo');
   const { key, search } = useLocation();
@@ -64,6 +78,9 @@ export function TodoPage() {
   const [items, setItems] = useState<TodoItem[]>([]);
   // Ítems recién tildados: siguen en su vista 1,5 s para poder deshacer con otro toque.
   const [linger, setLinger] = useState<Set<string>>(new Set());
+  // Ítems borrados con "Deshacer" pendiente: se ocultan ya y el DELETE sale al vencer el aviso.
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [dndBusy, setDndBusy] = useState(false);
   const timers = useRef(new Map<string, number>());
   const [title, setTitle] = useState('');
   const today = todayAR();
@@ -77,7 +94,7 @@ export function TodoPage() {
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const materiaOf = (id: string | null) => materias.find((m) => m.id === id);
-  const shown = items.map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
+  const shown = items.filter((i) => !hidden.has(i.id)).map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
   const real = new Map(items.map((i) => [i.id, i]));
   const groups = groupTodos(shown, view, today, materiaId);
 
@@ -85,11 +102,16 @@ export function TodoPage() {
     try { await api('PATCH', `/api/todo/${id}`, p); } catch (e) { rollback(); notify(msg(e)); }
   }
 
+  function setDone(id: string, next: boolean, prev: TodoItem[]) {
+    setItems((xs) => xs.map((i) => (i.id === id ? { ...i, completed: next, completedAt: next ? new Date().toISOString() : null } : i)));
+    return patch(id, { completed: next }, () => setItems(prev));
+  }
+
   function toggle(id: string) {
     const cur = items.find((i) => i.id === id)!;
     const next = !cur.completed;
     const prev = items;
-    setItems((xs) => xs.map((i) => (i.id === id ? { ...i, completed: next, completedAt: next ? new Date().toISOString() : null } : i)));
+    vibrate(next ? 'success' : 'tick');
     clearTimeout(timers.current.get(id));
     const unlinger = () => setLinger((s) => { const n = new Set(s); n.delete(id); return n; });
     if (linger.has(id)) { // segundo toque: vuelve a su estado original
@@ -99,11 +121,38 @@ export function TodoPage() {
       setLinger((s) => new Set(s).add(id));
       timers.current.set(id, window.setTimeout(() => { timers.current.delete(id); unlinger(); }, 1500));
     }
+    setItems((xs) => xs.map((i) => (i.id === id ? { ...i, completed: next, completedAt: next ? new Date().toISOString() : null } : i)));
     void patch(id, { completed: next }, () => { setItems(prev); unlinger(); });
   }
 
+  /** Deslizar a la derecha: se completa y se va enseguida; el aviso permite deshacer. */
+  function swipeDone(id: string) {
+    const prev = items;
+    vibrate('success');
+    void setDone(id, true, prev);
+    notify('Tarea completada.', () => { vibrate('tick'); void setDone(id, false, items); });
+  }
+
+  /** Deslizar a la izquierda: se oculta ya y se borra cuando vence el "Deshacer". */
+  function remove(id: string) {
+    if (block()) return;
+    vibrate('warn');
+    setHidden((s) => new Set(s).add(id));
+    const unhide = () => setHidden((s) => { const n = new Set(s); n.delete(id); return n; });
+    const t = window.setTimeout(async () => {
+      timers.current.delete(`del-${id}`);
+      try { await api('DELETE', `/api/todo/${id}`); setItems((xs) => xs.filter((i) => i.id !== id)); } catch (e) { notify(msg(e)); }
+      unhide();
+    }, DELETE_DELAY);
+    timers.current.set(`del-${id}`, t);
+    notify('Tarea borrada.', () => { clearTimeout(t); timers.current.delete(`del-${id}`); unhide(); });
+  }
+
   function onDragEnd(list: TodoItem[], { active, over }: DragEndEvent) {
+    // El reacomodo ya lo hizo dnd-kit: sin animación de layout en este render, si no la fila "vuelve" y salta.
+    setTimeout(() => setDndBusy(false), 50);
     if (!over || active.id === over.id || block()) return;
+    vibrate('release');
     const from = list.findIndex((i) => i.id === active.id), to = list.findIndex((i) => i.id === over.id);
     const moved = arrayMove(list, from, to);
     const sortOrder = orderBetween(moved[to - 1]?.sortOrder, moved[to + 1]?.sortOrder);
@@ -125,53 +174,64 @@ export function TodoPage() {
       const created = await api<TodoItem>('POST', '/api/todo', body);
       setItems((xs) => [...xs, created]);
       setTitle('');
+      vibrate('tick');
     } catch (err) { notify(msg(err)); }
   }
 
   const setMateria = (v: string | null) => setParams(v ? { vista: 'materia', materia: v } : { vista: 'materia' }, { replace: true });
   const empty = groups.every((g) => g.items.length === 0);
+  const pending = items.filter((i) => !i.completed && !hidden.has(i.id));
+  const forToday = pending.filter((i) => i.dueDate === today).length;
+  const late = pending.filter((i) => i.dueDate !== null && i.dueDate < today).length;
+  const sub = data ? [`${forToday} para hoy`, late > 0 && `${late} ${late === 1 ? 'vencida' : 'vencidas'}`].filter(Boolean).join(' · ') : undefined;
 
   return (
     <>
-      <h1 className="page-title">To-do</h1>
-      <div className="pills scroll" role="group" aria-label="Vistas">
-        {VIEWS.map((v) => (
-          <button key={v.id} className="pill" aria-pressed={v.id === view}
-            onClick={() => setParams(v.id === 'hoy' ? {} : { vista: v.id }, { replace: true })}>{v.label}</button>
-        ))}
+    <PullToRefresh>
+      <PageHeader title="To-do" sub={sub} />
+      <div className="seg-scroll">
+        <Segmented name="todo-view" label="Vistas" value={view} options={VIEWS}
+          onChange={(v) => setParams(v === 'hoy' ? {} : { vista: v }, { replace: true })} />
       </div>
       {view === 'materia' && (
         <div className="pills scroll" role="group" aria-label="Materia">
           {[{ id: null, name: 'Todas', sigla: 'Todas', color: undefined }, ...materias.filter((m) => !m.archived), { id: 'none', name: 'Sin materia', sigla: 'Sin materia', color: undefined }].map((m) => (
             <button key={m.id ?? 'all'} className="pill" title={m.name} aria-pressed={materiaId === m.id} onClick={() => setMateria(m.id)}>
-              {m.color && <span className="dot" style={materiaVars(m.color)} aria-hidden="true" />}{m.color && ' '}{m.sigla}
+              {m.color && <span className="dot" style={materiaVars(m.color)} aria-hidden="true" />}{m.color && ' '}{m.sigla}
             </button>
           ))}
         </div>
       )}
       <form className="todo-quick" onSubmit={quickAdd}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="Agregar tarea…"
-          aria-label="Agregar tarea rápido" enterKeyHint="send" />
-        <button className="icon-btn" aria-label="Agregar" aria-disabled={off}><PlusIcon /></button>
+        <PlusIcon size={20} />
+        <input className="bare" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder={view === 'hoy' ? 'Agregar tarea para hoy…' : 'Agregar tarea…'}
+          aria-label="Agregar tarea rápido" enterKeyHint="send" aria-disabled={off} />
+        <kbd className="kbd">Enter</kbd>
       </form>
       {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
-      {data && empty && <p className="muted pad">{view === 'completadas' ? 'Todavía no completaste nada.' : 'Nada pendiente por acá.'}</p>}
+      {!data && !error && <ListSkeleton />}
+      {data && empty && (view === 'hoy'
+        ? <EmptyState icon={PartyIcon} title="Todo listo por hoy" action={<button className="btn" onClick={() => setParams({ vista: 'proximas' }, { replace: true })}>Ver próximas</button>}>No quedan tareas para hoy.</EmptyState>
+        : <EmptyState icon={InboxIcon} title={view === 'completadas' ? 'Todavía nada completado' : 'Nada pendiente por acá'}>{view === 'completadas' ? 'Lo que tildes queda acá.' : 'Las tareas nuevas aparecen acá.'}</EmptyState>)}
       <div className="cols">
       {groups.filter((g) => g.items.length).map((g) => {
         const sortable = g.reorderable ? g.items.filter((i) => !i.dueTime) : [];
         const { minutes, unestimated } = groupMinutes(g.items);
         const total = [minutes && fmtDuration(minutes), unestimated && `${unestimated} sin estimar`].filter(Boolean).join(', ');
         return (
-          <section key={g.key}>
+          <section key={g.key} className="todo-group">
             <div className={`todo-sec${g.key === 'vencidas' ? ' late' : ''}`}><span>{g.label}</span><span className="num">{total}</span></div>
-            <DndContext sensors={sensors} onDragEnd={(ev) => onDragEnd(sortable, ev)}>
+            <DndContext sensors={sensors} onDragStart={() => { setDndBusy(true); vibrate('tick'); }} onDragCancel={() => setDndBusy(false)} onDragEnd={(ev) => onDragEnd(sortable, ev)}>
               <SortableContext items={sortable.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                <ul className="list">
-                  {g.items.map((i) => {
-                    const m = materiaOf(i.materiaId);
-                    return <Row key={i.id} item={real.get(i.id) ?? i} today={today} view={view} sigla={m?.sigla} color={m?.color}
-                      selected={editing === i.id} sortable={g.reorderable && !i.dueTime} onToggle={(x) => toggle(x.id)} />;
-                  })}
+                <ul className="card rows">
+                  <AnimatePresence initial={false}>
+                    {g.items.map((i) => {
+                      const m = materiaOf(i.materiaId);
+                      return <Row key={i.id} item={real.get(i.id) ?? i} today={today} view={view} sigla={m?.sigla} color={m?.color}
+                        selected={editing === i.id} sortable={g.reorderable && !i.dueTime} layout={!dndBusy}
+                        onToggle={() => toggle(i.id)} onSwipeDone={() => swipeDone(i.id)} onDelete={() => remove(i.id)} />;
+                    })}
+                  </AnimatePresence>
                 </ul>
               </SortableContext>
             </DndContext>
@@ -179,7 +239,8 @@ export function TodoPage() {
         );
       })}
       </div>
-      {!editing && <Link to={{ pathname: "/todo/nueva", search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>}
+    </PullToRefresh>
+      {!editing && <Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>}
     </>
   );
 }

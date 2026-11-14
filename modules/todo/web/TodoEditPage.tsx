@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+﻿import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, reloadAll, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
@@ -7,12 +7,14 @@ import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
 import type { Subtask, TodoItem } from '../server/service.ts';
-import { PlusIcon } from '../../../core/web/icons.tsx';
+import { BookIcon, CheckIcon, CloseIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
+import { Skeleton } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import { keepSearch } from './views.ts';
 import './todo.css';
 
 const PRESETS = [15, 30, 45, 60, 90];
+const CAT_ICON: Record<TodoCategory, React.ReactNode> = { tarea: <CheckIcon />, entrega: <UploadIcon />, estudio: <BookIcon /> };
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 
 function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
@@ -85,10 +87,10 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
             <button type="button" className="chk" role="checkbox" aria-checked={s.done} aria-label={`${s.done ? 'Destildar' : 'Completar'}: ${s.title}`} onClick={() => void toggleSub(s.id)}><span /></button>
             <input className="sub-title" value={s.title} maxLength={120} aria-label="Título de la subtarea"
               onChange={(e) => setSubs(subs.map((x) => (x.id === s.id ? { ...x, title: e.target.value } : x)))} />
-            <button type="button" className="icon-btn" aria-label={`Borrar subtarea: ${s.title}`} onClick={() => setSubs(subs.filter((x) => x.id !== s.id))}>✕</button>
+            <button type="button" className="icon-btn" aria-label={`Borrar subtarea: ${s.title}`} onClick={() => setSubs(subs.filter((x) => x.id !== s.id))}><CloseIcon size={18} /></button>
           </div>
         ))}
-        <div className="todo-quick">
+        <div className="sub-add">
           <input value={newSub} onChange={(e) => setNewSub(e.target.value)} maxLength={120} placeholder="Agregar subtarea…" aria-label="Nueva subtarea" enterKeyHint="done"
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} />
           <button type="button" className="icon-btn" aria-label="Agregar subtarea" onClick={addSub}><PlusIcon /></button>
@@ -108,7 +110,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
         <span>Categoría</span>
         <div className="pills">
           {TODO_CATEGORIES.map((c) => (
-            <button type="button" key={c.id} className="pill" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>{c.label}</button>
+            <button type="button" key={c.id} className="pill cat-pill" aria-pressed={category === c.id} onClick={() => setCategory(c.id)}>{CAT_ICON[c.id]}{c.label}</button>
           ))}
         </div>
       </div>
@@ -151,9 +153,9 @@ export function TodoEditPage({ embedded }: { embedded?: boolean }) {
   const { id } = useParams();
   const { data, error, loading, reload } = useApi<TodoItem>(id ? `/api/todo/${id}` : null);
   return (
-    <div className="card">
-      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3>{!embedded && <Link to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace>Cerrar</Link>}</div>
-      {id && loading && !data && <p className="muted">Cargando…</p>}
+    <div className="card todo-edit">
+      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3>{!embedded && <Link className="icon-btn" aria-label="Cerrar" to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace><CloseIcon /></Link>}</div>
+      {id && loading && !data && <div className="form" role="status" aria-label="Cargando"><Skeleton h={44} /><Skeleton w="40%" /><Skeleton h={44} /><Skeleton h={44} /></div>}
       {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
       {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} embedded={embedded} />}
     </div>
