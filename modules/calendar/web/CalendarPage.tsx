@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import FullCalendar, { useCalendarController } from '@fullcalendar/react';
 import type { DatesSetInfo, EventDisplayInfo, EventInput } from '@fullcalendar/react';
@@ -14,7 +14,10 @@ import { ApiError, onReload } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
-import { PlusIcon } from '../../../core/web/icons.tsx';
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../../core/web/icons.tsx';
+import { AnimatePresence, m } from 'motion/react';
+import { useMotion } from '../../../core/web/motion.tsx';
+import { PullToRefresh, Segmented, Sheet } from '../../../core/web/ui.tsx';
 import { addDays, formatDate, isValidDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import { NEUTRAL, strongOf } from '../../../core/shared/palette.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
@@ -62,8 +65,8 @@ export function CalendarPage() {
   const [fcRange, setFcRange] = useState('');
   const [loadError, setLoadError] = useState('');
   const seq = useRef(0);
-  const sheetRef = useRef<HTMLDivElement>(null);
   const pushed = useRef(false); // el detalle se abrió con push: cerrarlo es volver atrás
+  const { spring } = useMotion();
 
   const today = todayAR();
   const p = (k: string) => { const v = params.get(k); return isValidDate(v) ? v : null; };
@@ -93,8 +96,13 @@ export function CalendarPage() {
     if (pushed.current) nav(-1); else go({ dia: null });
   }
   const sheet = month && !!dia && !wide;
+  const lastDia = useRef(dia); // la hoja sigue mostrando el día mientras se va
+  if (dia) lastDia.current = dia;
   useEffect(() => { if (!dia) pushed.current = false; }, [dia]);
-  useEffect(() => { if (sheet) sheetRef.current?.focus(); }, [sheet]);
+  // Dirección del cambio de mes para la animación (adelante entra desde la derecha).
+  const prevFirst = useRef(first);
+  const dir = first > prevFirst.current ? 1 : first < prevFirst.current ? -1 : 0;
+  useEffect(() => { prevFirst.current = first; }, [first]);
 
   useSwipe(wrap, { onLeft: next, onRight: prev });
 
@@ -143,7 +151,7 @@ export function CalendarPage() {
 
   function content(i: EventDisplayInfo) {
     const { occ, todo } = i.event.extendedProps as Extra;
-    if (todo) return <span>{todo.completed ? '☑' : '☐'} {i.timeText} {todo.title}</span>;
+    if (todo) return <span className="fc-todo">{todo.completed ? <CheckIcon size={12} /> : <i className="fc-box" />}{i.timeText} {todo.title}</span>;
     if (occ && EXAM_KINDS.includes(occ.kind)) return <b>{KIND_LABELS[occ.kind].toUpperCase()} · {occ.title}</b>;
     return <span>{i.timeText} {occ?.title}</span>;
   }
@@ -167,6 +175,7 @@ export function CalendarPage() {
         aria-label={`${DOWL[weekdayOf(d) - 1]} ${formatDate(d).slice(0, 5)}${label ? `: ${label}` : ''}`} aria-pressed={d === selected && (wide || !!dia)}>
         <span className="n">{+d.slice(8)}</span>
         {ex && <span className="ex">{materias.find((m) => m.id === ex.materiaId)?.sigla ?? KIND_LABELS[ex.kind]}<small>{KIND_LABELS[ex.kind]}</small></span>}
+        <span className="dots" aria-hidden="true">{c.chips.filter((ch) => !ch.exam).slice(0, 4).map((ch) => <i key={ch.materiaId ?? '-'} style={materiaVars(ch.color)} className={ch.allDone && d < today ? 'past' : undefined} />)}</span>
         {c.chips.map((ch) => (
           <span key={`${ch.materiaId}:${ch.exam}`} className={`chip${ch.exam ? ' solid' : ''}${ch.allDone && d < today ? ' past' : ''}`} style={materiaVars(ch.color)}>
             <span>{ch.sigla}</span>{!ch.exam && <span>{ch.count}</span>}
@@ -178,23 +187,27 @@ export function CalendarPage() {
   }
 
   return (
+    <PullToRefresh>
     <div className={month ? 'cal-page month' : 'cal-page'}>
       <div className="cal-main">
         <div className="cal-bar">
           <h1 className="cal-title" aria-live="polite">{month ? monthTitle(first) : fcTitle}</h1>
-          <div className="seg" role="group" aria-label="Vista">
-            {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={vista === v.id} onClick={() => go({ vista: v.id, dia: null })}>{v.label}</button>)}
-          </div>
+          <Segmented name="cal-view" label="Vista" value={vista} options={VIEWS.map((v) => [v.id, v.label] as const)} onChange={(v) => go({ vista: v, dia: null })} />
           <button type="button" className="btn cal-today" onClick={toToday}>Hoy</button>
-          <button type="button" className="icon-btn" onClick={prev} aria-label="Anterior">‹</button>
-          <button type="button" className="icon-btn" onClick={next} aria-label="Siguiente">›</button>
+          <button type="button" className="icon-btn" onClick={prev} aria-label="Anterior"><ChevronLeftIcon /></button>
+          <button type="button" className="icon-btn" onClick={next} aria-label="Siguiente"><ChevronRightIcon /></button>
         </div>
         {loadError && <p className="error" role="alert">{loadError} <button className="btn" onClick={() => void load()}>Reintentar</button></p>}
         <div ref={wrap} className="cal-wrap">
           {month ? (
             <div className="cal-month">
               <div className="cal-dow" aria-hidden="true">{['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((x) => <span key={x}>{x}</span>)}</div>
-              <div className="cal-grid" key={first}>{Array.from({ length: 42 }, (_, i) => cell(addDays(gridStart, i)))}</div>
+              <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+                <m.div className="cal-grid" key={first} custom={dir}
+                  initial={{ opacity: 0, x: dir * 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -20 }} transition={spring('gentle')}>
+                  {Array.from({ length: 42 }, (_, i) => cell(addDays(gridStart, i)))}
+                </m.div>
+              </AnimatePresence>
             </div>
           ) : (
             <FullCalendar
@@ -235,17 +248,11 @@ export function CalendarPage() {
         )}
       </div>
       {month && wide && <aside className="cal-panel" aria-label="Detalle del día"><DayDetail data={data} date={selected} reload={() => void load()} /></aside>}
-      {sheet && (
-        <div className="cal-sheet-wrap" onClick={(e) => { if (e.target === e.currentTarget) close(); }} onKeyDown={(e) => { if (e.key === 'Escape') close(); }}>
-          <div className="cal-sheet" role="dialog" aria-modal="true" aria-label="Detalle del día" tabIndex={-1} ref={sheetRef}>
-            <div className="grab" aria-hidden="true" />
-            <DayDetail data={data} date={dia!} reload={() => void load()} />
-          </div>
-        </div>
-      )}
+      {!wide && <Sheet open={sheet} onClose={close} label="Detalle del día">{lastDia.current && <DayDetail data={data} date={lastDia.current} reload={() => void load()} />}</Sheet>}
       {!(month && wide) && (
         <Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>
       )}
     </div>
+    </PullToRefresh>
   );
 }

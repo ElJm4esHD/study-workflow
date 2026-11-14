@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+﻿import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
@@ -6,6 +6,8 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import type { CalendarEvent, EventInput } from '../server/service.ts';
 import { KIND_LABELS } from './views.ts';
+import { KIND_ICON } from './DayDetail.tsx';
+import { PageHeader, Skeleton } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import './calendar.css';
 
@@ -113,7 +115,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
           <span>Tipo</span>
           <div className="pills">
             {(Object.entries(KIND_LABELS) as [typeof kind, string][]).map(([k, l]) => (
-              <button type="button" key={k} className="pill" aria-pressed={kind === k} onClick={() => setKind(k)}>{l}</button>
+              <button type="button" key={k} className="pill kind-pill" aria-pressed={kind === k} onClick={() => setKind(k)}>{(() => { const I = KIND_ICON[k]; return <I />; })()}{l}</button>
             ))}
           </div>
         </div>
@@ -189,8 +191,8 @@ export function EventEditPage() {
   const { data, error, loading, reload } = useApi<CalendarEvent>(id ? `/api/calendar/events/${id}` : null);
   return (
     <>
-      <h1>{id ? 'Editar evento' : 'Nuevo evento'}</h1>
-      {id && loading && <p className="muted">Cargando…</p>}
+      <PageHeader title={id ? 'Editar evento' : 'Nuevo evento'} />
+      {id && loading && <div className="card form" role="status" aria-label="Cargando"><Skeleton h={44} /><Skeleton w="50%" /><Skeleton h={44} /><Skeleton h={44} /></div>}
       {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
       {(!id || data) && <Form item={data} ocurrencia={q.get('ocurrencia')} />}
     </>

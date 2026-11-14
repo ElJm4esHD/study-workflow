@@ -66,14 +66,17 @@ export function Sheet({ open, onClose, label, children }: { open: boolean; onClo
   const { spring, fade } = useMotion();
   const drag = useDragControls();
   const ref = useRef<HTMLElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  // Solo al abrir/cerrar (no en cada render del padre): foco al primer control y Esc para cerrar.
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeRef.current(); };
     document.addEventListener('keydown', esc);
     ref.current?.querySelector<HTMLElement>('a, button:not(.sheet-grab)')?.focus({ preventScroll: true });
     return () => { document.removeEventListener('keydown', esc); prev?.focus?.({ preventScroll: true }); };
-  }, [open, onClose]);
+  }, [open]);
   return (
     <AnimatePresence>
       {open && (
