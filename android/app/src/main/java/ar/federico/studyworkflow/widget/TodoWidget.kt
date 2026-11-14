@@ -27,7 +27,7 @@ class TodoWidget : GlanceAppWidget() {
                     s.server == null -> Message("Abrí Study Workflow para conectar.", openApp(null))
                     else -> {
                         val rows = todoList(s.todos!!, s.keep)
-                        Header("To-do · ${s.todos.count { !it.completed }}", route = null, plusRoute = "/todo/nueva")
+                        Header("To-do", s.todos.count { !it.completed }, route = "/todo", plusRoute = "/todo/nueva")
                         StatusLine(s)
                         if (rows.isEmpty()) Message("Nada pendiente.", openApp(null))
                         else LazyColumn(GlanceModifier.fillMaxWidth()) {

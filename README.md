@@ -95,7 +95,8 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - **Gestos (celu)**: deslizar a los costados en cualquier parte (menos sobre la grilla del calendario, que cambia de mes) pasa entre Inicio, To-do y Calendario. Las tareas ya no se completan ni se borran deslizándolas: se tildan con el cuadradito y se borran desde su pantalla. Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
 - **Atajos (compu)**: `1`…`n` cambian de pantalla (el número aparece al pasar el mouse por la barra lateral), `N` nueva tarea, `Esc` cierra hojas.
 - **Agregar tarea**: en el celu, con el botón flotante; en la compu, con el campo de arriba de la lista (Enter) o el panel.
-- **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"; arranca así si el sistema tiene "reducir movimiento"), vibración (solo APK) y tamaño de letra.
+- **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"), vibración (solo APK, con los efectos nativos del celu: suave, media o fuerte) y tamaño de letra.
+- **Widget To-do**: mismo estilo que la app (cuadradito y barra con el color de la materia, segunda línea con sigla, hora o "venció" y subtareas, botón + para nueva tarea; tocar "To-do" abre la lista).
 - **Finales**: los filtros y el orden van plegados en "Filtros y orden"; el resumen muestra lo aplicado.
 - **Ajustes › Materias**: tocar la fila edita; el ícono de la derecha archiva.
 

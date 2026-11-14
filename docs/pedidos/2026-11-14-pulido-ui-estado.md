@@ -10,7 +10,7 @@ Pedido: `docs/pedidos/2026-11-14-pulido-ui.md`. Diseño: `docs/superpowers/specs
 | 2. Base (tokens, íconos, Motion, navegación, ajustes, componentes) | Hecha, commiteada. Falta que el usuario la pruebe | `a2060ef` |
 | 3. Pantallas, de a grupos con un commit por grupo | Hecha. Falta que el usuario la pruebe (y probar gestos en el celu real) | `90934d6` (To-do e Inicio), `b37cf3b` (Calendario), `6392488` (Finales, Importar, Planes, Ajustes) |
 | 3b. Correcciones tras probar (portal para lo fijo, deslizar entre secciones, sidebar sin grupos, animaciones en la compu, subtareas desde la lista) | Hecha, probada en el celu | ver `git log` |
-| 4. Widget y detalles nativos (hápticos con `@capacitor/haptics`, gestos, widget Glance) | Pendiente | — |
+| 4. Widget y detalles nativos (hápticos con `@capacitor/haptics`, widget Glance; gestos en filas descartados por el usuario) | Hecha, probada en el celu (widget y tildado); falta que el usuario sienta la vibración | ver `git log` |
 
 Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales, Importar, Planes y Ajustes. El usuario pidió "dale con la etapa 3" y dejó el celu enchufado con depuración USB.
 
