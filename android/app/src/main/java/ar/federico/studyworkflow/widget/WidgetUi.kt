@@ -135,5 +135,8 @@ fun TaskRow(t: Todo, mat: Mat?, overdue: Boolean, route: String) {
             ),
             modifier = GlanceModifier.defaultWeight().clickable(openApp(route)),
         )
+        if (t.subTotal > 0) {
+            Text("${t.subDone}/${t.subTotal}", style = TextStyle(color = ColorProvider(Pal.muted), fontSize = 12.5.sp), modifier = GlanceModifier.padding(start = 6.dp, end = 4.dp))
+        }
     }
 }

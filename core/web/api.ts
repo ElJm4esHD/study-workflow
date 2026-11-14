@@ -28,6 +28,8 @@ export function onConnection(fn: (c: Connection) => void): () => void {
   connListeners.add(fn);
   return () => void connListeners.delete(fn);
 }
+/** Pide recargar a todas las pantallas que usan useApi (p. ej. la lista después de tildar en el panel). */
+export const reloadAll = (): void => reloadListeners.forEach((fn) => fn());
 export function onReload(fn: () => void): () => void {
   reloadListeners.add(fn);
   return () => void reloadListeners.delete(fn);

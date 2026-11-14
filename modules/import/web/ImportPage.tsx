@@ -146,7 +146,7 @@ export function ImportPage() {
                         <input type="checkbox" disabled={i.errors.length > 0} checked={checked.has(i.index)}
                           onChange={(e) => setChecked((s) => { const n = new Set(s); if (e.target.checked) n.add(i.index); else n.delete(i.index); return n; })} />
                         <span className="imp-body">
-                          <span className={`imp-tag${exam ? ' exam' : ''}`}>{i.tipo}{i.hora && ` · ${i.hora}`}{i.duracion && ` · ${fmtDuration(i.duracion)}`}{i.categoria !== 'tarea' && ` · ${TODO_CATEGORIES.find((c) => c.id === i.categoria)?.label}`}{i.duplicate && ' · Duplicado'}</span>
+                          <span className={`imp-tag${exam ? ' exam' : ''}`}>{i.tipo}{i.hora && ` · ${i.hora}`}{i.duracion && ` · ${fmtDuration(i.duracion)}`}{i.categoria !== 'tarea' && ` · ${TODO_CATEGORIES.find((c) => c.id === i.categoria)?.label}`}{i.subtareas.length > 0 && ` · ${i.subtareas.length} subtareas`}{i.duplicate && ' · Duplicado'}</span>
                           <span className={i.duplicate ? 'muted' : undefined}>{i.titulo}</span>
                           {i.errors.map((e) => <span key={e} className="error">{e}</span>)}
                         </span>

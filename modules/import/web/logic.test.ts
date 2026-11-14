@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { deleteCounts, neededMaterias } from './logic.ts';
 import type { Preview } from '../server/preview.ts';
 
-const it0 = { tipo: 'tarea', fecha: '2026-11-05', hora: null, titulo: 't', notas: null, duracion: null, categoria: 'tarea' as const, errors: [], materiaId: null, materiaArchived: false, duplicate: false };
+const it0 = { subtareas: [], tipo: 'tarea', fecha: '2026-11-05', hora: null, titulo: 't', notas: null, duracion: null, categoria: 'tarea' as const, errors: [], materiaId: null, materiaArchived: false, duplicate: false };
 describe('import logic', () => {
   it('solo pide materias de ítems tildados', () => {
     const p: Preview = {

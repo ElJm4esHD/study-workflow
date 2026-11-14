@@ -13,7 +13,7 @@ const ev = (o: Partial<Occurrence>): Occurrence => ({
   endDate: '2026-11-10', endTime: null, repeatWeekdays: null, repeatUntil: null, seriesId: null, originalDate: null,
   createdAt: '', updatedAt: '', eventId: 'e', occurrenceDate: '2026-11-10', isRecurring: false, ...o,
 });
-const td = (o: Partial<TodoItem>): TodoItem => ({
+const td = (o: Partial<TodoItem>): TodoItem => ({ subtasks: [],
   id: 't', title: 't', notes: null, dueDate: '2026-11-10', dueTime: null, materiaId: null, completed: false, completedAt: null,
   sortOrder: 0, createdAt: '', updatedAt: '', durationMin: 30, category: 'tarea', ...o,
 });

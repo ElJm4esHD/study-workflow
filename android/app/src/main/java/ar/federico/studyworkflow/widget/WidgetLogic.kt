@@ -3,6 +3,7 @@ package ar.federico.studyworkflow.widget
 data class Todo(
     val id: String, val title: String, val dueDate: String?, val dueTime: String?,
     val materiaId: String?, val completed: Boolean, val sortOrder: Int, val updatedAt: String,
+    val subDone: Int = 0, val subTotal: Int = 0,
 )
 data class Ev(
     val id: String, val title: String, val kind: String, val allDay: Boolean,

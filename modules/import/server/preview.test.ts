@@ -6,7 +6,7 @@ import { buildPreview } from './preview.ts';
 import type { ParsedItem } from './parser.ts';
 
 const mat = (id: string, name: string, archived = false): Materia => ({ id, name, color: '#000000', colorStrong: '#000000', sigla: 'X', archived, createdAt: '', updatedAt: '' });
-const item = (o: Partial<ParsedItem> = {}): ParsedItem => ({
+const item = (o: Partial<ParsedItem> = {}): ParsedItem => ({ subtareas: [],
   index: 0, tipo: 'tarea', fecha: '2026-11-10', hora: null, titulo: 'Leer', notas: null, duracion: null, categoria: 'tarea', materiaName: 'Álgebra', errors: [], ...o,
 });
 const run = (items: ParsedItem[], deps: { materias?: Materia[]; todos?: object[]; events?: object[] } = {}) =>

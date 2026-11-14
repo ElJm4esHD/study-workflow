@@ -149,3 +149,26 @@ test('category "examen" → 400 categoria_invalida', async () => {
   const r = await post({ title: 'a', category: 'examen' });
   expect([r.statusCode, r.json().error.code]).toEqual([400, 'categoria_invalida']);
 });
+
+test('subtareas: se guardan, completan la principal al tildarlas todas y la reabren al destildar', async () => {
+  const { post, patch } = await make();
+  const t = (await post({ title: 'Guía 1', subtasks: [{ title: ' 1.2 ' }, { title: '1.3' }] })).json();
+  expect(t.subtasks).toMatchObject([{ title: '1.2', done: false }, { title: '1.3', done: false }]);
+  const [a, b] = t.subtasks;
+  expect((await patch(t.id, { subtasks: [{ ...a, done: true }, b] })).json()).toMatchObject({ completed: false });
+  const all = (await patch(t.id, { subtasks: [{ ...a, done: true }, { ...b, done: true }] })).json();
+  expect(all).toMatchObject({ completed: true, subtasks: [{ id: a.id, done: true }, { id: b.id, done: true }] });
+  expect((await patch(t.id, { subtasks: [{ ...a, done: true }, b] })).json()).toMatchObject({ completed: false, completedAt: null });
+  // tildar la principal a mano no toca las subtareas; otros cambios tampoco
+  expect((await patch(t.id, { completed: true })).json()).toMatchObject({ completed: true, subtasks: [{ done: true }, { done: false }] });
+  expect((await patch(t.id, { title: 'Guía 1b' })).json()).toMatchObject({ completed: true, subtasks: [{ done: true }, { done: false }] });
+  // sin subtareas no se autocompleta
+  expect((await patch(t.id, { completed: false, subtasks: [] })).json()).toMatchObject({ completed: false, subtasks: [] });
+});
+
+test('subtareas inválidas → 400', async () => {
+  const { post } = await make();
+  for (const subtasks of [[{ title: ' ' }], [{ title: 'x'.repeat(121) }], Array(51).fill({ title: 'a' })]) {
+    expect((await post({ title: 'a', subtasks })).json().error.code).toBe('subtareas_invalidas');
+  }
+});

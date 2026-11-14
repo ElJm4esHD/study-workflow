@@ -13,6 +13,7 @@ export type ParsedItem = {
   notas: string | null;
   duracion: number | null;
   categoria: TodoCategory;
+  subtareas: string[];
   materiaName: string | null;
   errors: string[];
 };
@@ -25,7 +26,7 @@ const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object
 export const findPlanObject = (text: string) => findTagged(text, 'plan');
 
 function parseItem(raw: unknown, index: number, planMateria: string | null): ParsedItem {
-  const out: ParsedItem = { index, tipo: '', fecha: '', hora: null, titulo: '', notas: null, duracion: null, categoria: 'tarea', materiaName: null, errors: [] };
+  const out: ParsedItem = { index, tipo: '', fecha: '', hora: null, titulo: '', notas: null, duracion: null, categoria: 'tarea', subtareas: [], materiaName: null, errors: [] };
   if (!isObj(raw)) {
     out.errors.push('El ítem no es un objeto.');
     return out;
@@ -49,7 +50,7 @@ function parseItem(raw: unknown, index: number, planMateria: string | null): Par
     if (typeof raw.notas === 'string') out.notas = raw.notas;
     else out.errors.push('Las notas tienen que ser texto.');
   }
-  // Solo las tareas usan duración y categoría; en el resto se ignoran.
+  // Solo las tareas usan duración, categoría y subtareas; en el resto se ignoran.
   if (raw.tipo === 'tarea') {
     if (raw.duracion != null) {
       const d = raw.duracion;
@@ -61,6 +62,11 @@ function parseItem(raw: unknown, index: number, planMateria: string | null): Par
       if (c) out.categoria = c.id;
       else out.errors.push(`Categoría inválida: "${raw.categoria}".`);
     }
+    if (raw.subtareas != null) {
+      const s = raw.subtareas;
+      if (Array.isArray(s) && s.length <= 50 && s.every((x) => typeof x === 'string' && x.trim() && x.trim().length <= 120)) out.subtareas = s.map((x: string) => x.trim());
+      else out.errors.push('Subtareas inválidas (lista de hasta 50 textos de hasta 120 caracteres).');
+    }
   }
   if (raw.materia != null && typeof raw.materia !== 'string') out.errors.push('La materia tiene que ser texto.');
   out.materiaName = typeof raw.materia === 'string' ? raw.materia : planMateria;
@@ -70,7 +76,7 @@ function parseItem(raw: unknown, index: number, planMateria: string | null): Par
 export function parsePlanText(text: string): ParseResult {
   const obj = findPlanObject(text);
   if (!obj) return { ok: false, error: 'No encontré un plan en el texto pegado.' };
-  if (obj.version !== 1 && obj.version !== 2) return { ok: false, error: `Versión de plan no soportada (${obj.version}). Actualizá la app.` };
+  if (obj.version !== 1 && obj.version !== 2 && obj.version !== 3) return { ok: false, error: `Versión de plan no soportada (${obj.version}). Actualizá la app.` };
   if (!Array.isArray(obj.items) || obj.items.length === 0) return { ok: false, error: 'El plan no tiene ítems.' };
   const title = typeof obj.titulo === 'string' ? obj.titulo : null;
   const materia = typeof obj.materia === 'string' ? obj.materia : null;

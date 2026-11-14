@@ -107,6 +107,7 @@ export const importModule: ServerModule = {
         const events = withMateria.filter((x) => x.it.tipo !== 'tarea');
         const createdTodos = todo.createMany(tasks.map(({ it, materiaId }) => ({
           title: it.titulo, notes: it.notas, dueDate: it.fecha, dueTime: it.hora, materiaId, durationMin: it.duracion, category: it.categoria,
+          subtasks: it.subtareas.map((title) => ({ title })),
         })));
         const createdEvents = cal.createMany(events.map(({ it, materiaId }) => ({
           title: it.titulo, notes: it.notas, kind: it.tipo as EventKind, materiaId,

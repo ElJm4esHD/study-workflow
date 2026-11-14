@@ -63,8 +63,9 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
                 <button type="button" className="chk" role="checkbox" aria-checked={t.completed} aria-label={`Completar: ${t.title}`} onClick={() => void toggle(t)}><span /></button>
                 <Link to={`/todo/${t.id}`} className="body">
                   <div className="title">{t.title}</div>
-                  {(t.category !== 'tarea' || t.dueTime) && (
+                  {(t.category !== 'tarea' || t.dueTime || t.subtasks.length > 0) && (
                     <div className="meta">
+                      {t.subtasks.length > 0 && <span className="tag">{t.subtasks.filter((s) => s.done).length}/{t.subtasks.length}</span>}
                       {t.dueTime && <span className="tag">{t.dueTime}</span>}
                       {t.category !== 'tarea' && <span className={`tag ${t.category}`}>{TODO_CATEGORIES.find((c) => c.id === t.category)?.label}</span>}
                     </div>

@@ -30,12 +30,22 @@ describe('parsePlanText', () => {
   test('objeto sin studyWorkflow → error sin plan', () => {
     expect(parsePlanText('{"items":[]}')).toEqual({ ok: false, error: 'No encontré un plan en el texto pegado.' });
   });
-  test('version 2 se acepta; version 3 no', () => {
+  test('versiones 2 y 3 se aceptan; la 4 no', () => {
     expect(ok(plan([item()], { version: 2 })).items).toHaveLength(1);
-    expect(parsePlanText(plan([item()], { version: 3 }))).toEqual({
+    expect(ok(plan([item()], { version: 3 })).items).toHaveLength(1);
+    expect(parsePlanText(plan([item()], { version: 4 }))).toEqual({
       ok: false,
-      error: 'Versión de plan no soportada (3). Actualizá la app.',
+      error: 'Versión de plan no soportada (4). Actualizá la app.',
     });
+  });
+  test('subtareas: solo en tareas, lista de textos', () => {
+    const r = ok(plan([
+      item({ subtareas: [' 1.2 ', '1.3'] }), item(), item({ tipo: 'parcial', subtareas: [1] }),
+      item({ subtareas: ['ok', ''] }), item({ subtareas: 'no' }),
+    ], { version: 3 }));
+    expect(r.items.map((i) => i.subtareas)).toEqual([['1.2', '1.3'], [], [], [], []]);
+    expect(r.items.map((i) => i.errors.length)).toEqual([0, 0, 0, 1, 1]);
+    expect(r.items[3]!.errors[0]).toBe('Subtareas inválidas (lista de hasta 50 textos de hasta 120 caracteres).');
   });
   test('duracion y categoria en una tarea', () => {
     const r = ok(plan([item({ duracion: 45, categoria: 'estudio' }), item()], { version: 2 }));

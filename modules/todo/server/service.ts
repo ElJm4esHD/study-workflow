@@ -5,14 +5,16 @@ import type { CoreContext } from '../../../core/server/registry.ts';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoCategory } from '../shared.ts';
 
+export type Subtask = { id: string; title: string; done: boolean };
 export type TodoItem = {
   id: string; title: string; notes: string | null; dueDate: string | null; dueTime: string | null;
   materiaId: string | null; completed: boolean; completedAt: string | null; sortOrder: number;
-  createdAt: string; updatedAt: string; durationMin: number | null; category: TodoCategory;
+  createdAt: string; updatedAt: string; durationMin: number | null; category: TodoCategory; subtasks: Subtask[];
 };
 export type TodoInput = {
   id?: string; title: string; notes?: string | null; dueDate?: string | null; dueTime?: string | null;
   materiaId?: string | null; sortOrder?: number; durationMin?: number | null; category?: TodoCategory;
+  subtasks?: { id?: string; title: string; done?: boolean }[];
 };
 export type TodoPatch = Partial<Omit<TodoInput, 'id'>> & { completed?: boolean };
 
@@ -32,12 +34,13 @@ export interface TodoService {
 type Row = {
   id: string; title: string; notes: string | null; due_date: string | null; due_time: string | null;
   materia_id: string | null; completed: number; completed_at: string | null; sort_order: number;
-  created_at: string; updated_at: string; duration_min: number | null; category: TodoCategory;
+  created_at: string; updated_at: string; duration_min: number | null; category: TodoCategory; subtasks: string;
 };
 const toItem = (r: Row): TodoItem => ({
   id: r.id, title: r.title, notes: r.notes, dueDate: r.due_date, dueTime: r.due_time, materiaId: r.materia_id,
   completed: r.completed === 1, completedAt: r.completed_at, sortOrder: r.sort_order,
   createdAt: r.created_at, updatedAt: r.updated_at, durationMin: r.duration_min, category: r.category,
+  subtasks: JSON.parse(r.subtasks) as Subtask[],
 });
 const marks = (n: number) => Array(n).fill('?').join(',');
 const ORDER = 'ORDER BY sort_order, created_at';
@@ -60,6 +63,16 @@ export function makeTodo(ctx: CoreContext): TodoService {
     return title;
   }
 
+  function subs(raw: unknown): Subtask[] {
+    const bad = () => httpError(400, 'subtareas_invalidas', 'Las subtareas no son válidas: hasta 50, cada una con un título de 1 a 120 caracteres.');
+    if (!Array.isArray(raw) || raw.length > 50) throw bad();
+    return raw.map((s: { id?: unknown; title?: unknown; done?: unknown }) => {
+      const title = typeof s?.title === 'string' ? s.title.trim() : '';
+      if (!title || title.length > 120) throw bad();
+      return { id: typeof s.id === 'string' && s.id ? s.id : randomUUID(), title, done: s.done === true };
+    });
+  }
+
   const svc: TodoService = {
     list: () => all(`SELECT * FROM todo_items ${ORDER}`),
     get(id) {
@@ -70,12 +83,13 @@ export function makeTodo(ctx: CoreContext): TodoService {
       if (i.id) { const ex = svc.get(i.id); if (ex) return ex; }
       const f = { title: i.title, dueDate: i.dueDate ?? null, dueTime: i.dueTime ?? null, materiaId: i.materiaId ?? null, durationMin: i.durationMin ?? null, category: i.category ?? 'tarea' };
       const title = check(f);
+      const st = subs(i.subtasks ?? []);
       const max = (db.prepare('SELECT MAX(sort_order) AS m FROM todo_items').get() as { m: number | null }).m ?? 0;
       const id = i.id ?? randomUUID();
       const now = new Date().toISOString();
-      db.prepare(`INSERT INTO todo_items (id, title, notes, due_date, due_time, materia_id, completed, sort_order, created_at, updated_at, duration_min, category)
-        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`)
-        .run(id, title, i.notes ?? null, f.dueDate, f.dueTime, f.materiaId, i.sortOrder ?? max + 1, now, now, f.durationMin as number | null, f.category);
+      db.prepare(`INSERT INTO todo_items (id, title, notes, due_date, due_time, materia_id, completed, sort_order, created_at, updated_at, duration_min, category, subtasks)
+        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`)
+        .run(id, title, i.notes ?? null, f.dueDate, f.dueTime, f.materiaId, i.sortOrder ?? max + 1, now, now, f.durationMin as number | null, f.category, JSON.stringify(st));
       return svc.get(id)!;
     },
     update(id, p) {
@@ -89,12 +103,14 @@ export function makeTodo(ctx: CoreContext): TodoService {
       };
       const title = check(f);
       const now = new Date().toISOString();
-      const completed = p.completed ?? cur.completed;
+      const st = p.subtasks === undefined ? cur.subtasks : subs(p.subtasks);
+      // Con subtareas, tildarlas todas completa la tarea y destildar una la reabre; un `completed` explícito manda.
+      const completed = p.completed ?? (p.subtasks !== undefined && st.length ? st.every((s) => s.done) : cur.completed);
       const completedAt = !completed ? null : cur.completed ? cur.completedAt : now;
       db.prepare(`UPDATE todo_items SET title = ?, notes = ?, due_date = ?, due_time = ?, materia_id = ?,
-        completed = ?, completed_at = ?, sort_order = ?, updated_at = ?, duration_min = ?, category = ? WHERE id = ?`)
+        completed = ?, completed_at = ?, sort_order = ?, updated_at = ?, duration_min = ?, category = ?, subtasks = ? WHERE id = ?`)
         .run(title, p.notes === undefined ? cur.notes : p.notes, f.dueDate, f.dueTime, f.materiaId,
-          completed ? 1 : 0, completedAt, p.sortOrder ?? cur.sortOrder, now, f.durationMin as number | null, f.category, id);
+          completed ? 1 : 0, completedAt, p.sortOrder ?? cur.sortOrder, now, f.durationMin as number | null, f.category, JSON.stringify(st), id);
       return svc.get(id)!;
     },
     remove(id) {

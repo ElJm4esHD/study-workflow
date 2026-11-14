@@ -1,0 +1,1 @@
+ALTER TABLE todo_items ADD COLUMN subtasks TEXT NOT NULL DEFAULT '[]';

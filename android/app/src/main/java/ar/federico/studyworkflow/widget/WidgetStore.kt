@@ -13,6 +13,7 @@ object WidgetStore {
     private fun toTodo(o: JSONObject) = Todo(
         o.getString("id"), o.optString("title"), o.str("dueDate"), o.str("dueTime"), o.str("materiaId"),
         o.optBoolean("completed"), o.optInt("sortOrder"), o.optString("updatedAt"),
+        o.optJSONArray("subtasks")?.objs()?.count { it.optBoolean("done") } ?: 0, o.optJSONArray("subtasks")?.length() ?: 0,
     )
     private fun toEv(o: JSONObject) = Ev(
         o.getString("id"), o.optString("title"), o.optString("kind", "evento"), o.optBoolean("allDay"),

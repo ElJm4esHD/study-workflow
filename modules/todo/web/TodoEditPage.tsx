@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, ApiError, reloadAll, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { isValidDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
-import type { TodoItem } from '../server/service.ts';
+import type { Subtask, TodoItem } from '../server/service.ts';
+import { PlusIcon } from '../../../core/web/icons.tsx';
 import { keepSearch } from './views.ts';
 import './todo.css';
 
@@ -28,6 +29,8 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const [category, setCategory] = useState<TodoCategory>(item?.category ?? 'tarea');
   const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
+  const [subs, setSubs] = useState<Subtask[]>(item?.subtasks ?? []);
+  const [newSub, setNewSub] = useState('');
   const [focusOther, setFocusOther] = useState(false); // foco en Minutos solo si recién se tocó "Otra…"
   const { search } = useLocation();
   const back = () => volver?.startsWith('/') && !volver.startsWith('//') ? nav(volver, { replace: true }) : nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
@@ -37,12 +40,28 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     if (block()) return;
     const body = {
       title, notes: notes.trim() || null, dueDate: dueDate || null, dueTime: dueDate && dueTime ? dueTime : null,
-      materiaId: materiaId || null, category, durationMin,
+      materiaId: materiaId || null, category, durationMin, subtasks: cleanSubs(),
     };
     try {
       if (item) await api('PATCH', `/api/todo/${item.id}`, body); else await api('POST', '/api/todo', body);
       back();
     } catch (err) { notify(msg(err)); }
+  }
+  // Las subtareas sin título (recién borrado el texto) se descartan al guardar.
+  const cleanSubs = (list = subs) => list.filter((s) => s.title.trim());
+  function addSub() {
+    const t = newSub.trim();
+    if (!t || subs.length >= 50) return;
+    setSubs([...subs, { id: crypto.randomUUID(), title: t, done: false }]);
+    setNewSub('');
+  }
+  // Tildar una subtarea se guarda al toque (sin "Guardar"); en una tarea nueva queda para cuando se guarde.
+  async function toggleSub(id: string) {
+    const next = subs.map((s) => (s.id === id ? { ...s, done: !s.done } : s));
+    if (!item) { setSubs(next); return; }
+    if (block()) return;
+    setSubs(next);
+    try { await api('PATCH', `/api/todo/${item.id}`, { subtasks: cleanSubs(next) }); reloadAll(); } catch (err) { setSubs(subs); notify(msg(err)); }
   }
   async function remove() {
     if (!item || block() || !confirm(`¿Borrar "${item.title}"?`)) return;
@@ -56,6 +75,22 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
       <label>Título
         <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item && !embedded} />
       </label>
+      <div className="field" role="group" aria-label="Subtareas">
+        <span>Subtareas{subs.length > 0 && ` · ${subs.filter((s) => s.done).length}/${subs.length}`}</span>
+        {subs.map((s) => (
+          <div key={s.id} className={s.done ? 'task-row done' : 'task-row'}>
+            <button type="button" className="chk" role="checkbox" aria-checked={s.done} aria-label={`${s.done ? 'Destildar' : 'Completar'}: ${s.title}`} onClick={() => void toggleSub(s.id)}><span /></button>
+            <input className="sub-title" value={s.title} maxLength={120} aria-label="Título de la subtarea"
+              onChange={(e) => setSubs(subs.map((x) => (x.id === s.id ? { ...x, title: e.target.value } : x)))} />
+            <button type="button" className="icon-btn" aria-label={`Borrar subtarea: ${s.title}`} onClick={() => setSubs(subs.filter((x) => x.id !== s.id))}>✕</button>
+          </div>
+        ))}
+        <div className="todo-quick">
+          <input value={newSub} onChange={(e) => setNewSub(e.target.value)} maxLength={120} placeholder="Agregar subtarea…" aria-label="Nueva subtarea" enterKeyHint="done"
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSub(); } }} />
+          <button type="button" className="icon-btn" aria-label="Agregar subtarea" onClick={addSub}><PlusIcon /></button>
+        </div>
+      </div>
       <div className="field" role="group" aria-label="Materia">
         <span>Materia</span>
         <div className="pills">
