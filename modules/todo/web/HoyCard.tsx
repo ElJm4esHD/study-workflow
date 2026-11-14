@@ -28,7 +28,7 @@ export function HoyCard() {
           <div className="title">{i.title}</div>
           <div className="meta">
             {m && <span className="chip">{m.sigla}</span>}
-            {i.subtasks.length > 0 && <span className="tag">{i.subtasks.filter((s) => s.done).length}/{i.subtasks.length}</span>}
+            {i.subtasks?.length > 0 && <span className="tag">{i.subtasks.filter((s) => s.done).length}/{i.subtasks.length}</span>}
             {late && <span className="tag late">venció {formatDate(i.dueDate!).slice(0, 5)}</span>}
             {i.dueTime && <span className="tag">{i.dueTime}</span>}
           </div>

@@ -76,7 +76,7 @@ export const finals: ServerModule = {
         for (const m of r.materias) {
           if (!m.name || !m.fechas.length) continue;
           const k = nameKey(m.name);
-          const id = k in map ? map[k] : matchMateria(m.name, materias)?.id;
+          const id = Object.hasOwn(map, k) ? map[k] : matchMateria(m.name, materias)?.id;
           if (!id || done.has(id)) continue;
           if (!ctx.materias.get(id)) throw httpError(400, 'materia_inexistente', 'La materia no existe.');
           done.add(id);

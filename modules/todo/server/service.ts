@@ -114,8 +114,10 @@ export function makeTodo(ctx: CoreContext): TodoService {
       const title = check(f);
       const now = new Date().toISOString();
       const st = p.subtasks === undefined ? cur.subtasks : subs(p.subtasks);
-      // Con subtareas, tildarlas todas completa la tarea y destildar una la reabre; un `completed` explícito manda.
-      const completed = p.completed ?? (p.subtasks !== undefined && st.length ? st.every((s) => s.done) : cur.completed);
+      // Tildar la última subtarea completa la tarea y destildar una la reabre. Solo cuenta ese cambio:
+      // guardar otra edición no pisa un tilde manual de la principal. Un `completed` explícito manda.
+      const allDone = (x: Subtask[]) => x.length > 0 && x.every((s) => s.done);
+      const completed = p.completed ?? (allDone(st) !== allDone(cur.subtasks) ? allDone(st) : cur.completed);
       const completedAt = !completed ? null : cur.completed ? cur.completedAt : now;
       db.prepare(`UPDATE todo_items SET title = ?, notes = ?, due_date = ?, due_time = ?, materia_id = ?,
         completed = ?, completed_at = ?, sort_order = ?, updated_at = ?, duration_min = ?, category = ?, subtasks = ?,

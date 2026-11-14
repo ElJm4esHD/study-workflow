@@ -38,7 +38,7 @@ function Row({ item, today, view, sigla, color, selected, sortable, onToggle }: 
         <div className="meta">
           {sigla && <span className="chip">{sigla}</span>}
           {item.category !== 'tarea' && <span className={`tag ${item.category}`}>{cat.label}</span>}
-          {item.subtasks.length > 0 && <span className="tag">{item.subtasks.filter((s) => s.done).length}/{item.subtasks.length}</span>}
+          {item.subtasks?.length > 0 && <span className="tag">{item.subtasks.filter((s) => s.done).length}/{item.subtasks.length}</span>}
           {late && <span className="tag late">venció {dm(item.dueDate!)}</span>}
           {item.dueTime && <span className="tag">{item.dueTime}</span>}
           {!late && item.dueDate !== null && view !== 'hoy' && <span className="tag">{dm(item.dueDate)}</span>}

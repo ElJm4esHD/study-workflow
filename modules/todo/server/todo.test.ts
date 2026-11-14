@@ -162,6 +162,8 @@ test('subtareas: se guardan, completan la principal al tildarlas todas y la reab
   // tildar la principal a mano no toca las subtareas; otros cambios tampoco
   expect((await patch(t.id, { completed: true })).json()).toMatchObject({ completed: true, subtasks: [{ done: true }, { done: false }] });
   expect((await patch(t.id, { title: 'Guía 1b' })).json()).toMatchObject({ completed: true, subtasks: [{ done: true }, { done: false }] });
+  // reenviar las mismas subtareas (guardar una edición) no reabre la principal tildada a mano
+  expect((await patch(t.id, { title: 'Guía 1c', subtasks: [{ ...a, done: true }, b] })).json()).toMatchObject({ completed: true });
   // sin subtareas no se autocompleta
   expect((await patch(t.id, { completed: false, subtasks: [] })).json()).toMatchObject({ completed: false, subtasks: [] });
 });
