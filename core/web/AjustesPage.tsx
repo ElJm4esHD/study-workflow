@@ -6,7 +6,10 @@ import { webModules } from '../../modules/web.ts';
 import { api, ApiError } from './api.ts';
 import { BLOCKED, useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
-import { ChevronIcon } from './icons.tsx';
+import { ChevronIcon, GaugeIcon, TypeIcon, VibrateIcon } from './icons.tsx';
+import { setPref, usePrefs } from './prefs.ts';
+import { vibrate } from './haptics.ts';
+import { Segmented } from './ui.tsx';
 import { ServerForm } from './ConnectScreen.tsx';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
@@ -155,15 +158,60 @@ function Modulos() {
   );
 }
 
+const SPEEDS = [['lenta', 'Lenta', 'Para ver cada detalle'], ['normal', 'Normal', 'Recomendada'], ['rapida', 'Rápida', 'Más ágil, mismo recorrido'], ['off', 'Sin animaciones', 'Todo cambia al instante']] as const;
+
+/** Ajustes de este dispositivo: no pasan por el servidor, así que funcionan también sin conexión. */
+function Dispositivo() {
+  const prefs = usePrefs();
+  return (
+    <>
+      <section className="card-group">
+        <h2>Movimiento{isNative() ? ' y vibración' : ''}</h2>
+        <div className="card set-card">
+          <div className="set-row">
+            <div className="set-label"><b><GaugeIcon size={18} />Velocidad de animaciones</b><span>Si el sistema tiene “Reducir movimiento” activado, arranca en “Sin animaciones”.</span></div>
+            <div className="radios" role="radiogroup" aria-label="Velocidad de animaciones">
+              {SPEEDS.map(([v, label, hint]) => (
+                <button key={v} type="button" role="radio" aria-checked={prefs.speed === v} onClick={() => { setPref('speed', v); vibrate('tick'); }}>
+                  <span className="r" /><span>{label}<small>{hint}</small></span>
+                </button>
+              ))}
+            </div>
+          </div>
+          {isNative() && (
+            <div className="set-row">
+              <div className="set-label"><b><VibrateIcon size={18} />Vibración</b><span>Al tildar, completar, borrar, soltar al reordenar y al refrescar.</span></div>
+              <Segmented name="vibration" label="Vibración" value={prefs.vibration}
+                options={[['off', 'Apagada'], ['suave', 'Suave'], ['media', 'Media'], ['fuerte', 'Fuerte']]}
+                onChange={(v) => { setPref('vibration', v); vibrate('success'); }} />
+            </div>
+          )}
+        </div>
+      </section>
+      <section className="card-group">
+        <h2>Texto</h2>
+        <div className="card set-card">
+          <div className="set-row">
+            <div className="set-label"><b><TypeIcon size={18} />Tamaño de letra</b><span>Cambia el texto de toda la app; los botones mantienen su tamaño táctil.</span></div>
+            <Segmented name="font" label="Tamaño de letra" value={prefs.font} options={[['chica', 'Chica'], ['normal', 'Normal'], ['grande', 'Grande']]} onChange={(v) => setPref('font', v)} />
+            <div className="preview">Guía 4: autovalores y autovectores<small>Álgebra · Estudio · 09:00</small></div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function AjustesPage() {
   const { enabledModules, connection } = useCore();
-  if (connection.offline) return <><h1>Ajustes</h1><p className="muted pad" role="alert">{BLOCKED}</p></>;
+  if (connection.offline) return <><h1>Ajustes</h1><p className="muted pad" role="alert">{BLOCKED}</p><div className="cols"><Dispositivo /></div></>;
   return (
     <>
       <h1>Ajustes</h1>
       <div className="cols">
       <Materias />
       <Modulos />
+      <Dispositivo />
       {isNative() && <section className="card-group"><h2>Servidor</h2><ServerForm onDone={() => location.reload()} /></section>}
       {enabledModules.flatMap((m) => (m.settings ? [{ id: m.id, name: m.name, Panel: m.settings }] : [])).map(({ id, name, Panel }) => (
         <section key={id} className="card-group"><h2>{name}</h2><Panel /></section>

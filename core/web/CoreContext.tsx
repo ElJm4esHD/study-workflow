@@ -5,6 +5,9 @@ import { api, getConnection, onConnection, resync, useApi, type Connection } fro
 import { prefetchUrls, resolveEnabled, type WebModule } from './registry.ts';
 import { isNative } from './server.ts';
 import { refreshWidgets } from './widgets.ts';
+import { AnimatePresence, m as mo } from 'motion/react'; // `m` ya es la lista de materias acá
+import { useMotion } from './motion.tsx';
+import { PageSkeleton } from './ui.tsx';
 
 type Core = {
   materias: Materia[];
@@ -38,6 +41,7 @@ export function CoreProvider({ children }: { children: ReactNode }) {
   const [patched, setPatched] = useState<Record<string, unknown> | undefined>();
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const { spring } = useMotion();
   const [connection, setConnection] = useState(getConnection);
   useEffect(() => onConnection(setConnection), []);
 
@@ -85,17 +89,22 @@ export function CoreProvider({ children }: { children: ReactNode }) {
   return (
     <>
       {value ? <Ctx value={value}>{children}</Ctx> : (
-        <div className="center-screen" role={err ? 'alert' : undefined}>
-          {err ? (
-            <>
-              <h1>No se pudo cargar</h1>
-              <p>{err.message}</p>
-              <button className="btn primary" onClick={() => { m.reload(); s.reload(); }}>Reintentar</button>
-            </>
-          ) : <p>Cargando…</p>}
-        </div>
+        err ? (
+          <div className="center-screen" role="alert">
+            <h1>No se pudo cargar</h1>
+            <p>{err.message}</p>
+            <button className="btn primary" onClick={() => { m.reload(); s.reload(); }}>Reintentar</button>
+          </div>
+        ) : <div className="main"><PageSkeleton /></div>
       )}
-      <div className="toast-zone" role="status">{toast && <div className="toast">{toast}</div>}</div>
+      <div className="toast-zone" role="status">
+        <AnimatePresence>
+          {toast && (
+            <mo.div key={toast} className="toast" initial={{ y: 24, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 12, opacity: 0 }} transition={spring('sheet')}>{toast}</mo.div>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   );
 }

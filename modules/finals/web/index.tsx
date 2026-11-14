@@ -6,7 +6,7 @@ export const finals: WebModule = {
   id: 'finals',
   name: 'Finales',
   icon: FlagIcon,
-  nav: { path: '/finales', order: 25 },
+  nav: { path: '/finales', order: 25, more: true },
   requires: ['calendar'],
   routes: [{ path: '/finales', element: <FinalesPage /> }],
   prefetch: () => ['/api/finals'],

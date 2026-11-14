@@ -9,6 +9,7 @@ import { ConnectScreen } from './ConnectScreen.tsx';
 import { getServerUrl, isNative } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
 import { parentOf } from './back.ts';
+import { MotionRoot } from './motion.tsx';
 import { onWidgetRoute, setWidgetServer, takeWidgetRoute } from './widgets.ts';
 
 function Routes() {
@@ -64,5 +65,5 @@ export function App() {
   // Instalaciones ya configuradas: el nativo todavía no conoce la URL.
   useEffect(() => { setWidgetServer(getServerUrl()); }, []);
   if (!connected) return <ConnectScreen onDone={() => setConnected(true)} />;
-  return <ErrorBoundary><CoreProvider><Routes /></CoreProvider></ErrorBoundary>;
+  return <ErrorBoundary><MotionRoot><CoreProvider><Routes /></CoreProvider></MotionRoot></ErrorBoundary>;
 }
