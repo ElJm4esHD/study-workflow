@@ -12,6 +12,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
+import { TodoEditPage } from './TodoEditPage.tsx';
 import './todo.css';
 
 const VIEWS: { id: TodoView; label: string }[] = [
@@ -54,11 +55,11 @@ export function TodoPage() {
   const view = VIEWS.find((v) => v.id === params.get('vista'))?.id ?? 'hoy';
   const materiaId = params.get('materia');
   const { data, error, reload } = useApi<TodoItem[]>('/api/todo');
-  const { pathname, search } = useLocation();
+  const { key, search } = useLocation();
   const editing = useMatch('/todo/:id')?.params.id;
   const first = useRef(true);
-  // En la compu la lista sigue montada al guardar en el panel: se recarga al cambiar de ruta.
-  useEffect(() => { if (first.current) first.current = false; else reload(); }, [pathname, reload]);
+  // En la compu la lista sigue montada al guardar en el panel: se recarga en cada navegación.
+  useEffect(() => { if (first.current) first.current = false; else reload(); }, [key, reload]);
   const [items, setItems] = useState<TodoItem[]>([]);
   // Ítems recién tildados: siguen en su vista 1,5 s para poder deshacer con otro toque.
   const [linger, setLinger] = useState<Set<string>>(new Set());
@@ -154,6 +155,7 @@ export function TodoPage() {
       </form>
       {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
       {data && empty && <p className="muted pad">{view === 'completadas' ? 'Todavía no completaste nada.' : 'Nada pendiente por acá.'}</p>}
+      <div className="cols">
       {groups.filter((g) => g.items.length).map((g) => {
         const sortable = g.reorderable ? g.items.filter((i) => !i.dueTime) : [];
         const { minutes, unestimated } = groupMinutes(g.items);
@@ -175,6 +177,7 @@ export function TodoPage() {
           </section>
         );
       })}
+      </div>
       {!editing && <Link to={{ pathname: "/todo/nueva", search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link>}
     </>
   );
@@ -195,6 +198,8 @@ const useWide = () => {
 export function TodoLayout() {
   const outlet = useOutlet();
   const wide = useWide();
+  const { key } = useLocation();
   if (!wide) return outlet ?? <TodoPage />;
-  return <div className="todo-split"><div><TodoPage /></div>{outlet && <aside>{outlet}</aside>}</div>;
+  // Sin tarea elegida el panel ofrece "Nueva tarea"; la key lo vacía después de guardar.
+  return <div className="todo-split"><div><TodoPage /></div><aside>{outlet ?? <TodoEditPage key={key} embedded />}</aside></div>;
 }

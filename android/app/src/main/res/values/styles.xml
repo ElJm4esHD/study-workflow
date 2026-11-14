@@ -21,6 +21,9 @@
         <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <!-- EdgeToEdge crea el decor con este tema: sin esto la plataforma le pone una action bar encima del WebView. -->
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@color/ic_launcher_background</item>
     </style>
 </resources>

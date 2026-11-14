@@ -5,7 +5,6 @@ import type { DatesSetInfo, EventDisplayInfo, EventInput } from '@fullcalendar/r
 import classicTheme from '@fullcalendar/react/themes/classic';
 import dayGrid from '@fullcalendar/react/daygrid';
 import timeGrid from '@fullcalendar/react/timegrid';
-import list from '@fullcalendar/react/list';
 import interaction from '@fullcalendar/react/interaction';
 import es from '@fullcalendar/react/locales/es';
 import '@fullcalendar/react/skeleton.css';
@@ -201,13 +200,12 @@ export function CalendarPage() {
             <FullCalendar
               key={vista}
               controller={controller}
-              plugins={[classicTheme, dayGrid, timeGrid, list, interaction]}
+              plugins={[classicTheme, dayGrid, timeGrid, interaction]}
               locale={es}
               firstDay={1}
               headerToolbar={false}
               initialView={VIEWS.find((v) => v.id === vista)!.fc}
               initialDate={fecha}
-              views={{ agenda: { type: 'list', duration: { days: 30 } } }}
               height={wide ? '100%' : 'auto'}
               scrollTime="07:00:00"
               noEventsText="No hay nada en estas fechas."

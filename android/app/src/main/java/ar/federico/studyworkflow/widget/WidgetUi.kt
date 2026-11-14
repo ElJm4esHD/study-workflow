@@ -59,19 +59,17 @@ val doneKey = ActionParameters.Key<Boolean>("done")
 private val AR = ZoneId.of("America/Argentina/Buenos_Aires")
 
 fun hex(s: String?, fallback: Color): Color = runCatching { Color(android.graphics.Color.parseColor(s)) }.getOrDefault(fallback)
-fun dayRoute(d: String) = "/calendario?vista=mes&fecha=$d&dia=$d"
 
 /** Todo lo que un widget necesita para dibujar, leído de la copia local. */
 class Snap(
-    val server: String?, val todos: List<Todo>?, val events: List<Ev>?, val agendaTodos: List<Todo>?,
+    val server: String?, val todos: List<Todo>?,
     val mats: Map<String, Mat>, val offline: Boolean, val savedAt: Long?, val queued: Int, val keep: Set<String>, val today: String,
 )
 
 /** null si algo falla al leer: el widget muestra "No pude cargar" en vez de romperse. */
 fun snapshot(ctx: Context): Snap? = runCatching {
-    val agenda = WidgetStore.agenda(ctx)
     Snap(
-        WidgetStore.server(ctx), WidgetStore.todos(ctx), agenda?.first, agenda?.second, WidgetStore.mats(ctx),
+        WidgetStore.server(ctx), WidgetStore.todos(ctx), WidgetStore.mats(ctx),
         WidgetStore.offline(ctx), WidgetStore.savedAt(ctx), WidgetStore.queue(ctx).size, WidgetStore.keep(ctx),
         LocalDate.now(AR).toString(),
     )

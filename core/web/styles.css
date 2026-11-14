@@ -93,6 +93,8 @@ p { margin: 0 0 .75rem; }
   .dash-col { display: flex; }
   .dash-all { display: none; }
 }
+/* Compu: bloques lado a lado cuando entran (Ajustes, Planes, secciones del To-do). */
+@media (min-width: 1024px) { .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 0 20px; align-items: start; } }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form label { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); }
 input:not([type='checkbox']):not([type='radio']), textarea, select {
@@ -113,7 +115,7 @@ input:not([type='checkbox']):not([type='radio']), textarea, select {
 /* Fila de tarea: 48 px, con .chk de 44 x 44. Estructura: .task-row > .chk + .body(.title + .meta) + .dur */
 .task-row { display: flex; align-items: center; gap: 4px; min-height: 48px; border-radius: 8px; transition: opacity var(--t); }
 .task-row .body { flex: 1; min-width: 0; padding: 4px 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; color: inherit; text-decoration: none; }
-.task-row .title { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--t); }
+.task-row .title { font-size: 14.5px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; transition: color var(--t); }
 .task-row .meta { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
 .task-row .dur { font-size: 12.5px; color: var(--muted); flex: none; padding-right: 4px; }
 .task-row.done .title { color: var(--faint); text-decoration: line-through; }

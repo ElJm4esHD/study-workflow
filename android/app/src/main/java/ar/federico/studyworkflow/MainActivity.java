@@ -3,6 +3,7 @@ package ar.federico.studyworkflow;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import ar.federico.studyworkflow.widget.WidgetsPlugin;
 import com.getcapacitor.BridgeActivity;
 
@@ -16,6 +17,15 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         SharedTextPlugin.capture(getIntent());
         WidgetsPlugin.capture(getIntent());
+        // Atrás: decide la web (historial → pantalla padre); desde una pantalla principal se minimiza.
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (bridge == null) { moveTaskToBack(true); return; }
+                bridge.getWebView().evaluateJavascript("window.swBack ? window.swBack() : false",
+                    v -> { if (!"true".equals(v)) moveTaskToBack(true); });
+            }
+        });
     }
 
     @Override

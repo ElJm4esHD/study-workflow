@@ -120,3 +120,7 @@
 .week-row .name { display: flex; align-items: center; gap: 8px; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .week-row .ruler b { height: 18px; }
 .week-row .tot { font-size: 12.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+@media (min-width: 1024px) {
+  .cal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; align-items: start; }
+  .cal-form > .row, .cal-form > .cal-days { grid-column: 1 / -1; }
+}

@@ -21,3 +21,9 @@
 .imp-materia legend { padding: 0 6px; float: left; width: 100%; margin-bottom: 4px; }
 .imp-materia legend + * { clear: both; }
 .imp-planes-link { display: inline-flex; align-items: center; min-height: 44px; }
+.imp-plans { gap: 10px 20px; }
+.imp-plans > .card { margin-bottom: 10px; }
+@media (min-width: 1024px) {
+  .imp-split { display: grid; grid-template-columns: minmax(320px, 2fr) 3fr; gap: 20px; align-items: start; }
+  .imp-save { bottom: 16px; }
+}

@@ -161,12 +161,14 @@ export function AjustesPage() {
   return (
     <>
       <h1>Ajustes</h1>
+      <div className="cols">
       <Materias />
       <Modulos />
       {isNative() && <section className="card-group"><h2>Servidor</h2><ServerForm onDone={() => location.reload()} /></section>}
       {enabledModules.flatMap((m) => (m.settings ? [{ id: m.id, name: m.name, Panel: m.settings }] : [])).map(({ id, name, Panel }) => (
         <section key={id} className="card-group"><h2>{name}</h2><Panel /></section>
       ))}
+      </div>
     </>
   );
 }

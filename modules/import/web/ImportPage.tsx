@@ -95,6 +95,7 @@ export function ImportPage() {
   return (
     <>
       <h1>Importar</h1>
+      <div className="imp-split">
       <div className="card-group">
         <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy} aria-disabled={off}>Importar desde portapapeles</button>
         <label className="form" style={{ display: 'flex' }}>
@@ -104,6 +105,7 @@ export function ImportPage() {
         <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()} aria-disabled={off}>Ver vista previa</button>
         <Link to="/importar/planes" className="imp-planes-link">Ver planes importados</Link>
       </div>
+      <div>
       {error && <div className="imp-err" role="alert">{error}</div>}
       {preview && (
         <>
@@ -160,6 +162,8 @@ export function ImportPage() {
           </button>
         </>
       )}
+      </div>
+      </div>
     </>
   );
 }

@@ -102,7 +102,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
 
   return (
     <>
-      <form className="card form" onSubmit={submit}>
+      <form className="card form cal-form" onSubmit={submit}>
         <label>Título
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item} />
         </label>

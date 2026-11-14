@@ -11,7 +11,7 @@ val REV = longPreferencesKey("rev")
 
 suspend fun redrawAll(ctx: Context) {
     val manager = GlanceAppWidgetManager(ctx)
-    for (w in listOf<GlanceAppWidget>(TodoWidget(), AgendaWidget())) {
+    for (w in listOf<GlanceAppWidget>(TodoWidget())) {
         for (id in manager.getGlanceIds(w.javaClass)) {
             updateAppWidgetState(ctx, id) { it[REV] = System.currentTimeMillis() }
             w.update(ctx, id)

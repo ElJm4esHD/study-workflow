@@ -8,6 +8,7 @@ import { AjustesPage } from './AjustesPage.tsx';
 import { ConnectScreen } from './ConnectScreen.tsx';
 import { getServerUrl, isNative } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
+import { parentOf } from './back.ts';
 import { onWidgetRoute, setWidgetServer, takeWidgetRoute } from './widgets.ts';
 
 function Routes() {
@@ -36,9 +37,24 @@ function Routes() {
   }, [router]); // eslint-disable-line
   // Ruta pedida desde un widget (tocar una tarea, un día o el "+").
   useEffect(() => {
-    const go = (r: string | null) => { if (r) void router.navigate(r); };
+    // Primero la pantalla padre: así Atrás desde la tarea vuelve a la lista y no a lo que hubiera antes.
+    const go = async (r: string | null) => {
+      if (!r) return;
+      const up = parentOf(r.split('?')[0]!);
+      if (up) await router.navigate(up);
+      void router.navigate(r);
+    };
     void takeWidgetRoute().then(go);
     return onWidgetRoute(go);
+  }, [router]);
+  // Botón Atrás de Android (lo llama MainActivity): true = lo resolvió la web; false = minimizar la app.
+  useEffect(() => {
+    (window as unknown as { swBack?: () => boolean }).swBack = () => {
+      if (window.history.state?.idx > 0) { void router.navigate(-1); return true; }
+      const up = parentOf(router.state.location.pathname);
+      if (up) void router.navigate(up, { replace: true });
+      return !!up;
+    };
   }, [router]);
   return <RouterProvider router={router} />;
 }

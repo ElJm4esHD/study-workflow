@@ -13,7 +13,7 @@ import './todo.css';
 const PRESETS = [15, 30, 45, 60, 90];
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 
-function Form({ item }: { item?: TodoItem }) {
+function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const { materias, notify } = useCore();
   const { off, block } = useBlock();
   const nav = useNavigate();
@@ -28,6 +28,7 @@ function Form({ item }: { item?: TodoItem }) {
   const [category, setCategory] = useState<TodoCategory>(item?.category ?? 'tarea');
   const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
+  const [focusOther, setFocusOther] = useState(false); // foco en Minutos solo si recién se tocó "Otra…"
   const { search } = useLocation();
   const back = () => volver?.startsWith('/') && !volver.startsWith('//') ? nav(volver, { replace: true }) : nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
 
@@ -53,7 +54,7 @@ function Form({ item }: { item?: TodoItem }) {
   return (
     <form className="form" onSubmit={save}>
       <label>Título
-        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item} />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item && !embedded} />
       </label>
       <div className="field" role="group" aria-label="Materia">
         <span>Materia</span>
@@ -80,10 +81,10 @@ function Form({ item }: { item?: TodoItem }) {
             <button type="button" key={m} className="pill" aria-pressed={!other && durationMin === m}
               onClick={() => { setOther(false); setDuration(durationMin === m ? null : m); }}>{fmtDuration(m)}</button>
           ))}
-          <button type="button" className="pill" aria-pressed={other} onClick={() => { setOther(!other); setDuration(null); }}>Otra…</button>
+          <button type="button" className="pill" aria-pressed={other} onClick={() => { setOther(!other); setFocusOther(true); setDuration(null); }}>Otra…</button>
         </div>
         {other && (
-          <input type="number" inputMode="numeric" min={1} max={1440} step={1} aria-label="Minutos" placeholder="Minutos" autoFocus
+          <input type="number" inputMode="numeric" min={1} max={1440} step={1} aria-label="Minutos" placeholder="Minutos" autoFocus={focusOther}
             value={durationMin ?? ''} onChange={(e) => setDuration(e.target.value ? Number(e.target.value) : null)} />
         )}
       </div>
@@ -107,15 +108,15 @@ function Form({ item }: { item?: TodoItem }) {
   );
 }
 
-export function TodoEditPage() {
+export function TodoEditPage({ embedded }: { embedded?: boolean }) {
   const { id } = useParams();
   const { data, error, loading, reload } = useApi<TodoItem>(id ? `/api/todo/${id}` : null);
   return (
     <div className="card">
-      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3><Link to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace>Cerrar</Link></div>
+      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3>{!embedded && <Link to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace>Cerrar</Link>}</div>
       {id && loading && !data && <p className="muted">Cargando…</p>}
       {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
-      {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} />}
+      {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} embedded={embedded} />}
     </div>
   );
 }

@@ -5,5 +5,4 @@
     <string name="package_name">ar.federico.studyworkflow</string>
     <string name="custom_url_scheme">ar.federico.studyworkflow</string>
     <string name="widget_todo_name">Study Workflow · To-do</string>
-    <string name="widget_agenda_name">Study Workflow · Agenda</string>
 </resources>

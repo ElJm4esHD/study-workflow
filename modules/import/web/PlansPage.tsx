@@ -34,7 +34,7 @@ export function PlansPage() {
       <h1>Planes importados</h1>
       {error && <p className="error" role="alert">{error.message}</p>}
       {data?.length === 0 && <p className="muted">Todavía no importaste ningún plan.</p>}
-      <div className="card-group">
+      <div className="cols imp-plans">
         {data?.map((p) => (
           <div key={p.id} className="card">
             <h2 style={{ marginLeft: 0 }}>{p.title ?? `Plan del ${formatDate(todayAR(new Date(p.createdAt)))}`}</h2>
