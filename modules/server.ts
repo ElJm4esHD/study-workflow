@@ -2,5 +2,6 @@ import type { ServerModule } from '../core/server/registry.ts';
 import { todo } from './todo/server/index.ts';
 import { calendar } from './calendar/server/index.ts';
 import { importModule } from './import/server/index.ts';
+import { finals } from './finals/server/index.ts';
 
-export const modules: ServerModule[] = [todo, calendar, importModule];
+export const modules: ServerModule[] = [todo, calendar, importModule, finals];

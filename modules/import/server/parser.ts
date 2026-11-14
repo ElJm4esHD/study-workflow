@@ -1,5 +1,6 @@
 import { TODO_CATEGORIES, type TodoCategory } from '../../todo/shared.ts';
 import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
+import { findTagged } from '../../../core/shared/tagged.ts';
 
 export const ITEM_TIPOS = ['tarea', 'evento', 'parcial', 'recuperatorio', 'final'] as const;
 
@@ -21,32 +22,7 @@ export type ParseResult =
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-// shortcut: O(n^2) worst case on pathological text with many unbalanced '{'; fine for pasted chat messages.
-export function findPlanObject(text: string): Record<string, unknown> | null {
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] !== '{') continue;
-    let depth = 0;
-    let inStr = false;
-    for (let j = i; j < text.length; j++) {
-      const c = text[j];
-      if (inStr) {
-        if (c === '\\') j++;
-        else if (c === '"') inStr = false;
-      } else if (c === '"') inStr = true;
-      else if (c === '{') depth++;
-      else if (c === '}' && --depth === 0) {
-        try {
-          const obj: unknown = JSON.parse(text.slice(i, j + 1));
-          if (isObj(obj) && obj.studyWorkflow === 'plan') return obj;
-        } catch {
-          // not JSON; keep scanning
-        }
-        break;
-      }
-    }
-  }
-  return null;
-}
+export const findPlanObject = (text: string) => findTagged(text, 'plan');
 
 function parseItem(raw: unknown, index: number, planMateria: string | null): ParsedItem {
   const out: ParsedItem = { index, tipo: '', fecha: '', hora: null, titulo: '', notas: null, duracion: null, categoria: 'tarea', materiaName: null, errors: [] };
