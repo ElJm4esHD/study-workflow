@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { expandEvents } from './recurrence.ts';
 import type { CalendarEvent } from './service.ts';
 
-const ev = (o: Partial<CalendarEvent> = {}): CalendarEvent => ({
+const ev = (o: Partial<CalendarEvent> = {}): CalendarEvent => ({ reminderMin: null, reminderInsistent: false,
   id: 'e', title: 'Clase', notes: null, kind: 'evento', materiaId: null, allDay: false,
   startDate: '2026-11-02', startTime: '10:00', endDate: '2026-11-02', endTime: null,
   repeatWeekdays: [1, 3], repeatUntil: null, seriesId: null, originalDate: null, createdAt: '', updatedAt: '', ...o,

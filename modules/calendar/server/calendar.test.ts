@@ -135,3 +135,13 @@ test('PUT occurrence sobre una ya separada reemplaza completo', async () => {
   expect(r.statusCode).toBe(200);
   expect(r.json()).toMatchObject({ allDay: true, startTime: null, endTime: null, notes: null });
 });
+
+test('recordatorio: se guarda, llega en cada ocurrencia de la agenda y valida el rango', async () => {
+  const { post, patch, agenda } = await make();
+  const e = (await post({ title: 'Clase', kind: 'evento', allDay: false, startDate: '2026-11-02', startTime: '10:00', repeatWeekdays: [1, 3], reminderMin: 60, reminderInsistent: true })).json();
+  expect(e).toMatchObject({ reminderMin: 60, reminderInsistent: true });
+  const occ = (await agenda('2026-11-02', '2026-11-08')).events;
+  expect(occ.map((o: { reminderMin: number }) => o.reminderMin)).toEqual([60, 60]);
+  expect((await patch(e.id, { reminderMin: null })).json().reminderMin).toBeNull();
+  expect((await patch(e.id, { reminderMin: 99999 })).statusCode).toBe(400);
+});

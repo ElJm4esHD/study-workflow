@@ -30,4 +30,29 @@ class WidgetLogicTest {
         assertFalse(shouldSend(QueueOp("a", true, "u1", "t"), 200, "u2"))
         assertTrue(shouldSend(QueueOp("a", true, null, "2026-11-06T10:00:00Z"), 200, "2026-11-06T09:00:00Z"))
     }
+
+    @Test fun reminders_calcula() {
+        val zone = java.time.ZoneId.of("America/Argentina/Buenos_Aires")
+        fun ms(iso: String) = java.time.OffsetDateTime.parse(iso).toInstant().toEpochMilli()
+        val todos = listOf(
+            Todo("a", "A", "2026-11-20", "18:00", null, false, 0, "u", reminderMin = 15, insistent = true),
+            Todo("sinhora", "B", "2026-11-21", null, null, false, 0, "u", reminderMin = 0),
+            Todo("hecha", "C", "2026-11-20", "18:00", null, true, 0, "u", reminderMin = 15),
+            Todo("sinrec", "D", "2026-11-20", "18:00", null, false, 0, "u"),
+            Todo("pasada", "E", "2026-11-10", "18:00", null, false, 0, "u", reminderMin = 0),
+        )
+        val events = listOf(
+            Ev("s:2026-11-23", "Clase", "evento", false, "2026-11-23", "2026-11-23", "10:00", null, reminderMin = 60),
+            Ev("s:2026-11-25", "Clase", "evento", false, "2026-11-25", "2026-11-25", "10:00", null, reminderMin = 60),
+            Ev("f", "Final", "final", true, "2026-11-22", "2026-11-22", null, null, reminderMin = 1440),
+        )
+        val r = reminders(todos, events, ms("2026-11-14T12:00:00-03:00"), zone)
+        assertEquals(listOf("t:a", "t:sinhora", "f", "s:2026-11-23", "s:2026-11-25").map { if (it.startsWith("t:")) it else "e:$it" }, r.map { it.key })
+        assertEquals(ms("2026-11-20T17:45:00-03:00"), r[0].at)
+        assertTrue(r[0].insistent)
+        assertEquals(ms("2026-11-21T09:00:00-03:00"), r[1].at) // sin hora: 09:00
+        assertEquals(ms("2026-11-21T09:00:00-03:00"), r[2].at) // todo el día: 09:00 del 22, menos 1 día
+        assertEquals("/todo/a", r[0].route)
+        assertEquals(2, reminders(todos, events, ms("2026-11-14T12:00:00-03:00"), zone, max = 2).size)
+    }
 }

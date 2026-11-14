@@ -10,6 +10,7 @@ const fields = {
   title: { type: 'string' }, notes: nullableStr, kind: { type: 'string' }, materiaId: nullableStr,
   allDay: { type: 'boolean' }, startDate: { type: 'string' }, startTime: nullableStr, endDate: nullableStr,
   endTime: nullableStr, repeatUntil: nullableStr,
+  reminderMin: {}, reminderInsistent: { type: 'boolean' }, // reminderMin lo valida el service
   repeatWeekdays: { type: ['array', 'null'], items: { type: 'integer' } },
 };
 const full = { type: 'object', required: ['title', 'kind', 'allDay', 'startDate'], properties: fields };

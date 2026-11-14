@@ -4,7 +4,7 @@ import { groupMinutes, groupTodos, hoyCardData, orderBetween, sortDay } from './
 
 const today = '2026-11-04';
 let n = 0;
-const t = (o: Partial<TodoItem>): TodoItem => ({ subtasks: [],
+const t = (o: Partial<TodoItem>): TodoItem => ({ subtasks: [], reminderMin: null, reminderInsistent: false,
   id: `i${++n}`, title: 't', notes: null, dueDate: null, dueTime: null, materiaId: null, completed: false,
   completedAt: null, sortOrder: 0, createdAt: '', updatedAt: '', durationMin: null, category: 'tarea', ...o,
 });

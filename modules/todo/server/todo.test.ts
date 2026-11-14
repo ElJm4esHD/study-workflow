@@ -172,3 +172,16 @@ test('subtareas inválidas → 400', async () => {
     expect((await post({ title: 'a', subtasks })).json().error.code).toBe('subtareas_invalidas');
   }
 });
+
+test('recordatorio: se guarda con fecha, se descarta sin fecha y valida el rango', async () => {
+  const { post, patch } = await make();
+  const t = (await post({ title: 'a', dueDate: '2026-11-20', dueTime: '18:00', reminderMin: 15, reminderInsistent: true })).json();
+  expect(t).toMatchObject({ reminderMin: 15, reminderInsistent: true });
+  expect((await patch(t.id, { reminderMin: 0, reminderInsistent: false })).json()).toMatchObject({ reminderMin: 0, reminderInsistent: false });
+  expect((await patch(t.id, { completed: true })).json().reminderMin).toBe(0);
+  expect((await patch(t.id, { dueDate: null, dueTime: null })).json().reminderMin).toBeNull();
+  expect((await post({ title: 'b', reminderMin: 15 })).json().reminderMin).toBeNull();
+  for (const reminderMin of [-1, 1.5, 40321, '15']) {
+    expect((await post({ title: 'c', dueDate: '2026-11-20', reminderMin })).json().error.code).toBe('recordatorio_invalido');
+  }
+});

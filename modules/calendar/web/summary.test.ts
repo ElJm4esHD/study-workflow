@@ -8,12 +8,12 @@ import { NEUTRAL, PALETTE } from '../../../core/shared/palette.ts';
 
 const mat = (id: string, i: number): Materia => ({ id, name: id, color: PALETTE[i].hex, colorStrong: PALETTE[i].strong, sigla: id.toUpperCase(), archived: false, createdAt: '', updatedAt: '' });
 const materias = ['a', 'b', 'c', 'd', 'e'].map(mat);
-const ev = (o: Partial<Occurrence>): Occurrence => ({
+const ev = (o: Partial<Occurrence>): Occurrence => ({ reminderMin: null, reminderInsistent: false,
   id: 'e', title: 'ev', notes: null, kind: 'evento', materiaId: null, allDay: true, startDate: '2026-11-10', startTime: null,
   endDate: '2026-11-10', endTime: null, repeatWeekdays: null, repeatUntil: null, seriesId: null, originalDate: null,
   createdAt: '', updatedAt: '', eventId: 'e', occurrenceDate: '2026-11-10', isRecurring: false, ...o,
 });
-const td = (o: Partial<TodoItem>): TodoItem => ({ subtasks: [],
+const td = (o: Partial<TodoItem>): TodoItem => ({ subtasks: [], reminderMin: null, reminderInsistent: false,
   id: 't', title: 't', notes: null, dueDate: '2026-11-10', dueTime: null, materiaId: null, completed: false, completedAt: null,
   sortOrder: 0, createdAt: '', updatedAt: '', durationMin: 30, category: 'tarea', ...o,
 });

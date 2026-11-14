@@ -68,15 +68,33 @@ La dirección se cambia después en Ajustes → Servidor.
 
 Anda con la app cerrada o abierta. Si es la primera vez, antes te pide la dirección del servidor.
 
-## Widgets (To-do y Agenda)
+## Widget To-do
 
 1. Abrí la app una vez con conexión (si no, el widget dice "Abrí Study Workflow para conectar.").
-2. Mantené apretada la pantalla de inicio → **Widgets** → **Study Workflow** → arrastrá "To-do" o "Agenda". Para redimensionarlo, mantenelo apretado y tirá de los bordes.
+2. Mantené apretada la pantalla de inicio → **Widgets** → **Study Workflow** → arrastrá "To-do". Para redimensionarlo, mantenelo apretado y tirá de los bordes.
 3. **Batería (importante en Samsung):** **Ajustes → Aplicaciones → Study Workflow → Batería → Sin restricciones**. Sin esto, One UI puede frenar los refrescos y la sincronización de los tildes hechos sin señal.
 
 Se actualizan al cambiar algo en la app, al salir de la app, al tildar desde el widget y cada 30 minutos. Un tilde hecho sin señal se sube solo al volver la red; si la tarea se cambió desde la compu mientras tanto, gana ese cambio.
 
 Si un tilde sin señal no se sube: revisá la batería "Sin restricciones" y abrí la app una vez.
+
+Las tareas con subtareas muestran el progreso (`2/4`); tildar en el widget completa la tarea principal.
+
+El widget Agenda ya no existe. Si lo tenías puesto, después de actualizar queda como "No se puede cargar el widget": mantenelo apretado y quitalo.
+
+## Recordatorios
+
+En una tarea con fecha o en un evento, elegí **Recordatorio**: a la hora, 15 min, 1 h o 1 día antes, o "Otro…" (minutos, horas o días). Se puede poner desde la compu o desde el celu; suena en el celu.
+
+- **Permisos:** la primera vez que ponés uno desde el celu, Android pide permiso de **notificaciones**: aceptalo. Si lo rechazaste: Ajustes → Aplicaciones → Study Workflow → Notificaciones.
+- **Sonido:** usa el tono y el **volumen de alarma** del celu, así que suena aunque esté en silencio o vibración. Con **Insistente** se repite hasta que bajes la barra de notificaciones o la descartes. El tono se cambia en Ajustes → Aplicaciones → Study Workflow → Notificaciones → Recordatorios.
+- **Sin hora** (tarea con fecha sola o evento de todo el día) se toma las 09:00 como base.
+- **Eventos que se repiten:** suena en cada ocurrencia.
+- Funciona sin conexión, con la app cerrada y después de reiniciar el celu. Tocar la notificación abre la tarea o el día.
+- Al completar o borrar la tarea, o sacarle la fecha, el recordatorio se cancela solo.
+- **Cuándo se entera el celu:** al cambiar algo en la app del celu, al instante. Si lo pusiste desde la compu, en la próxima sincronización: al abrir la app o cada 30 minutos con el widget To-do puesto. Se programan los 60 más próximos dentro de los próximos 30 días.
+- **Batería:** necesita "Sin restricciones", igual que el widget (paso 3 de arriba).
+- Si el celu estaba apagado a la hora del recordatorio, ese no suena.
 
 ## 5. Actualizar
 

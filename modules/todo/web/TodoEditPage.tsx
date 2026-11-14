@@ -8,6 +8,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
 import type { Subtask, TodoItem } from '../server/service.ts';
 import { PlusIcon } from '../../../core/web/icons.tsx';
+import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import { keepSearch } from './views.ts';
 import './todo.css';
 
@@ -29,6 +30,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const [category, setCategory] = useState<TodoCategory>(item?.category ?? 'tarea');
   const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
+  const [reminder, setReminder] = useState({ min: item?.reminderMin ?? null, insistent: item?.reminderInsistent ?? false });
   const [subs, setSubs] = useState<Subtask[]>(item?.subtasks ?? []);
   const [newSub, setNewSub] = useState('');
   const [focusOther, setFocusOther] = useState(false); // foco en Minutos solo si recién se tocó "Otra…"
@@ -41,6 +43,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     const body = {
       title, notes: notes.trim() || null, dueDate: dueDate || null, dueTime: dueDate && dueTime ? dueTime : null,
       materiaId: materiaId || null, category, durationMin, subtasks: cleanSubs(),
+      reminderMin: dueDate ? reminder.min : null, reminderInsistent: !!dueDate && reminder.insistent,
     };
     try {
       if (item) await api('PATCH', `/api/todo/${item.id}`, body); else await api('POST', '/api/todo', body);
@@ -131,6 +134,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
           <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} disabled={!dueDate} />
         </label>
       </div>
+      <ReminderField value={reminder.min} insistent={reminder.insistent} disabled={!dueDate} onChange={(min, insistent) => setReminder({ min, insistent })} />
       <label>Notas
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </label>

@@ -79,13 +79,23 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - **Duración y categoría**: cada to-do puede llevar duración estimada y categoría (tarea, entrega, estudio); el tiempo se suma por día y por materia.
 - **Importar**: la vista previa muestra duración y categoría; el formato pasó a v2 (ver [docs/formato-importacion.md](docs/formato-importacion.md)).
 
+## Qué cambió de uso (observaciones 14/11)
+
+- **Finales** (pantalla nueva): cargás las fechas posibles de cada materia (a mano o pegando el JSON de la skill, ver [docs/formato-finales.md](docs/formato-finales.md)), filtrás y ordenás las combinaciones y elegís una. Elegir crea los eventos `final` en el calendario; "Deshacer" los borra.
+- **Subtareas**: una tarea puede tener subtareas. En las listas y en el widget se ve el progreso (`2/4`); se tildan abriendo la tarea, y tildarlas todas completa la principal. Sin conexión solo se tilda la principal.
+- **Recordatorios**: tareas (con fecha) y eventos pueden sonar en el celu a la hora, 15 min, 1 h o 1 día antes, o un tiempo a elección. Con "Insistente" sigue sonando hasta que la atiendas. Detalles en [docs/android.md](docs/android.md).
+- **Atrás en el celu**: vuelve dentro de la app; sin historial va a la pantalla padre y recién desde una pantalla principal minimiza.
+- **Compu**: To-do tiene siempre el panel de la derecha (editar o nueva tarea) y las pantallas usan el ancho.
+- **Agenda**: se sacaron el widget Agenda y la vista Agenda del calendario (quedan Mes y Semana).
+- **Importar**: el formato pasó a v3 (subtareas).
+
 ## Agregar un módulo
 
 Una carpeta en `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`. Contrato y ejemplo en [docs/modulos.md](docs/modulos.md).
 
 ## Importar planes
 
-El formato JSON que genera Claude está en [docs/formato-importacion.md](docs/formato-importacion.md).
+El formato JSON que genera Claude está en [docs/formato-importacion.md](docs/formato-importacion.md). El de las fechas de finales, en [docs/formato-finales.md](docs/formato-finales.md).
 
 ## Compilar el APK
 

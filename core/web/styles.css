@@ -101,6 +101,10 @@ input:not([type='checkbox']):not([type='radio']), textarea, select {
   min-height: 44px; padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface-2);
   color: var(--text); font: inherit; font-size: 14.5px;
 }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form label.rem-check { flex-direction: row; align-items: center; gap: 10px; min-height: 44px; font-size: 13.5px; color: var(--text); }
+.rem-check input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
 .error { color: var(--late); margin: 0; }
 
 /* --m = pastel de la materia, --ms = tono fuerte; se setean en el style del elemento o de un ancestro. */

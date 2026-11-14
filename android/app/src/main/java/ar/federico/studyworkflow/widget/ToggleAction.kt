@@ -12,6 +12,7 @@ class ToggleAction : ActionCallback {
         val done = parameters[doneKey] ?: return
         runCatching {
             WidgetStore.toggle(context, id, done)
+            ReminderScheduler.reschedule(context)
             redrawAll(context)
         }
         SyncWorker.schedule(context)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { appendCopy, applyPending, enqueue, flush, isQueueable, lastCopyAt, mergeCopies, patchCopies, pending, readCopy, saveCopy } from './offline.ts';
 import { apiBase, isNative } from './server.ts';
-import { refreshWidgets } from './widgets.ts';
+import { markWidgetDone, refreshWidgets } from './widgets.ts';
 
 export class ApiError extends Error {
   status: number;
@@ -62,6 +62,7 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
       throw new ApiError(0, 'sin_conexion', 'No se pudo guardar el cambio sin conexión.');
     }
     patchCopies(id, completed, at);
+    markWidgetDone(id, completed);
     setOffline(true);
     return readCopy<T>(path)?.data as T;
   };

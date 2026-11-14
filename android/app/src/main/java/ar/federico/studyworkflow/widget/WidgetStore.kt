@@ -8,16 +8,19 @@ import org.json.JSONObject
 object WidgetStore {
     private fun p(ctx: Context) = ctx.getSharedPreferences("sw_widgets", Context.MODE_PRIVATE)
     private fun JSONObject.str(k: String): String? = if (isNull(k)) null else optString(k)
+    private fun JSONObject.int(k: String): Int? = if (isNull(k)) null else optInt(k)
     private fun JSONArray.objs(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
 
     private fun toTodo(o: JSONObject) = Todo(
         o.getString("id"), o.optString("title"), o.str("dueDate"), o.str("dueTime"), o.str("materiaId"),
         o.optBoolean("completed"), o.optInt("sortOrder"), o.optString("updatedAt"),
         o.optJSONArray("subtasks")?.objs()?.count { it.optBoolean("done") } ?: 0, o.optJSONArray("subtasks")?.length() ?: 0,
+        o.int("reminderMin"), o.optBoolean("reminderInsistent"),
     )
     private fun toEv(o: JSONObject) = Ev(
         o.getString("id"), o.optString("title"), o.optString("kind", "evento"), o.optBoolean("allDay"),
         o.getString("startDate"), o.optString("endDate", o.getString("startDate")), o.str("startTime"), o.str("materiaId"),
+        o.int("reminderMin"), o.optBoolean("reminderInsistent"),
     )
 
     fun server(ctx: Context): String? = p(ctx).getString("server", null)?.takeIf { it.isNotBlank() }
@@ -85,6 +88,15 @@ object WidgetStore {
         val keep = keepMap(ctx)
         if (completed) keep.put(id, System.currentTimeMillis() + 3000) else keep.remove(id)
         e.putString("keep", keep.toString()).apply()
+    }
+
+    /** Tilde hecho sin conexión dentro de la app: actualiza la copia sin encolar (la cola es la de la app). */
+    // shortcut: si el celu sincroniza antes de que la app suba su cola, la copia vuelve a "pendiente" hasta ese momento.
+    @Synchronized
+    fun setCompletedLocal(ctx: Context, id: String, completed: Boolean) {
+        val e = p(ctx).edit()
+        for (k in listOf("todos", "agenda")) p(ctx).getString(k, null)?.let { e.putString(k, patch(it, id, completed, null)) }
+        e.apply()
     }
 
     fun setUpdatedAt(ctx: Context, id: String, updatedAt: String) {

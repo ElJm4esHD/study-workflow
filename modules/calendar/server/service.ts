@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
+import { isValidReminder } from '../../../core/shared/reminder.ts';
 import { httpError } from '../../../core/server/errors.ts';
 import type { CoreContext } from '../../../core/server/registry.ts';
 import type { EventKind } from '../shared.ts';
@@ -11,11 +12,13 @@ export type CalendarEvent = {
   allDay: boolean; startDate: string; startTime: string | null; endDate: string; endTime: string | null;
   repeatWeekdays: number[] | null; repeatUntil: string | null; seriesId: string | null;
   originalDate: string | null; createdAt: string; updatedAt: string;
+  reminderMin: number | null; reminderInsistent: boolean;
 };
 export type EventInput = {
   id?: string; title: string; notes?: string | null; kind: EventKind; materiaId?: string | null;
   allDay: boolean; startDate: string; startTime?: string | null; endDate?: string | null;
   endTime?: string | null; repeatWeekdays?: number[] | null; repeatUntil?: string | null;
+  reminderMin?: number | null; reminderInsistent?: boolean;
 };
 
 export interface CalendarService {
@@ -61,6 +64,7 @@ export function validateEvent(i: EventInput): string | null {
       return 'La fecha límite de repetición no es válida.';
     }
   }
+  if (i.reminderMin != null && !isValidReminder(i.reminderMin)) return 'El recordatorio no es válido.';
   return null;
 }
 
@@ -69,6 +73,7 @@ type Row = {
   all_day: number; start_date: string; start_time: string | null; end_date: string; end_time: string | null;
   repeat_weekdays: string | null; repeat_until: string | null; series_id: string | null;
   original_date: string | null; created_at: string; updated_at: string;
+  reminder_min: number | null; reminder_insistent: number;
 };
 const toEvent = (r: Row): CalendarEvent => ({
   id: r.id, title: r.title, notes: r.notes, kind: r.kind, materiaId: r.materia_id, allDay: r.all_day === 1,
@@ -76,6 +81,7 @@ const toEvent = (r: Row): CalendarEvent => ({
   repeatWeekdays: r.repeat_weekdays === null ? null : r.repeat_weekdays.split(',').map(Number),
   repeatUntil: r.repeat_until, seriesId: r.series_id, originalDate: r.original_date,
   createdAt: r.created_at, updatedAt: r.updated_at,
+  reminderMin: r.reminder_min, reminderInsistent: r.reminder_insistent === 1,
 });
 const marks = (n: number) => Array(n).fill('?').join(',');
 const ORDER = 'ORDER BY start_date, start_time, created_at';
@@ -104,9 +110,11 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
       const id = i.id ?? randomUUID();
       const now = new Date().toISOString();
       db.prepare(`INSERT INTO calendar_events (id, title, notes, kind, materia_id, all_day, start_date, start_time,
-        end_date, end_time, repeat_weekdays, repeat_until, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+        end_date, end_time, repeat_weekdays, repeat_until, created_at, updated_at, reminder_min, reminder_insistent)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
         .run(id, i.title.trim(), i.notes ?? null, i.kind, materiaId, i.allDay ? 1 : 0, i.startDate, i.startTime ?? null,
-          i.endDate ?? i.startDate, i.endTime ?? null, i.repeatWeekdays?.join(',') ?? null, i.repeatUntil ?? null, now, now);
+          i.endDate ?? i.startDate, i.endTime ?? null, i.repeatWeekdays?.join(',') ?? null, i.repeatUntil ?? null, now, now,
+          i.reminderMin ?? null, i.reminderInsistent ? 1 : 0);
       return byId(id)!;
     },
     // El que llama lo envuelve en ctx.transaction para que sea todo o nada (igual que todo).
@@ -123,10 +131,10 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
       const materiaId = m.materiaId ?? null;
       if (materiaId !== null && !ctx.materias.get(materiaId)) throw httpError(400, 'materia_inexistente', 'La materia no existe.');
       db.prepare(`UPDATE calendar_events SET title=?, notes=?, kind=?, materia_id=?, all_day=?, start_date=?, start_time=?,
-        end_date=?, end_time=?, repeat_weekdays=?, repeat_until=?, updated_at=? WHERE id=?`)
+        end_date=?, end_time=?, repeat_weekdays=?, repeat_until=?, updated_at=?, reminder_min=?, reminder_insistent=? WHERE id=?`)
         .run(m.title.trim(), m.notes ?? null, m.kind, materiaId, m.allDay ? 1 : 0, m.startDate, m.startTime ?? null,
           m.endDate ?? m.startDate, m.endTime ?? null, m.repeatWeekdays?.join(',') ?? null, m.repeatUntil ?? null,
-          new Date().toISOString(), id);
+          new Date().toISOString(), m.reminderMin ?? null, m.reminderInsistent ? 1 : 0, id);
       return byId(id)!;
     },
     remove(id) {

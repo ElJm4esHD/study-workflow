@@ -9,6 +9,7 @@ const fields = {
   materiaId: nullableStr, sortOrder: { type: 'number' },
   durationMin: {}, // schema vacío: Ajv no tipa ni coerciona; el service valida entero 1–1440
   category: { type: 'string' },
+  reminderMin: {}, reminderInsistent: { type: 'boolean' }, // reminderMin lo valida el service, igual que durationMin
   subtasks: { type: 'array', items: { type: 'object' } }, // el service valida cantidad y títulos
 };
 

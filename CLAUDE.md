@@ -41,11 +41,14 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 ## Estado actual (ya hecho)
 
 - **Núcleo:** Materias (nombre, sigla, color pastel + tono fuerte de la paleta), Ajustes, Inicio (dashboard armado con tarjetas de los módulos).
-- **To-do:** lista unificada; tareas con fecha/hora, materia, categoría (`tarea` | `entrega` | `estudio`), duración estimada; vistas Hoy, Próximas, Sin fecha, Por materia, Completadas.
-- **Calendario:** vista Mes (grilla propia, chips por materia, exámenes en color sólido, detalle del día) y Semana (FullCalendar). Eventos `evento | parcial | recuperatorio | final`, repetición semanal.
-- **Importar plan:** pegar JSON generado por mi skill de Claude `cargar-app`. Formato y reglas: `docs/formato-importacion.md` (v2). Es un contrato: no lo cambies sin subir `version`, seguir aceptando las anteriores y pasarme el texto exacto de los cambios.
+- **To-do:** lista unificada; tareas con fecha/hora, materia, categoría (`tarea` | `entrega` | `estudio`), duración estimada, subtareas (JSON en la tarea; tildarlas todas completa la principal) y recordatorio; vistas Hoy, Próximas, Sin fecha, Por materia, Completadas.
+- **Calendario:** vista Mes (grilla propia, chips por materia, exámenes en color sólido, detalle del día) y Semana (FullCalendar). Eventos `evento | parcial | recuperatorio | final`, repetición semanal, recordatorio.
+- **Finales** (módulo `finals`): fechas posibles por materia (a mano o pegando el JSON de mi skill; formato en `docs/formato-finales.md`, v1, mismo criterio de contrato), combinaciones con filtros y orden, elegir crea los eventos `final` y se puede deshacer.
+- **Importar plan:** pegar JSON generado por mi skill de Claude `cargar-app`. Formato y reglas: `docs/formato-importacion.md` (v3). Es un contrato: no lo cambies sin subir `version`, seguir aceptando las anteriores y pasarme el texto exacto de los cambios.
 - **APK:** offline con la última copia; sin conexión solo se puede tildar (cola, gana la última escritura). Menú "Compartir" → Importar. Guía en `docs/android.md`.
-- **Widget To-do** (Glance): scroll y tildado dentro del widget, cola offline propia.
+- **Widget To-do** (Glance): scroll y tildado dentro del widget, cola offline propia. No hay widget ni vista Agenda.
+- **Recordatorios:** `reminderMin` (minutos antes) + `reminderInsistent` en tareas y eventos; el celu los programa en nativo (AlarmManager) desde la copia del sync del widget. Selector compartido en `core/web/ReminderField.tsx`.
+- **Atrás en el APK:** `MainActivity` llama a `window.swBack()` (`core/web/App.tsx`, regla en `core/web/back.ts`).
 - **Estilo (Hito C):** tema oscuro fijo, tarjetas, densidad compacta, esquinas medias, fuente del sistema, animaciones sutiles. Tokens en `core/web/styles.css`. Zonas táctiles ≥ 44–48 px.
 - Diseños y planes anteriores: `docs/superpowers/specs/` y `docs/superpowers/plans/`.
 

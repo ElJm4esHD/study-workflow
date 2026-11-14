@@ -31,6 +31,7 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
         } catch (_: Exception) {
             // un widget nunca debe romper: se reintenta en el próximo disparo
         }
+        runCatching { ReminderScheduler.reschedule(ctx) }
         runCatching { redrawAll(ctx) }
         // Las tachadas de 3 s desaparecen en un trabajo aparte (otro nombre, para no cancelar este).
         WidgetStore.nextKeepExpiry(ctx)?.let { schedule(ctx, it - System.currentTimeMillis() + 100, "sw-sync-keep") }
@@ -44,7 +45,7 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
             retry = !flush(base)
             val today = LocalDate.now(ZoneId.of("America/Argentina/Buenos_Aires"))
             val t = WidgetApi.get(base, "/api/todo")
-            val a = WidgetApi.get(base, "/api/calendar/agenda?from=$today&to=${today.plusDays(7)}")
+            val a = WidgetApi.get(base, "/api/calendar/agenda?from=$today&to=${today.plusDays(30)}")
             val m = WidgetApi.get(base, "/api/materias")
             if (t.status == 200 && a.status == 200 && m.status == 200) {
                 WidgetStore.saveAll(ctx, t.body, a.body, m.body)

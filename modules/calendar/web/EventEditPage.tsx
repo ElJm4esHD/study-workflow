@@ -6,6 +6,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import type { CalendarEvent, EventInput } from '../server/service.ts';
 import { KIND_LABELS } from './views.ts';
+import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import './calendar.css';
 
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
@@ -39,6 +40,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   const [endDate, setEndDate] = useState(isSeries ? date0 : (item?.endDate ?? date0));
   const [endTime, setEndTime] = useState(item?.endTime ?? '');
   const [notes, setNotes] = useState(item?.notes ?? '');
+  const [reminder, setReminder] = useState({ min: item?.reminderMin ?? null, insistent: item?.reminderInsistent ?? false });
   const [repeat, setRepeat] = useState(isSeries);
   const [weekdays, setWeekdays] = useState<number[]>(item?.repeatWeekdays ?? []);
   const [until, setUntil] = useState(item?.repeatUntil ?? '');
@@ -58,6 +60,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
     startTime: allDay ? null : startTime || null, endDate: series || ocurrencia ? startDate : endDate,
     endTime: allDay ? null : endTime || null, notes: notes.trim() || null,
     repeatWeekdays: series ? weekdays : null, repeatUntil: series ? until || null : null,
+    reminderMin: reminder.min, reminderInsistent: reminder.insistent,
   });
 
   async function run(fn: () => Promise<unknown>) {
@@ -144,6 +147,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
             <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </label>
         )}
+        <ReminderField value={reminder.min} insistent={reminder.insistent} onChange={(min, insistent) => setReminder({ min, insistent })} />
         <label>Notas
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </label>

@@ -1,6 +1,11 @@
 package ar.federico.studyworkflow.widget
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -41,6 +46,26 @@ class WidgetsPlugin : Plugin() {
 
     @PluginMethod
     fun refresh(call: PluginCall) {
+        SyncWorker.schedule(context)
+        call.resolve()
+    }
+
+    /** Android 13+: sin este permiso los recordatorios no se muestran. Se pide al poner el primero. */
+    @PluginMethod
+    fun askNotifications(call: PluginCall) {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        }
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun setDone(call: PluginCall) {
+        val id = call.getString("id")
+        if (id != null) runCatching {
+            WidgetStore.setCompletedLocal(context, id, call.getBoolean("completed", true) == true)
+            ReminderScheduler.reschedule(context)
+        }
         SyncWorker.schedule(context)
         call.resolve()
     }
