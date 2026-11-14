@@ -2,6 +2,7 @@
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, reloadAll, useApi } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { vibrate } from '../../../core/web/haptics.ts';
 import { isValidDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
@@ -70,7 +71,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   }
   async function remove() {
     if (!item || block() || !confirm(`¿Borrar "${item.title}"?`)) return;
-    try { await api('DELETE', `/api/todo/${item.id}`); back(); } catch (err) { notify(msg(err)); }
+    try { await api('DELETE', `/api/todo/${item.id}`); vibrate('warn'); back(); } catch (err) { notify(msg(err)); }
   }
   // Las archivadas no se ofrecen, salvo la que ya tiene el ítem, para no perderla al guardar.
   const options = materias.filter((m) => !m.archived || m.id === item?.materiaId);

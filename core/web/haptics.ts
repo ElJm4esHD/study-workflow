@@ -1,11 +1,15 @@
-import { getPrefs, VIBRATION_K } from './prefs.ts';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { getPrefs } from './prefs.ts';
 import { isNative } from './server.ts';
 
-const PATTERNS = { tick: [8], success: [10, 40, 14], warn: [14, 30, 14], release: [14] } as const;
+const STYLE = { suave: ImpactStyle.Light, media: ImpactStyle.Medium, fuerte: ImpactStyle.Heavy } as const;
 
-/** Vibración con la intensidad elegida; solo en el APK. Etapa 4: pasa a @capacitor/haptics. */
-export function vibrate(kind: keyof typeof PATTERNS) {
-  const k = VIBRATION_K[getPrefs().vibration];
-  if (!k || !isNative()) return;
-  try { navigator.vibrate?.(PATTERNS[kind].map((ms, i) => (i % 2 ? ms : Math.round(ms * k)))); } catch { /* sin soporte */ }
+/** Vibración nativa (efectos del sistema) con la intensidad elegida; solo en el APK. */
+export function vibrate(kind: 'tick' | 'success' | 'warn' | 'release') {
+  const v = getPrefs().vibration;
+  if (v === 'off' || !isNative()) return;
+  const p = kind === 'success' ? Haptics.notification({ type: NotificationType.Success })
+    : kind === 'warn' ? Haptics.notification({ type: NotificationType.Warning })
+    : Haptics.impact({ style: kind === 'tick' && v !== 'fuerte' ? ImpactStyle.Light : STYLE[v] });
+  p.catch(() => { /* sin soporte */ });
 }
