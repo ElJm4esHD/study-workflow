@@ -1,6 +1,6 @@
 # Pulido UX/UI — Etapa 1: auditoría y sistema de diseño
 
-Pedido: `docs/pedidos/2026-11-14-pulido-ui.md`. Mockup interactivo: `2026-11-14-pulido-ui-mockup.html` (abrirlo en el navegador; arriba se elige Celu 412 px / Compu 1440 px).
+Pedido: `docs/pedidos/2026-11-14-pulido-ui.md`. Mockup interactivo: `2026-11-14-pulido-ui-mockup.html` (también publicado como página privada). En una pantalla ancha, arriba se elige Celu 412 px o Compu; en el celu ocupa toda la pantalla.
 
 ## 1. Auditoría (capturas a 412 y 1440 px, datos de ejemplo)
 
@@ -61,24 +61,42 @@ Mapa: Inicio `house` · To-do `list-checks` · Calendario `calendar` · Finales 
 
 ### Movimiento
 
-Sin librería: **View Transitions API** (cambio de pantalla, alta/baja/reorden de filas, cambio de mes y de vista) + **CSS** (micro-interacciones, hoja con curva de resorte vía `linear()`). Motion (framer) no se justifica: la WebView del S25 y el Chrome de la compu soportan todo esto.
+**Motion (`motion/react`)**. Justificación: resortes interrumpibles (si tocás a mitad de una animación, sigue desde donde está y con su velocidad), gestos que siguen el dedo y se sueltan con velocidad (`drag` con `dragConstraints`/`onDragEnd` en la hoja del día y en las filas), animaciones de layout cuando la lista se reacomoda (`layout` + `AnimatePresence` para las salidas) y escalonados. Con CSS + View Transitions habría que escribir a mano la física, la velocidad al soltar y las salidas. Se carga con `LazyMotion` + `domMax` (incluye drag y layout, ~30 kB gz).
 
-| Token | Valor | Uso |
-|---|---|---|
-| `--d-micro` | 120 ms | hover, press, toggles |
-| `--d-small` | 200 ms | check, chips, tabs |
-| `--d-screen` | 260 ms | pantallas, mes |
-| `--d-sheet` | 420 ms | hojas y paneles |
-| `--ease-out` | `cubic-bezier(.2,.8,.2,1)` | entradas |
-| `--ease-in` | `cubic-bezier(.4,0,1,1)` | salidas (más cortas) |
-| `--spring` | `linear(…)` (amortiguado 0.72, sobrepaso ~4 %) | hojas, check, indicadores |
+El mockup usa el `animate()` de Motion sin React (mismos resortes, FLIP a mano para el layout); en la app se usan los componentes `motion.*`.
 
-- Pantallas: fundido + subida de 8 px. Mes: deslizamiento según la dirección. Vista Mes/Semana: fundido cruzado.
-- Filas: tildar dibuja el tilde y la fila se va (las de abajo suben); deslizar a la derecha completa, a la izquierda borra, ambos con "Deshacer".
-- Hoja del día: entra con resorte, se cierra arrastrando o con el fondo.
-- Carga: skeletons con brillo, y aparición escalonada (máx. 6 ítems, 30 ms entre sí).
-- `prefers-reduced-motion`: todo pasa a 0 ms (las View Transitions también).
-- Solo `transform` y `opacity` animados (60 fps).
+Resortes (con `visualDuration` en segundos y `bounce`; se multiplican por la velocidad elegida):
+
+| Nombre | `visualDuration` | `bounce` | Uso |
+|---|---|---|---|
+| `snappy` | 0.22 | 0.15 | indicadores, filas al soltar, botones |
+| `gentle` | 0.32 | 0 | reacomodo de listas, pantallas, mes |
+| `sheet` | 0.38 | 0.12 | hojas y paneles, toasts |
+| `pop` | 0.30 | 0.5 | tilde del checkbox |
+
+Transiciones CSS que quedan (hover, press, color): `--d-micro` 120 ms, `--d-small` 200 ms, `--d-screen` 260 ms, todas `calc(… * var(--k))`.
+
+- Pantallas: sale con fundido corto, entra con subida de 10 px y escalonado de las tarjetas.
+- Listas: tildar dibuja el tilde con rebote; la fila se va y las de abajo suben con resorte; la tarjeta achica su alto.
+- Deslizar fila: sigue el dedo; pasado el 40 % (o con un movimiento rápido) completa (derecha) o borra (izquierda), si no vuelve con la velocidad que traía. Siempre con "Deshacer".
+- Hoja del día: entra con resorte; se arrastra desde la manija o desde el contenido si está arriba de todo; se cierra al pasar el 30 % o con un movimiento rápido hacia abajo.
+- Tirar para refrescar (To-do y Calendario, solo celu): el indicador baja con resistencia, gira según la distancia, se arma a los 64 px (vibración corta) y al soltar vibra y vuelve a pedir los datos al servidor.
+- Mes/semana: deslizamiento según la dirección. Vista Mes/Semana: fundido cruzado.
+- Carga: skeletons con brillo.
+- Solo `transform`, `opacity` y alto de tarjetas (este último al reacomodar). Las animaciones nunca bloquean los toques.
+- **Fallback:** si Motion no carga o la velocidad es "Sin animaciones", todo se aplica al instante con el mismo código (`MotionConfig reducedMotion="always"` y `--k: 0`).
+
+### Ajustes nuevos (sección "Movimiento y vibración" + "Texto")
+
+Se guardan **por dispositivo** en `localStorage` (no en los ajustes del servidor, que son compartidos), leídos al arrancar. Se agregan a `AjustesPage`.
+
+| Ajuste | Opciones | Por defecto | Efecto |
+|---|---|---|---|
+| Velocidad de animaciones | Lenta (×1.6), Normal (×1), Rápida (×0.6), Sin animaciones (×0) | Normal; "Sin animaciones" si el sistema tiene "reducir movimiento" | multiplica `visualDuration`/duraciones y `--k` |
+| Vibración (solo APK; en la web no se muestra) | Apagada, Suave, Media, Fuerte | Media | `Haptics.impact` Light / Medium / Heavy; Apagada no llama |
+| Tamaño de letra | Chica (×0.92), Normal, Grande (×1.12) | Normal | escala los tokens de tipografía (`--fs`); las zonas táctiles no cambian |
+
+Los tokens de tipografía pasan a `calc(Npx * var(--fs))` (`--t-micro`, `--t-meta`, `--t-sec`, `--t-body`, `--t-card`, `--t-h2`, `--t-page`, `--t-display`).
 
 ### Componentes base (únicos en toda la app)
 
@@ -94,4 +112,10 @@ Foco visible: anillo de 2 px `--accent` con halo `--accent-soft` (nunca el conto
 
 ### Nativo (etapa 4)
 
-Hápticos con `@capacitor/haptics` (oficial, usa los efectos del sistema; `navigator.vibrate` se siente tosco) en tildar, completar, borrar y soltar al reordenar. Gestos de deslizar en filas. Widget: mismos tokens de color, espaciado e íconos.
+Hápticos con `@capacitor/haptics` (oficial, usa los efectos del sistema; `navigator.vibrate` se siente tosco) en tildar, completar, borrar, soltar al reordenar y soltar al refrescar, con la intensidad del ajuste. Gestos de deslizar en filas. Widget: mismos tokens de color, espaciado e íconos.
+
+### Dependencias nuevas
+
+- `lucide-react`: set de íconos consistente, se importan de a uno.
+- `motion`: resortes interrumpibles, drag con velocidad y animaciones de layout (ver Movimiento).
+- `@capacitor/haptics` (etapa 4): vibración nativa con intensidad.
