@@ -91,7 +91,9 @@ export function TodoPage() {
   );
 
   useEffect(() => { if (data) setItems(data); }, [data]);
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  // Borrados con "Deshacer" pendiente: si se sale de la pantalla antes de que venza, se mandan igual.
+  const pendingDel = useRef(new Map<string, () => void>());
+  useEffect(() => () => { timers.current.forEach(clearTimeout); pendingDel.current.forEach((send) => send()); }, []);
 
   const materiaOf = (id: string | null) => materias.find((m) => m.id === id);
   const shown = items.filter((i) => !hidden.has(i.id)).map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
@@ -139,13 +141,16 @@ export function TodoPage() {
     vibrate('warn');
     setHidden((s) => new Set(s).add(id));
     const unhide = () => setHidden((s) => { const n = new Set(s); n.delete(id); return n; });
-    const t = window.setTimeout(async () => {
+    const send = async () => {
+      pendingDel.current.delete(id);
       timers.current.delete(`del-${id}`);
       try { await api('DELETE', `/api/todo/${id}`); setItems((xs) => xs.filter((i) => i.id !== id)); } catch (e) { notify(msg(e)); }
       unhide();
-    }, DELETE_DELAY);
+    };
+    const t = window.setTimeout(() => void send(), DELETE_DELAY);
     timers.current.set(`del-${id}`, t);
-    notify('Tarea borrada.', () => { clearTimeout(t); timers.current.delete(`del-${id}`); unhide(); });
+    pendingDel.current.set(id, () => void send());
+    notify('Tarea borrada.', () => { clearTimeout(t); timers.current.delete(`del-${id}`); pendingDel.current.delete(id); unhide(); });
   }
 
   function onDragEnd(list: TodoItem[], { active, over }: DragEndEvent) {

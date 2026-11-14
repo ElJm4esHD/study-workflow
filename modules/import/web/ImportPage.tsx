@@ -13,6 +13,8 @@ import type { EventKind } from '../../calendar/shared.ts';
 import type { Preview } from '../server/preview.ts';
 import type { PlanSummary } from '../server/index.ts';
 import { neededMaterias } from './logic.ts';
+import { ImportIcon, InboxIcon, ListIcon } from '../../../core/web/icons.tsx';
+import { EmptyState, PageHeader } from '../../../core/web/ui.tsx';
 import './import.css';
 
 type Res = { mode: 'create'; color: string } | { mode: 'existing'; materiaId: string };
@@ -94,22 +96,22 @@ export function ImportPage() {
 
   return (
     <>
-      <h1>Importar</h1>
+      <PageHeader title="Importar plan" actions={<Link to="/importar/planes" className="btn"><ListIcon size={18} />Planes</Link>} />
       <div className="imp-split">
       <div className="card-group">
-        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy} aria-disabled={off}>Importar desde portapapeles</button>
+        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy} aria-disabled={off}><ImportIcon />Importar desde el portapapeles</button>
         <label className="form" style={{ display: 'flex' }}>
           O pegalo acá
           <textarea ref={area} className="imp-text" value={text} onChange={(e) => setText(e.target.value)} />
         </label>
         <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()} aria-disabled={off}>Ver vista previa</button>
-        <Link to="/importar/planes" className="imp-planes-link">Ver planes importados</Link>
       </div>
       <div>
       {error && <div className="imp-err" role="alert">{error}</div>}
+      {!preview && !error && <EmptyState icon={InboxIcon} title="Todavía no hay vista previa">Copiá el plan que te armó Claude y tocá “Importar desde el portapapeles”. Vas a poder revisar cada ítem antes de guardar.</EmptyState>}
       {preview && (
         <>
-          <h2>{preview.plan.title ?? 'Plan sin título'}</h2>
+          <h2 className="imp-title">{preview.plan.title ?? 'Plan sin título'}</h2>
           {needed.map((u) => {
             const r = res[u.key]!;
             return (
@@ -136,7 +138,7 @@ export function ImportPage() {
           })}
           {[...days].sort(([a], [b]) => a.localeCompare(b)).map(([d, items]) => (
             <section key={d}>
-              <h2>{d ? formatDate(d) : 'Sin fecha'}</h2>
+              <div className="eyebrow imp-day">{d ? formatDate(d) : 'Sin fecha'}</div>
               <ul className="list card imp-list">
                 {items.map((i) => {
                   const exam = EXAM_KINDS.includes(i.tipo as EventKind);

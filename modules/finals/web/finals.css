@@ -1,15 +1,30 @@
-.fin-page, .fin-side, .fin-main { display: flex; flex-direction: column; gap: 10px; }
-.fin-main h2 { margin: 6px 4px 0; }
+.fin-page, .fin-side, .fin-main { display: flex; flex-direction: column; gap: var(--s3); }
+.fin-count { margin: 12px 4px 0; }
 @media (min-width: 1024px) {
-  .fin-page { display: grid; grid-template-columns: minmax(340px, 2fr) 5fr; gap: 20px; align-items: start; }
+  .fin-page { display: grid; grid-template-columns: minmax(340px, 2fr) 5fr; gap: 24px; align-items: start; }
+  .fin-count { margin-top: 0; }
 }
-.fin-text { width: 100%; padding: 10px 12px; }
-.fin-prev { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.fin-text { width: 100%; }
+.fin-prev { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); font-size: var(--t-sec); }
 .fin-mat { padding: 8px 0; border-top: 1px solid var(--line); }
+.fin-mat:first-of-type { border-top: 0; }
 .fin-mat-head { display: flex; align-items: center; gap: 8px; min-height: 48px; }
 .fin-mat-head strong { flex: 1; min-width: 0; font-weight: 600; }
+.fin-add, .pill .pill-x { gap: 4px; }
+.pill .pill-x { margin-left: 6px; color: var(--faint); }
+.fin-add svg { margin-right: 2px; }
 .fin-form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .fin-form input { flex: 1; min-width: 130px; }
+
+/* Filtros plegables: el resumen dice lo que está aplicado. */
+.fin-filters { padding: 0; }
+.fin-filters summary { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; cursor: pointer; list-style: none; }
+.fin-filters summary::-webkit-details-marker { display: none; }
+.fin-filters summary > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fin-filters summary small { color: var(--muted); font-size: var(--t-meta); font-weight: 500; }
+.fin-filters summary svg { color: var(--faint); transition: transform var(--d-small) var(--ease-out); }
+.fin-filters[open] summary svg { transform: rotate(180deg); }
+.fin-filters > .form { padding: 4px 16px 16px; }
 
 /* Línea de tiempo: misma escala en todas las filas; la posición sale de `left` en %. */
 .fin-axis { padding: 0 34px; font-size: 10.5px; color: var(--faint); }
@@ -17,19 +32,18 @@
 .fin-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .fin-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .fin-combo { padding: 10px 14px; }
-.fin-combo.chosen { outline: 2px solid var(--accent); }
+.fin-combo.chosen { box-shadow: inset 0 0 0 2px var(--accent), var(--e1); }
 .fin-top { display: flex; align-items: center; gap: 10px; min-height: 48px; }
-.fin-n { color: var(--faint); font-size: 12.5px; min-width: 20px; }
-.fin-sum { flex: 1; font-size: 13.5px; color: var(--muted); }
+.fin-n { color: var(--faint); font-size: var(--t-meta); min-width: 20px; font-weight: 600; }
+.fin-sum { flex: 1; font-size: var(--t-sec); color: var(--muted); }
 .fin-sum strong { color: var(--text); margin-right: 6px; }
+.fin-chosen-tag { --m: var(--accent); height: 28px; padding: 0 10px; }
 .fin-line { position: relative; height: 4px; margin: 16px 20px 34px; border-radius: 2px; background: var(--surface-2); }
-.fin-line i { position: absolute; top: -6px; width: 1px; height: 16px; background: var(--line); }
+.fin-line i { position: absolute; top: -6px; width: 1px; height: 16px; background: var(--line-strong); }
 .fin-line b { position: absolute; top: -8px; transform: translateX(-50%); }
 .fin-line b.low { top: 12px; }
-.fin-detail { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--muted); }
+.fin-detail { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: var(--t-meta); color: var(--muted); }
 .fin-detail > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.fin-detail em { font-style: normal; color: var(--faint); margin-right: 5px; }
-.fin-detail em::before { content: '← '; }
-.fin-detail em::after { content: ' →'; }
-.fin-chosen { display: flex; align-items: center; gap: 10px; outline: 2px solid var(--accent); }
-.fin-chosen > div { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.fin-detail em { font-style: normal; color: var(--faint); margin-right: 4px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); font-size: var(--t-micro); }
+.fin-chosen { display: flex; align-items: center; gap: 10px; box-shadow: inset 0 0 0 2px var(--accent), var(--e1); }
+.fin-chosen > div { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: var(--t-sec); }

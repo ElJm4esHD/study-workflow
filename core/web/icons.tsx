@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import {
-  BookOpen, Calendar, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Ellipsis, Flag, Gauge,
+  Archive, ArchiveRestore, BookOpen, Calendar, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Ellipsis, Flag, Gauge,
   GraduationCap, House, Inbox, List, ListChecks, ListTree, PartyPopper, PenLine, Plus, RefreshCw, RotateCcw, Settings, Trash2,
   Type, Upload, Vibrate, X, type LucideIcon, type LucideProps,
 } from 'lucide-react';
@@ -37,3 +37,5 @@ export const EventIcon = make(CalendarClock);
 export const ParcialIcon = make(PenLine);
 export const RecuperatorioIcon = make(RotateCcw);
 export const FinalIcon = make(GraduationCap);
+export const ArchiveIcon = make(Archive);
+export const UnarchiveIcon = make(ArchiveRestore);

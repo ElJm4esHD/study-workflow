@@ -1,29 +1,32 @@
-.imp-big { width: 100%; min-height: 64px; font-size: 1.1rem; }
-.imp-text { width: 100%; min-height: 160px; font: inherit; padding: 12px; border-radius: var(--r-card); border: 1px solid var(--line); background: var(--surface); color: var(--text); }
-.imp-err { border: 2px solid var(--late); color: var(--late); border-radius: var(--r-card); padding: 12px 16px; margin: 12px 0; }
-.imp-materia { background: var(--surface); border: 0; border-radius: var(--r-card); padding: 16px; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
-.imp-materia select { min-height: 48px; font: inherit; }
+.imp-big { width: 100%; min-height: 64px; font-size: var(--t-body); display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.imp-text { width: 100%; min-height: 160px; }
+.imp-err { border: 1.5px solid var(--late); background: color-mix(in srgb, var(--late) 10%, var(--surface)); color: var(--late); border-radius: var(--r-card); padding: 12px 16px; margin: 0 0 12px; }
+.imp-title { margin: 4px 4px 12px; font-size: var(--t-h2); font-weight: 700; letter-spacing: -.01em; }
+.imp-day { margin: 16px 4px 8px; }
+.imp-materia { background: var(--surface); box-shadow: var(--e1); border: 0; border-radius: var(--r-card); padding: 16px; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
 .imp-materia label { display: flex; align-items: center; gap: 10px; min-height: 48px; }
-.imp-list { padding: 0; overflow: hidden; }
-.imp-row { display: flex; align-items: center; min-height: 64px; border-left: 6px solid var(--bar); background: var(--surface); }
-.imp-row label { flex: 1; display: flex; align-items: center; min-height: 64px; gap: 4px; cursor: pointer; }
-.imp-row input[type='checkbox'] { width: 28px; height: 28px; margin: 10px; flex: none; accent-color: var(--accent); }
-.imp-row .imp-body { display: flex; flex-direction: column; padding: 6px 12px 6px 0; overflow-wrap: anywhere; }
-.imp-tag { font-size: .8rem; color: var(--muted); }
-.imp-tag.exam { color: var(--accent); font-weight: 700; text-transform: uppercase; }
-.imp-save { position: sticky; bottom: calc(var(--nav-h) + 12px); margin-top: 16px; width: 100%; }
-.imp-bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
-.imp-bar > div { height: 100%; background: var(--accent); }
-.imp-dialog { border: 0; border-radius: var(--r-card); padding: 20px; max-width: min(420px, 92vw); background: var(--surface); color: var(--text); }
-.imp-dialog::backdrop { background: rgba(0, 0, 0, .5); }
-.imp-dialog label { display: flex; align-items: center; gap: 10px; min-height: 48px; }
-.imp-dialog input[type='checkbox'] { width: 24px; height: 24px; accent-color: var(--accent); }
-.imp-materia legend { padding: 0 6px; float: left; width: 100%; margin-bottom: 4px; }
+.imp-materia legend { padding: 0; float: left; width: 100%; margin-bottom: 4px; font-weight: 650; }
 .imp-materia legend + * { clear: both; }
-.imp-planes-link { display: inline-flex; align-items: center; min-height: 44px; }
-.imp-plans { gap: 10px 20px; }
-.imp-plans > .card { margin-bottom: 10px; }
+.imp-list { padding: 0; overflow: hidden; }
+.imp-row { position: relative; display: flex; align-items: center; min-height: 60px; background: var(--surface); }
+.imp-row::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 2px; background: var(--bar); }
+.imp-row label { flex: 1; display: flex; align-items: center; min-height: 60px; gap: 2px; cursor: pointer; padding-left: 4px; }
+.imp-row input[type='checkbox'] { margin: 11px; }
+.imp-row .imp-body { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px 8px 0; overflow-wrap: anywhere; }
+.imp-tag { font-size: var(--t-meta); color: var(--muted); font-weight: 500; }
+.imp-tag::first-letter { text-transform: uppercase; }
+.imp-tag.exam { color: var(--accent); font-weight: 700; }
+.imp-save { position: sticky; bottom: calc(var(--nav-h) + 12px); margin-top: 16px; width: 100%; box-shadow: var(--e2); }
+.imp-plan { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.imp-plan h3 { margin: 0; font-size: var(--t-card); font-weight: 650; }
+.imp-plan-meta { margin: 0; color: var(--muted); font-size: var(--t-sec); }
+.imp-plan .btn { display: inline-flex; align-items: center; gap: 6px; }
+.imp-bar { width: 100%; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.imp-bar > div { height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left; }
+.imp-dialog label { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.imp-plans { gap: 12px 20px; }
+.imp-plans > .card { margin-bottom: 12px; }
 @media (min-width: 1024px) {
-  .imp-split { display: grid; grid-template-columns: minmax(320px, 2fr) 3fr; gap: 20px; align-items: start; }
+  .imp-split { display: grid; grid-template-columns: minmax(320px, 2fr) 3fr; gap: 24px; align-items: start; }
   .imp-save { bottom: 16px; }
 }

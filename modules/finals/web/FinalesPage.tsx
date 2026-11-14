@@ -5,6 +5,11 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { nameKey } from '../../../core/shared/normalize.ts';
 import { combos, daysBetween, matchMateria, ORDENES, parseFinales, type Combo, type FinalDate, type Filters, type FinalsData, type ParsedMateria } from '../shared.ts';
+import { AnimatePresence, m } from 'motion/react';
+import { CheckIcon, ChevronIcon, CloseIcon, FinalIcon, ImportIcon, InboxIcon, PlusIcon } from '../../../core/web/icons.tsx';
+import { useMotion } from '../../../core/web/motion.tsx';
+import { vibrate } from '../../../core/web/haptics.ts';
+import { EmptyState, PageHeader, Skeleton } from '../../../core/web/ui.tsx';
 import './finals.css';
 
 type Plan = Filters & { noRinde: string[] };
@@ -99,6 +104,7 @@ export function FinalesPage() {
   const [editing, setEditing] = useState<{ materiaId: string; id?: string } | null>(null);
   const [range, setRange] = useState({ from: '', to: '' });
   const [shown, setShown] = useState(SHOWN);
+  const { spring } = useMotion();
 
   const dates = data?.dates ?? [];
   const active = materias.filter((m) => !m.archived || dates.some((d) => d.materiaId === m.id));
@@ -123,6 +129,7 @@ export function FinalesPage() {
     if (block()) return;
     try {
       if (c) await api('PUT', '/api/finals/chosen', { dateIds: c.picks.map((p) => p.id) }); else await api('DELETE', '/api/finals/chosen');
+      vibrate(c ? 'success' : 'tick');
       notify(c ? 'Listo: los finales están en el calendario.' : 'Saqué los finales del calendario.');
       reload();
     } catch (e) { notify(msg(e)); }
@@ -131,14 +138,16 @@ export function FinalesPage() {
 
   return (
     <>
-      <h1 className="page-title">Finales</h1>
+      <PageHeader title="Finales" sub={data && rinde.length ? `${rinde.length} ${rinde.length === 1 ? 'materia' : 'materias'} para rendir` : undefined}
+        actions={!importing && <button className="btn" aria-disabled={off} onClick={() => { if (!block()) setImporting(true); }}><ImportIcon size={18} />Importar fechas</button>} />
       {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
-      <div className="fin-page">
+      {!data && !error && <div className="card skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={18} /><Skeleton /><Skeleton w="70%" /><Skeleton w="85%" /></div>}
+      {data && <div className="fin-page">
         <div className="fin-side">
-          {importing ? <Importar onDone={done} /> : <button className="btn primary" aria-disabled={off} onClick={() => { if (!block()) setImporting(true); }}>Importar fechas</button>}
+          {importing && <Importar onDone={done} />}
           <section className="card">
             <div className="card-head"><h3>Fechas posibles</h3></div>
-            {!active.length && <p className="muted">Creá tus materias en Ajustes.</p>}
+            {!active.length && <EmptyState icon={InboxIcon} title="Sin materias">Creá tus materias en Ajustes.</EmptyState>}
             {active.map((m) => {
               const own = dates.filter((d) => d.materiaId === m.id);
               const on = !plan.noRinde.includes(m.id);
@@ -159,15 +168,19 @@ export function FinalesPage() {
                       <button key={d.id} type="button" className="pill" aria-pressed={editing?.id === d.id} aria-label={`Editar ${when(d)}`}
                         onClick={() => setEditing({ materiaId: m.id, id: d.id })}>{when(d)}</button>
                     ))}
-                    <button type="button" className="pill" aria-label={`Agregar fecha a ${m.name}`} onClick={() => setEditing({ materiaId: m.id })}>+ fecha</button>
+                    <button type="button" className="pill fin-add" aria-label={`Agregar fecha a ${m.name}`} onClick={() => setEditing({ materiaId: m.id })}><PlusIcon size={16} />Fecha</button>
                   </div>
                   {editing?.materiaId === m.id && <FechaForm key={editing.id ?? 'new'} materiaId={m.id} item={own.find((d) => d.id === editing.id)} onDone={done} />}
                 </div>
               );
             })}
           </section>
-          <section className="card form">
-            <div className="card-head"><h3>Filtros</h3></div>
+          <details className="card fin-filters">
+            <summary>
+              <span><strong>Filtros y orden</strong><small>mín. {dias(plan.minDias)}{plan.antes ? ` · hasta ${dm(plan.antes)}` : ''}{plan.excluir.length ? ` · ${plan.excluir.length} excluidas` : ''} · {ORDENES.find((o) => o.id === plan.orden)?.label}</small></span>
+              <ChevronIcon size={20} />
+            </summary>
+            <div className="form">
             <label>Mínimo de días entre finales
               <input type="number" inputMode="numeric" min={0} max={60} value={plan.minDias}
                 onChange={(e) => void setPlan({ minDias: Math.max(0, Math.min(60, Math.round(Number(e.target.value)) || 0)) })} />
@@ -181,7 +194,7 @@ export function FinalesPage() {
                 <div className="pills">
                   {plan.excluir.map((r, i) => (
                     <button key={i} type="button" className="pill" aria-label={`Quitar exclusión ${dm(r.from)} a ${dm(r.to)}`}
-                      onClick={() => void setPlan({ excluir: plan.excluir.filter((_, k) => k !== i) })}>{r.from === r.to ? dm(r.from) : `${dm(r.from)} a ${dm(r.to)}`} ✕</button>
+                      onClick={() => void setPlan({ excluir: plan.excluir.filter((_, k) => k !== i) })}>{r.from === r.to ? dm(r.from) : `${dm(r.from)} a ${dm(r.to)}`}<CloseIcon size={16} className="pill-x" /></button>
                   ))}
                 </div>
               )}
@@ -192,13 +205,14 @@ export function FinalesPage() {
                   onClick={() => { void setPlan({ excluir: [...plan.excluir, { from: range.from, to: range.to || range.from }] }); setRange({ from: '', to: '' }); }}>Excluir</button>
               </div>
             </div>
-            <div className="field" role="group" aria-label="Orden">
+            <div className="field">
               <span>Orden</span>
-              <div className="pills">
-                {ORDENES.map((o) => <button key={o.id} type="button" className="pill" aria-pressed={plan.orden === o.id} onClick={() => void setPlan({ orden: o.id })}>{o.label}</button>)}
+              <div className="radios" role="radiogroup" aria-label="Orden">
+                {ORDENES.map((o) => <button key={o.id} type="button" role="radio" aria-checked={plan.orden === o.id} onClick={() => void setPlan({ orden: o.id })}><span className="r" /><span>{o.label}</span></button>)}
               </div>
             </div>
-          </section>
+            </div>
+          </details>
         </div>
 
         <div className="fin-main">
@@ -209,22 +223,24 @@ export function FinalesPage() {
               <button className="btn" aria-disabled={off} onClick={() => void choose(null)}>Deshacer</button>
             </section>
           )}
-          <h2>{rinde.length < 1 ? 'Combinaciones' : `${result.list.length}${result.truncated ? '+' : ''} ${result.list.length === 1 ? 'combinación' : 'combinaciones'}`}</h2>
-          {data && !rinde.length && <p className="muted pad">Cargá las fechas posibles de las materias que vas a rendir.</p>}
-          {rinde.length > 0 && !result.list.length && <p className="muted pad">Ninguna combinación cumple los filtros. Probá con menos días entre finales o sacá exclusiones.</p>}
+          <div className="eyebrow fin-count">{rinde.length < 1 ? 'Combinaciones' : `${result.list.length}${result.truncated ? '+' : ''} ${result.list.length === 1 ? 'combinación' : 'combinaciones'}`}</div>
+          {data && !rinde.length && <EmptyState icon={FinalIcon} title="Sin fechas cargadas">Cargá las fechas posibles de las materias que vas a rendir, a mano o con "Importar fechas".</EmptyState>}
+          {rinde.length > 0 && !result.list.length && <EmptyState icon={InboxIcon} title="Ninguna combinación">Ninguna cumple los filtros. Probá con menos días entre finales o sacá exclusiones.</EmptyState>}
           {result.truncated && <p className="muted">Hay demasiadas combinaciones: usá los filtros para achicar.</p>}
           {result.list.length > 0 && (
             <div className="fin-axis" aria-hidden="true"><div className="fin-line">{mondays.map((d) => <span key={d} style={{ left: pos(d) }}>{dm(d)}</span>)}</div></div>
           )}
           <ol className="fin-list">
+            <AnimatePresence initial={false}>
             {result.list.slice(0, shown).map((c, i) => {
               const chosen = isChosen(c);
               return (
-                <li key={c.picks.map((p) => p.id).join()} className={chosen ? 'card fin-combo chosen' : 'card fin-combo'}>
+                <m.li key={c.picks.map((p) => p.id).join()} className={chosen ? 'card fin-combo chosen' : 'card fin-combo'}
+                  layout="position" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={spring('gentle')}>
                   <div className="fin-top">
                     <span className="fin-n">{i + 1}</span>
                     <span className="fin-sum">{c.minGap !== null && <strong>mín. {dias(c.minGap)}</strong>} {c.first === c.last ? dm(c.first) : `del ${dm(c.first)} al ${dm(c.last)}`}</span>
-                    {chosen ? <span className="tag">Elegida</span> : <button className="btn" aria-disabled={off} onClick={() => void choose(c)}>Elegir</button>}
+                    {chosen ? <span className="chip fin-chosen-tag"><CheckIcon size={14} />Elegida</span> : <button className="btn" aria-disabled={off} onClick={() => void choose(c)}>Elegir</button>}
                   </div>
                   <div className="fin-line" aria-hidden="true">
                     {mondays.map((d) => <i key={d} style={{ left: pos(d) }} />)}
@@ -237,13 +253,14 @@ export function FinalesPage() {
                       </span>
                     ))}
                   </div>
-                </li>
+                </m.li>
               );
             })}
+            </AnimatePresence>
           </ol>
           {result.list.length > shown && <button className="btn" onClick={() => setShown(shown + SHOWN)}>Ver más</button>}
         </div>
-      </div>
+      </div>}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+﻿import { useState, type FormEvent } from 'react';
 import { makeSigla } from '../shared/sigla.ts';
 import { PALETTE } from '../shared/palette.ts';
 import type { Materia } from '../server/registry.ts';
@@ -6,10 +6,10 @@ import { webModules } from '../../modules/web.ts';
 import { api, ApiError } from './api.ts';
 import { BLOCKED, useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
-import { ChevronIcon, GaugeIcon, TypeIcon, VibrateIcon } from './icons.tsx';
+import { ArchiveIcon, ChevronIcon, ChevronRightIcon, GaugeIcon, PlusIcon, TypeIcon, UnarchiveIcon, VibrateIcon } from './icons.tsx';
 import { setPref, usePrefs } from './prefs.ts';
 import { vibrate } from './haptics.ts';
-import { Segmented } from './ui.tsx';
+import { PageHeader, Segmented } from './ui.tsx';
 import { ServerForm } from './ConnectScreen.tsx';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
@@ -81,14 +81,13 @@ function Materias() {
   const row = (m: Materia) => editing === m.id
     ? <li key={m.id}><MateriaForm initial={m} onDone={() => setEditing(null)} /></li>
     : (
-      <li key={m.id} className="list-row">
-        <span className="mod-name"><MateriaChip materia={m} />{m.name}</span>
-        <span className="row">
-          <button className="btn" onClick={() => setEditing(m.id)} aria-label={`Editar ${m.name}`}>Editar</button>
-          <button className="btn" onClick={() => archive(m)} aria-label={`${m.archived ? 'Desarchivar' : 'Archivar'} ${m.name}`}>
-            {m.archived ? 'Desarchivar' : 'Archivar'}
-          </button>
-        </span>
+      <li key={m.id} className="mat-row">
+        <button type="button" className="mat-edit" onClick={() => setEditing(m.id)} aria-label={`Editar ${m.name}`}>
+          <MateriaChip materia={m} /><span>{m.name}</span><ChevronRightIcon size={18} />
+        </button>
+        <button type="button" className="icon-btn" onClick={() => archive(m)} aria-label={`${m.archived ? 'Desarchivar' : 'Archivar'} ${m.name}`} title={m.archived ? 'Desarchivar' : 'Archivar'}>
+          {m.archived ? <UnarchiveIcon size={20} /> : <ArchiveIcon size={20} />}
+        </button>
       </li>
     );
   return (
@@ -100,7 +99,7 @@ function Materias() {
       </ul>
       {editing === 'new'
         ? <MateriaForm onDone={() => setEditing(null)} />
-        : <button className="btn primary" onClick={() => setEditing('new')}>Nueva materia</button>}
+        : <button className="btn" onClick={() => setEditing('new')}><PlusIcon size={18} />Nueva materia</button>}
       {archived.length > 0 && (
         <details className="archived">
           <summary><ChevronIcon /> Archivadas ({archived.length})</summary>
@@ -204,10 +203,10 @@ function Dispositivo() {
 
 export function AjustesPage() {
   const { enabledModules, connection } = useCore();
-  if (connection.offline) return <><h1>Ajustes</h1><p className="muted pad" role="alert">{BLOCKED}</p><div className="cols"><Dispositivo /></div></>;
+  if (connection.offline) return <><PageHeader title="Ajustes" /><p className="muted pad" role="alert">{BLOCKED}</p><div className="cols"><Dispositivo /></div></>;
   return (
     <>
-      <h1>Ajustes</h1>
+      <PageHeader title="Ajustes" />
       <div className="cols">
       <Materias />
       <Modulos />
