@@ -174,7 +174,7 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 
 /* Fila de tarea: 48 px, con .chk de 44 x 44. Estructura: .task-row > .chk + .body(.title + .meta) + .dur */
 .task-row { position: relative; display: flex; align-items: center; gap: 4px; min-height: 48px; border-radius: 8px; transition: opacity var(--t); }
-/* TaskRow (core/web/ui.tsx): .row-wrap(m.li) > .task-row > .swipe-bg + .row-inner(.chk + .body + .dur) */
+/* TaskRow (core/web/ui.tsx): .row-wrap(m.li) > .task-row > .row-inner(.chk + .body + .dur) */
 .rows { list-style: none; margin: 0; padding: 0; }
 .row-wrap { list-style: none; overflow: hidden; }
 .row-wrap + .row-wrap .row-inner::after { content: ''; position: absolute; top: 0; left: 48px; right: 0; height: 1px; background: var(--line); }
@@ -185,14 +185,6 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 .task-row.dragging { z-index: 2; box-shadow: var(--e2); }
 .task-row.dragging > .row-inner { background: var(--surface-2); }
 @media (hover: hover) { .task-row:hover > .row-inner { background: var(--surface-2); } }
-.swipe-bg { position: absolute; inset: 0; border-radius: inherit; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-  font-size: var(--t-sec); font-weight: 650; opacity: 0; }
-.swipe-bg span { display: inline-flex; align-items: center; gap: 6px; transition: transform var(--d-small) cubic-bezier(.3,1.6,.5,1); }
-.task-row[data-swipe] .swipe-bg { opacity: 1; }
-.task-row[data-swipe='done'] .swipe-bg { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
-.task-row[data-swipe='del'] .swipe-bg { background: color-mix(in srgb, var(--late) 22%, var(--surface)); color: var(--late); justify-content: flex-end; }
-.task-row[data-swipe='done'] .sb-del, .task-row[data-swipe='del'] .sb-done { display: none; }
-.task-row.armed .swipe-bg span { transform: scale(1.12); }
 .task-row .meta svg { width: 13px; height: 13px; }
 .mi-tag { display: inline-flex; align-items: center; gap: 3px; }
 /* Tirar para refrescar */

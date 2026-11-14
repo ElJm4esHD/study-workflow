@@ -92,7 +92,7 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 ## Qué cambió de uso (pulido UX/UI)
 
 - **Navegación del celu**: abajo quedan Inicio, To-do, Calendario y **Más** (Finales, Importar y Ajustes). En la compu, barra lateral con todas las secciones y Ajustes abajo.
-- **Gestos (celu)**: deslizar a los costados (fuera de las tareas y de la grilla del calendario) pasa entre Inicio, To-do y Calendario. Deslizar una tarea a la derecha la completa y a la izquierda la borra (con "Deshacer" unos segundos). Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
+- **Gestos (celu)**: deslizar a los costados en cualquier parte (menos sobre la grilla del calendario, que cambia de mes) pasa entre Inicio, To-do y Calendario. Las tareas ya no se completan ni se borran deslizándolas: se tildan con el cuadradito y se borran desde su pantalla. Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
 - **Atajos (compu)**: `1`…`n` cambian de pantalla (el número aparece al pasar el mouse por la barra lateral), `N` nueva tarea, `Esc` cierra hojas.
 - **Agregar tarea**: en el celu, con el botón flotante; en la compu, con el campo de arriba de la lista (Enter) o el panel.
 - **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"; arranca así si el sistema tiene "reducir movimiento"), vibración (solo APK) y tamaño de letra.

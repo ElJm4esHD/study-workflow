@@ -5,7 +5,7 @@ import { animate, AnimatePresence, m, useDragControls, useMotionValue, useTransf
 import { useMotion } from './motion.tsx';
 import { reloadAll } from './api.ts';
 import { vibrate } from './haptics.ts';
-import { CheckIcon, RefreshIcon, TrashIcon } from './icons.tsx';
+import { RefreshIcon } from './icons.tsx';
 
 /** Componentes base compartidos. Las pantallas de los módulos usan estos y no variantes propias. */
 
@@ -112,9 +112,6 @@ type TaskRowProps = {
   to: To;
   toggleLabel: string;
   onToggle(): void;
-  /** Deslizar a la derecha (completar) / a la izquierda (borrar). Sin ellos la fila no se desliza. */
-  onSwipeRight?(): void;
-  onSwipeLeft?(): void;
   /** Para reordenar con dnd-kit: ref, atributos, listeners y estilo van al elemento `.task-row`. */
   dndRef?: Ref<HTMLDivElement>;
   dndProps?: HTMLAttributes<HTMLDivElement>;
@@ -130,54 +127,20 @@ type TaskRowProps = {
 /** Fila de tarea única (To-do, Inicio, Calendario). El `m.li` anima entrada/salida y reacomodo (layout). */
 export function TaskRow(p: TaskRowProps) {
   const { spring } = useMotion();
-  const x = useMotionValue(0);
-  const inner = useRef<HTMLDivElement>(null);
-  const moved = useRef(false);
-  const [side, setSide] = useState<'done' | 'del' | null>(null);
-  const [armed, setArmed] = useState(false);
-  const swipe = !!(p.onSwipeRight || p.onSwipeLeft);
-  const width = () => inner.current?.offsetWidth ?? 360;
   return (
     <m.li layout={p.noLayout ? false : 'position'} className="row-wrap" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }} transition={spring('gentle')}>
-      <div ref={p.dndRef} {...p.dndProps} style={{ ...p.colorVars, ...p.dndStyle }} data-swipe={side ?? undefined}
-        className={`task-row${p.done ? ' done' : ''}${p.selected ? ' sel' : ''}${p.dragging ? ' dragging' : ''}${armed ? ' armed' : ''}`}>
-        {swipe && <div className="swipe-bg" aria-hidden="true"><span className="sb-done"><CheckIcon size={18} />Completar</span><span className="sb-del">Borrar<TrashIcon size={18} /></span></div>}
-        <m.div ref={inner} className="row-inner" style={{ x }}
-          drag={swipe ? 'x' : false} dragDirectionLock dragMomentum={false}
-          onDragStart={() => { moved.current = true; }}
-          onDrag={(_, i) => {
-            const dir = i.offset.x > 0 ? 'done' : 'del';
-            const allowed = dir === 'done' ? p.onSwipeRight : p.onSwipeLeft;
-            if (!allowed) { x.set(0); return; }
-            if (side !== dir) setSide(dir);
-            const a = Math.abs(i.offset.x) > width() * 0.4;
-            if (a !== armed) { setArmed(a); if (a) vibrate('tick'); }
-          }}
-          onDragEnd={(_, i) => {
-            const dx = x.get(), v = i.velocity.x, dir = Math.sign(dx);
-            const fling = Math.abs(v) > 700 && Math.sign(v) === dir && Math.abs(dx) > 30;
-            const act = dir > 0 ? p.onSwipeRight : p.onSwipeLeft;
-            setArmed(false);
-            setTimeout(() => { moved.current = false; }, 0);
-            if (act && (Math.abs(dx) > width() * 0.4 || fling)) {
-              void animate(x, dir * width() * 1.05, spring('snappy', { velocity: v, bounce: 0 })).then(() => {
-                act();
-                // Si la fila no se fue (por ejemplo, sin conexión), vuelve a su lugar.
-                setTimeout(() => { x.set(0); setSide(null); }, 700);
-              });
-            } else {
-              void animate(x, 0, spring('snappy', { velocity: v })).then(() => setSide(null));
-            }
-          }}>
+      <div ref={p.dndRef} {...p.dndProps} style={{ ...p.colorVars, ...p.dndStyle }}
+        className={`task-row${p.done ? ' done' : ''}${p.selected ? ' sel' : ''}${p.dragging ? ' dragging' : ''}`}>
+        <div className="row-inner">
           <button type="button" className="chk" onClick={p.onToggle} aria-pressed={!!p.done} aria-label={p.toggleLabel}><span /></button>
-          <Link to={p.to} className="body" draggable={false} onClickCapture={(e) => { if (moved.current) e.preventDefault(); }}>
+          <Link to={p.to} className="body" draggable={false}>
             <div className="title">{p.title}</div>
             {p.meta && <div className="meta">{p.meta}</div>}
           </Link>
           <span className="dur">{p.duration}</span>
           {p.trailing}
-        </m.div>
+        </div>
       </div>
       {p.below && <div style={p.colorVars}>{p.below}</div>}
     </m.li>

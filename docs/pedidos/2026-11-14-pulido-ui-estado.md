@@ -52,7 +52,7 @@ Grupos de la etapa 3, en orden: (a) To-do e Inicio; (b) Calendario; (c) Finales,
 ## Trampas ya encontradas
 
 - Todo lo `position: fixed` dentro de una pantalla (botón +, hojas) va con `Floating` (portal al body): la pantalla se anima y se desliza con transform, que corre a los fijos.
-- Deslizar entre secciones (`Shell.tsx`) ignora gestos que empiezan en `.row-inner`, `.cal-wrap`, campos, tiras con scroll horizontal o `[data-noswipe]`.
+- Deslizar entre secciones (`Shell.tsx`) escucha en todo el documento (con poco contenido, lo vacío de abajo no es `<main>`) e ignora gestos que empiezan en la barra de abajo, hojas, `.cal-wrap`, campos, tiras con scroll horizontal o `[data-noswipe]`. Se sacó deslizar fila (completar/borrar) a pedido del usuario: molestaba y competía con cambiar de sección.
 
 - Choques de nombres de clase global: `.grab` (lo usa `calendar.css`) y `.pill` (filtros). Por eso la manija de la hoja es `.sheet-grab` y la píldora de la barra de abajo `.nav-pill`. Antes de crear una clase, `grep` en `modules/*/web/*.css`.
 - En `CoreContext.tsx` la variable `m` es la lista de materias: Motion se importa como `mo`.

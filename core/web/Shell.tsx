@@ -51,10 +51,10 @@ export function Shell() {
     const el = mainRef.current;
     if (!el || !matchMedia('(pointer: coarse)').matches) return;
     let x0 = 0, y0 = 0, st: 'off' | 'maybe' | 'on' = 'off', v = 0, last = { x: 0, t: 0 };
-    // Gestos horizontales que ya tienen dueño: deslizar fila, cambiar de mes/semana, campos y tiras con scroll horizontal.
+    // Gestos horizontales que ya tienen dueño: barra de abajo, hojas, cambiar de mes/semana, campos y tiras con scroll horizontal.
     const owned = (t: EventTarget | null) => {
-      for (let n = t instanceof HTMLElement ? t : null; n && n !== el; n = n.parentElement) {
-        if (n.matches('input, textarea, select, .row-inner, .cal-wrap, [data-noswipe]')) return true;
+      for (let n = t instanceof HTMLElement ? t : null; n; n = n.parentElement) {
+        if (n.matches('input, textarea, select, .nav, .sheet, .cal-wrap, [data-noswipe]')) return true;
         if (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return true;
       }
       return false;
@@ -87,13 +87,15 @@ export function Shell() {
       enter.current = dir * w + dx; // la nueva arranca donde estaría pegada a la actual
       navigate(tos[to]!);
     };
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchmove', move, { passive: false });
-    el.addEventListener('touchend', end);
-    el.addEventListener('touchcancel', end);
+    // En todo el documento: con poco contenido, la parte vacía de abajo no es parte de <main>.
+    const d = document;
+    d.addEventListener('touchstart', start, { passive: true });
+    d.addEventListener('touchmove', move, { passive: false });
+    d.addEventListener('touchend', end);
+    d.addEventListener('touchcancel', end);
     return () => {
-      el.removeEventListener('touchstart', start); el.removeEventListener('touchmove', move);
-      el.removeEventListener('touchend', end); el.removeEventListener('touchcancel', end);
+      d.removeEventListener('touchstart', start); d.removeEventListener('touchmove', move);
+      d.removeEventListener('touchend', end); d.removeEventListener('touchcancel', end);
     };
   }, [x, navigate]);
 

@@ -22,7 +22,6 @@ import './todo.css';
 const VIEWS = [['hoy', 'Hoy'], ['proximas', 'Próximas'], ['sin-fecha', 'Sin fecha'], ['materia', 'Por materia'], ['completadas', 'Completadas']] as const;
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 const dm = (d: string) => formatDate(d).slice(0, 5);
-const DELETE_DELAY = 6000; // lo que dura el "Deshacer": el borrado real se manda después
 
 /** Meta de una tarea (materia, categoría, subtareas, vencida/hora/fecha). Compartida con la tarjeta Hoy. */
 export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; today: string; sigla?: string; showDate: boolean }) {
@@ -38,8 +37,8 @@ export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; tod
 }
 
 type RowProps = { item: TodoItem; today: string; view: TodoView; sigla?: string; color?: string; selected: boolean; sortable: boolean; layout: boolean;
-  onToggle(): void; onSwipeDone(): void; onDelete(): void; onSaved(i: TodoItem): void };
-function Row({ item, today, view, sigla, color, selected, sortable, layout, onToggle, onSwipeDone, onDelete, onSaved }: RowProps) {
+  onToggle(): void; onSaved(i: TodoItem): void };
+function Row({ item, today, view, sigla, color, selected, sortable, layout, onToggle, onSaved }: RowProps) {
   const s = useSortable({ id: item.id, disabled: !sortable });
   const { search } = useLocation();
   return (
@@ -49,7 +48,7 @@ function Row({ item, today, view, sigla, color, selected, sortable, layout, onTo
       duration={item.durationMin ? fmtDuration(item.durationMin) : ''}
       to={{ pathname: `/todo/${item.id}`, search: keepSearch(search) }}
       toggleLabel={`${item.completed ? 'Destildar' : 'Completar'}: ${item.title}`}
-      noLayout={!layout} onToggle={onToggle} onSwipeRight={item.completed ? undefined : onSwipeDone} onSwipeLeft={onDelete}
+      noLayout={!layout} onToggle={onToggle}
       dndRef={s.setNodeRef} dndProps={{ ...s.attributes, 'aria-disabled': undefined, ...s.listeners }} /* con hora no se reordena, pero la fila no está deshabilitada */ dragging={s.isDragging}
       dndStyle={{ transform: CSS.Transform.toString(s.transform), transition: s.transition }}
     />
@@ -77,8 +76,6 @@ export function TodoPage() {
   const [items, setItems] = useState<TodoItem[]>([]);
   // Ítems recién tildados: siguen en su vista 1,5 s para poder deshacer con otro toque.
   const [linger, setLinger] = useState<Set<string>>(new Set());
-  // Ítems borrados con "Deshacer" pendiente: se ocultan ya y el DELETE sale al vencer el aviso.
-  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [dndBusy, setDndBusy] = useState(false);
   const timers = useRef(new Map<string, number>());
   const [title, setTitle] = useState('');
@@ -90,22 +87,15 @@ export function TodoPage() {
   );
 
   useEffect(() => { if (data) setItems(data); }, [data]);
-  // Borrados con "Deshacer" pendiente: si se sale de la pantalla antes de que venza, se mandan igual.
-  const pendingDel = useRef(new Map<string, () => void>());
-  useEffect(() => () => { timers.current.forEach(clearTimeout); pendingDel.current.forEach((send) => send()); }, []);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   const materiaOf = (id: string | null) => materias.find((m) => m.id === id);
-  const shown = items.filter((i) => !hidden.has(i.id)).map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
+  const shown = items.map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
   const real = new Map(items.map((i) => [i.id, i]));
   const groups = groupTodos(shown, view, today, materiaId);
 
   async function patch(id: string, p: Record<string, unknown>, rollback: () => void) {
     try { await api('PATCH', `/api/todo/${id}`, p); } catch (e) { rollback(); notify(msg(e)); }
-  }
-
-  function setDone(id: string, next: boolean, prev: TodoItem[]) {
-    setItems((xs) => xs.map((i) => (i.id === id ? { ...i, completed: next, completedAt: next ? new Date().toISOString() : null } : i)));
-    return patch(id, { completed: next }, () => setItems(prev));
   }
 
   function toggle(id: string) {
@@ -124,32 +114,6 @@ export function TodoPage() {
     }
     setItems((xs) => xs.map((i) => (i.id === id ? { ...i, completed: next, completedAt: next ? new Date().toISOString() : null } : i)));
     void patch(id, { completed: next }, () => { setItems(prev); unlinger(); });
-  }
-
-  /** Deslizar a la derecha: se completa y se va enseguida; el aviso permite deshacer. */
-  function swipeDone(id: string) {
-    const prev = items;
-    vibrate('success');
-    void setDone(id, true, prev);
-    notify('Tarea completada.', () => { vibrate('tick'); void setDone(id, false, items); });
-  }
-
-  /** Deslizar a la izquierda: se oculta ya y se borra cuando vence el "Deshacer". */
-  function remove(id: string) {
-    if (block()) return;
-    vibrate('warn');
-    setHidden((s) => new Set(s).add(id));
-    const unhide = () => setHidden((s) => { const n = new Set(s); n.delete(id); return n; });
-    const send = async () => {
-      pendingDel.current.delete(id);
-      timers.current.delete(`del-${id}`);
-      try { await api('DELETE', `/api/todo/${id}`); setItems((xs) => xs.filter((i) => i.id !== id)); } catch (e) { notify(msg(e)); }
-      unhide();
-    };
-    const t = window.setTimeout(() => void send(), DELETE_DELAY);
-    timers.current.set(`del-${id}`, t);
-    pendingDel.current.set(id, () => void send());
-    notify('Tarea borrada.', () => { clearTimeout(t); timers.current.delete(`del-${id}`); pendingDel.current.delete(id); unhide(); });
   }
 
   function onDragEnd(list: TodoItem[], { active, over }: DragEndEvent) {
@@ -184,7 +148,7 @@ export function TodoPage() {
 
   const setMateria = (v: string | null) => setParams(v ? { vista: 'materia', materia: v } : { vista: 'materia' }, { replace: true });
   const empty = groups.every((g) => g.items.length === 0);
-  const pending = items.filter((i) => !i.completed && !hidden.has(i.id));
+  const pending = items.filter((i) => !i.completed);
   const forToday = pending.filter((i) => i.dueDate === today).length;
   const late = pending.filter((i) => i.dueDate !== null && i.dueDate < today).length;
   const sub = data ? [`${forToday} para hoy`, late > 0 && `${late} ${late === 1 ? 'vencida' : 'vencidas'}`].filter(Boolean).join(' · ') : undefined;
@@ -233,7 +197,7 @@ export function TodoPage() {
                       const m = materiaOf(i.materiaId);
                       return <Row key={i.id} item={real.get(i.id) ?? i} today={today} view={view} sigla={m?.sigla} color={m?.color}
                         selected={editing === i.id} sortable={g.reorderable && !i.dueTime} layout={!dndBusy}
-                        onToggle={() => toggle(i.id)} onSwipeDone={() => swipeDone(i.id)} onDelete={() => remove(i.id)}
+                        onToggle={() => toggle(i.id)}
                         onSaved={(n) => setItems((xs) => xs.map((x) => (x.id === n.id ? n : x)))} />;
                     })}
                   </AnimatePresence>
