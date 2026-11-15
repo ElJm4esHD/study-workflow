@@ -18,7 +18,9 @@ interface ServerModule {
   requires?: string[];        // ids de los que depende (se cargan antes)
   routes(app: FastifyInstance, ctx: CoreContext): Promise<void>;  // se registra con prefix /api/<id>
   service?(ctx: CoreContext): object;  // disponible para otros como ctx.services.get(id)
+  search?(ctx: CoreContext, q: string): SearchHit[];  // aporta resultados a la búsqueda global (/api/search)
 }
+type SearchHit = { id: string; kind: string; title: string; detail?: string; to: string };  // `to` = ruta de la app
 interface CoreContext {
   db: DatabaseSync; transaction<T>(fn: () => T): T;
   materias: MateriasService; settings: SettingsService;
@@ -32,6 +34,8 @@ Reglas:
 - Un módulo solo toca tablas con su prefijo (`todo_*`, `notas_*`). Para datos de otro módulo usa `ctx.services.get<TodoService>('todo')` (tipado con `import type`); las materias se leen solo con `ctx.materias`.
 - Sus tablas pueden tener FK a `materias(id)`: las materias nunca se borran, solo se archivan.
 - Desactivar un módulo lo saca de la UI y de lo que muestran otros, pero migraciones y API siguen andando (no se pierden datos). Desactivar uno del que otro depende desactiva también al dependiente.
+- Búsqueda global (`/` o Ctrl+K): el núcleo llama a `search(ctx, q)` de cada módulo activo y junta los resultados. `core/shared/normalize.ts` trae `contains(q, ...textos)` (ignora mayúsculas y tildes). Un módulo sin `search` no aparece.
+- Backup (`GET/POST /api/backup`): exporta e importa **todas** las tablas sin conocer los módulos; un módulo nuevo entra solo, con sus migraciones al día. No hace falta tocar nada.
 - Auth: `core/server/auth.ts` es un hook `onRequest` que hoy deja pasar todo; ahí se engancha el login.
 - DB en `snake_case`, API en `camelCase` (el mapeo va en el service). Errores: `httpError(status, code, mensaje)` de `core/server/errors.ts`.
 
@@ -45,6 +49,7 @@ interface WebModule {
   routes: RouteObject[];                 // react-router, paths absolutos
   nav?: { path: string; order: number }; // ítem de navegación
   settings?: ComponentType;              // panel opcional en Ajustes
+  settingsTitle?: string;                // título de esa sección (por defecto, name)
   dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];  // tarjetas de Inicio
   requires?: string[];
 }

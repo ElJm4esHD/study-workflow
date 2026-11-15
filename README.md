@@ -109,6 +109,13 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - "Reducir movimiento" del sistema arranca la app en "Sin animaciones" (se cambia en Ajustes).
 - Las fechas se leen "Hoy", "Mañana", "En 3 días", "Vencida hace 2 días".
 
+## Qué cambió de uso (pulido final, etapa 3)
+
+- **Ajustes** en secciones: General (pantalla de inicio, guía), Materias, Módulos, Tareas (duración, categoría y ocultar completadas), Calendario, Recordatorios (anticipación e insistente por defecto, probar sonido), Apariencia (letra, color de acento, animaciones, vibración), Datos, Servidor y Acerca de (versiones y Novedades).
+- **Búsqueda global** de tareas y eventos: `/` o Ctrl+K en la compu; "Buscar" en el menú Más del celu.
+- **Backup**: Ajustes › Datos › Exportar baja un .json con todo; Importar lo restaura (reemplaza todo; el servidor guarda antes una copia en `/data/backups/pre-import-*.sqlite`).
+- **Guía de primera vez** (3 pasos, salteable); se reabre desde Ajustes › General.
+
 ## Agregar un módulo
 
 Una carpeta en `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`. Contrato y ejemplo en [docs/modulos.md](docs/modulos.md).
