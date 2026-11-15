@@ -170,8 +170,6 @@ export function Datos() {
   );
 }
 
-const when = (iso: string) => new Date(iso).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
-
 export function AcercaDe() {
   const { data } = useApi<{ version?: string }>('/api/health');
   return (
@@ -179,9 +177,8 @@ export function AcercaDe() {
       <h2>Acerca de</h2>
       <div className="card set-card">
         <dl className="about">
-          <div><dt>App</dt><dd>{__APP_VERSION__}</dd></div>
-          <div><dt>Armada el</dt><dd>{when(__BUILD_DATE__)}</dd></div>
-          <div><dt>Servidor</dt><dd>{data?.version ?? '…'}</dd></div>
+          <div><dt>App</dt><dd>Versión {__APP_VERSION__}{NOVEDADES[0]?.version === __APP_VERSION__ ? ` · ${NOVEDADES[0].fecha}` : ''}</dd></div>
+          <div><dt>Servidor</dt><dd>{data?.version ? `Versión ${data.version}` : '…'}</dd></div>
         </dl>
         <Link to="/ajustes/novedades" className="set-link"><span><b>Novedades</b><small>{NOVEDADES[0]?.titulo}</small></span><ChevronRightIcon size={18} /></Link>
       </div>

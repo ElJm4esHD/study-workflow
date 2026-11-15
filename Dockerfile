@@ -3,19 +3,15 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG APP_VERSION=dev
-ENV APP_VERSION=$APP_VERSION
 RUN npm run build
 
 FROM node:24-bookworm-slim
 WORKDIR /app
-ARG APP_VERSION=dev
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     DB_PATH=/data/study.sqlite \
     WEB_DIST=/app/dist/web \
-    TZ=America/Argentina/Buenos_Aires \
-    APP_VERSION=$APP_VERSION
+    TZ=America/Argentina/Buenos_Aires
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY core ./core

@@ -1,8 +1,17 @@
-/** Novedades que muestra Ajustes › Acerca de › Novedades. Lo más nuevo primero; sumá una entrada por cada versión que cambie el uso. */
-export type Novedad = { fecha: string; titulo: string; items: string[] };
+/** Novedades que muestra Ajustes › Acerca de › Novedades. Lo más nuevo primero; cada pedido sube la versión de package.json y suma su entrada acá (un test verifica que coincidan). */
+export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
-  { fecha: '15/11/2026', titulo: 'Pulido final', items: [
+  { version: '1.1.0', fecha: '15/11/2026', titulo: 'Tema claro, Semana y Finales nuevos', items: [
+    'Tema claro, oscuro o según el sistema (Ajustes › Apariencia). El widget y la pantalla de arranque del celu lo siguen.',
+    'Vista Semana nueva: grilla horaria limpia con el color de cada materia, exámenes destacados, tareas sin hora arriba y la hora actual marcada. En el celu muestra 3 días y se desliza; tocá un hueco para crear un evento a esa hora.',
+    'Finales rediseñado: elegís qué rendís, cargás las fechas en una fila por materia y ves la mejor combinación en un mini calendario; las demás muestran solo lo que cambia.',
+    'Versiones: Ajustes › Acerca de muestra la versión de la app con su fecha y la del servidor.',
+  ] },
+  { version: '1.0.1', fecha: '15/11/2026', titulo: 'Semana más prolija', items: [
+    'En la vista Semana cada tarea ocupa una línea y lo que no entra se ve con “+N más”.',
+  ] },
+  { version: '1.0.0', fecha: '15/11/2026', titulo: 'Pulido final', items: [
     'Fechas y horas se escriben rápido (5/11, hoy, mañana, 930) o se eligen en un calendario propio, que también anda con teclado y lector de pantalla.',
     'Borrar una tarea o un evento ya no pregunta: avisa y deja “Deshacer”.',
     'Si salís de una tarea o evento con cambios sin guardar, te avisa.',
@@ -16,14 +25,41 @@ export const NOVEDADES: Novedad[] = [
     'Más rápida: la web baja comprimida y la vista Semana se carga solo cuando la abrís. Las listas largas muestran de a 30 tareas con “Mostrar más”.',
     'El widget de To-do usa el color de acento que elijas.',
   ] },
-  { fecha: '14/11/2026', titulo: 'Pulido de la interfaz', items: [
+  { version: '0.7.0', fecha: '14/11/2026', titulo: 'Pulido de la interfaz', items: [
     'Tema oscuro, tarjetas, animaciones con resortes y vibración con la intensidad que elijas.',
     'Subtareas que se tildan desde la lista.',
     'Widget de To-do con el estilo nuevo y botón + para crear.',
     'Deslizar entre secciones en el celu.',
   ] },
-  { fecha: 'Antes', titulo: 'Lo primero', items: [
-    'To-do, Calendario (mes y semana), Finales, importación de planes desde Claude y recordatorios que suenan en el celu.',
-    'Funciona sin conexión en el APK: se pueden tildar tareas y se sincronizan al volver.',
+  { version: '0.6.0', fecha: '14/11/2026', titulo: 'Finales, subtareas y recordatorios', items: [
+    'Planificador de finales: cargás las fechas posibles de cada materia (a mano o pegando lo que arma Claude), ves las combinaciones y al elegir una se crean los finales en el calendario.',
+    'Subtareas dentro de una tarea; al tildarlas todas se completa la principal.',
+    'Recordatorios que suenan en el celu para tareas y eventos, con opción insistente.',
+    'Arreglos del APK: sin barra negra arriba, el botón Atrás vuelve a la pantalla anterior y los títulos largos usan dos líneas.',
+  ] },
+  { version: '0.5.0', fecha: '06/11/2026', titulo: 'Widget en el celu', items: [
+    'Widget de To-do en la pantalla de inicio: muestra tus tareas y las tildás sin abrir la app, aun sin conexión.',
+  ] },
+  { version: '0.4.0', fecha: '05/11/2026', titulo: 'App para el celu', items: [
+    'App para Android que se conecta a tu servidor.',
+    'Sin conexión ves la última copia y podés tildar tareas; se sincronizan al volver.',
+    'Compartir un plan desde Claude a la app lo abre directo en Importar.',
+  ] },
+  { version: '0.3.0', fecha: '05/11/2026', titulo: 'Diseño nuevo', items: [
+    'Tema oscuro con tarjetas y una pantalla de Inicio con lo de hoy, el próximo examen y los próximos 7 días.',
+    'Materias con sigla y color pastel.',
+    'Tareas con duración estimada y categoría (tarea, entrega o estudio), también al importar planes.',
+    'Calendario Mes con chips por materia y el detalle del día.',
+  ] },
+  { version: '0.2.0', fecha: '05/11/2026', titulo: 'Calendario', items: [
+    'Calendario con vista Mes y Semana: eventos, parciales, recuperatorios y finales.',
+    'Eventos que se repiten cada semana, como las clases.',
+    'Las tareas con fecha también aparecen en el calendario.',
+  ] },
+  { version: '0.1.0', fecha: '04/11/2026', titulo: 'Primera versión', items: [
+    'To-do con fecha, hora y materia, y vistas Hoy, Próximas y Sin fecha.',
+    'Materias con nombre y color.',
+    'Importar un plan de estudio armado con Claude: pegás el texto, ves la vista previa y se cargan las tareas y los exámenes.',
+    'Corre en tu servidor y se abre desde cualquier equipo de tu red Tailscale.',
   ] },
 ];

@@ -19,7 +19,7 @@ git --git-dir "$HOME/git/study-workflow.git" archive "$SHA" | tar -x -C "release
 # compose lee este .env: los comandos manuales en el release (restore, logs) usan el mismo puerto.
 printf 'PORT=%s\nIMAGE_TAG=%s\n' "$PORT" "$SHA" > "releases/$SHA/.env"
 
-if ! docker build --build-arg APP_VERSION="$SHA" -t "study-workflow:$SHA" "releases/$SHA" </dev/null; then
+if ! docker build -t "study-workflow:$SHA" "releases/$SHA" </dev/null; then
   echo "BUILD FALLÓ"; rm -rf "releases/$SHA"; exit 1
 fi
 

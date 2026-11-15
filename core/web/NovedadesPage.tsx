@@ -7,8 +7,8 @@ export function NovedadesPage() {
       <PageHeader title="Novedades" />
       <ul className="novedades">
         {NOVEDADES.map((n) => (
-          <li key={n.fecha + n.titulo} className="card">
-            <h2>{n.titulo}<small>{n.fecha}</small></h2>
+          <li key={n.version} className="card">
+            <h2>{n.titulo}<small>Versión {n.version} · {n.fecha}</small></h2>
             <ul>{n.items.map((i) => <li key={i}>{i}</li>)}</ul>
           </li>
         ))}

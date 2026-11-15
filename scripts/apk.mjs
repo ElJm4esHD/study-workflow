@@ -1,7 +1,7 @@
 // APK firmado de un comando. Uso: node scripts/apk.mjs [--check]. Guía: docs/android.md.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,10 +48,10 @@ if (!existsSync(keystore) || !existsSync(keyProps)) {
   console.log(`\n⚠ Creé la llave de firma en ${keyDir}.\n  Hacele backup a esa carpeta (pendrive, nube personal): sin ella no vas a poder actualizar\n  la app encima, y vas a tener que desinstalarla e instalarla de nuevo.\n`);
 }
 
-const now = new Date();
-const versionCode = Math.floor((now.getTime() - Date.UTC(2026, 0, 1)) / 60000);
-const p2 = (n) => String(n).padStart(2, '0');
-const versionName = `${now.getFullYear()}.${p2(now.getMonth() + 1)}.${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
+// versionName = la de package.json; versionCode = X·10000 + Y·100 + Z (sube con cada versión).
+const versionName = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
+const [vx, vy, vz] = versionName.split('.').map(Number);
+const versionCode = vx * 10000 + vy * 100 + vz;
 
 sh('npx vite build');
 sh('npx cap sync android');
