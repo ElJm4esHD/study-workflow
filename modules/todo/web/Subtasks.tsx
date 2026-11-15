@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
-import { api, ApiError } from '../../../core/web/api.ts';
+import { api, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { ChevronRightIcon, SubtasksIcon } from '../../../core/web/icons.tsx';
@@ -23,7 +23,7 @@ export function useSubtasks(item: TodoItem, onSaved: (i: TodoItem) => void) {
     setSubs(next);
     vibrate(next.every((s) => s.done) ? 'success' : 'tick');
     try { const r = await api<TodoItem | undefined>('PATCH', `/api/todo/${item.id}`, { subtasks: next }); if (r) onSaved(r); }
-    catch (e) { setSubs(prev); notify(e instanceof ApiError ? e.message : 'Algo salió mal.'); }
+    catch (e) { setSubs(prev); notify(errMsg(e)); }
   }
 
   const done = subs.filter((s) => s.done).length;

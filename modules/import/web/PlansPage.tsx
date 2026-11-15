@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { m } from 'motion/react';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { InboxIcon, TrashIcon } from '../../../core/web/icons.tsx';
 import { useMotion } from '../../../core/web/motion.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
-import { EmptyState, PageHeader, Skeleton } from '../../../core/web/ui.tsx';
+import { EmptyState, PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import type { PlanSummary } from '../server/index.ts';
 import { deleteCounts } from './logic.ts';
 import './import.css';
@@ -32,14 +32,14 @@ export function PlansPage() {
       notify('Plan borrado.');
       setTarget(null);
       reload();
-    } catch (e) { notify(e instanceof ApiError ? e.message : 'Algo salió mal.'); }
+    } catch (e) { notify(errMsg(e)); }
   }
 
   const c = target ? deleteCounts(target, keep) : null;
   return (
     <>
       <PageHeader title="Planes importados" sub={data?.length ? `${data.length} ${data.length === 1 ? 'plan' : 'planes'}` : undefined} />
-      {error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
+      {error && <ErrorState error={error} onRetry={reload} />}
       {!data && !error && <div className="card skel-card" role="status" aria-label="Cargando"><Skeleton w="50%" h={18} /><Skeleton h={8} /><Skeleton w="40%" /></div>}
       {data?.length === 0 && <EmptyState icon={InboxIcon} title="Sin planes">Los planes que importes desde Claude aparecen acá.</EmptyState>}
       <div className="cols imp-plans">

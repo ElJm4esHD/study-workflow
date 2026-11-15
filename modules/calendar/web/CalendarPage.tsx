@@ -10,15 +10,15 @@ import es from '@fullcalendar/react/locales/es';
 import '@fullcalendar/react/skeleton.css';
 import '@fullcalendar/react/themes/classic/theme.css';
 import '@fullcalendar/react/themes/classic/palette.css';
-import { ApiError, onReload } from '../../../core/web/api.ts';
+import { onReload, errMsg } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { AnimatePresence, m } from 'motion/react';
 import { useMotion } from '../../../core/web/motion.tsx';
-import { Floating, PullToRefresh, Segmented, Sheet } from '../../../core/web/ui.tsx';
-import { addDays, formatDate, isValidDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
+import { Floating, PullToRefresh, Segmented, Sheet, ErrorState } from '../../../core/web/ui.tsx';
+import { addDays, formatDate, isValidDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { NEUTRAL, strongOf } from '../../../core/shared/palette.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
 import type { Occurrence } from '../server/recurrence.ts';
@@ -28,6 +28,7 @@ import { DayDetail, DOWL, eventHref } from './DayDetail.tsx';
 import { KIND_LABELS, VIEWS } from './views.ts';
 import { useSwipe } from './useSwipe.ts';
 import './calendar.css';
+import { useToday } from '../../../core/web/useToday.ts';
 
 // Las fechas son texto local y FullCalendar trabaja en la zona del dispositivo: no se convierte nada.
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -68,7 +69,7 @@ export function CalendarPage() {
   const pushed = useRef(false); // el detalle se abrió con push: cerrarlo es volver atrás
   const { spring } = useMotion();
 
-  const today = todayAR();
+  const today = useToday();
   const p = (k: string) => { const v = params.get(k); return isValidDate(v) ? v : null; };
   const dia = p('dia');
   const fecha = p('fecha') ?? dia ?? today;
@@ -113,7 +114,7 @@ export function CalendarPage() {
       const r = await loadAgenda(...range.match(/\d{4}-\d{2}-\d{2}/g) as [string, string]);
       if (me === seq.current) { setData(r); setLoadError(''); }
     } catch (e) {
-      if (me === seq.current) setLoadError(e instanceof ApiError ? e.message : 'No se pudo cargar el calendario.');
+      if (me === seq.current) setLoadError(errMsg(e));
     }
   }
   useEffect(() => { void load(); return onReload(() => void load()); }, [range]);
@@ -197,7 +198,7 @@ export function CalendarPage() {
           <button type="button" className="icon-btn" onClick={prev} aria-label="Anterior"><ChevronLeftIcon /></button>
           <button type="button" className="icon-btn" onClick={next} aria-label="Siguiente"><ChevronRightIcon /></button>
         </div>
-        {loadError && <p className="error" role="alert">{loadError} <button className="btn" onClick={() => void load()}>Reintentar</button></p>}
+        {loadError && <ErrorState error={{ message: loadError }} onRetry={() => void load()} />}
         <div ref={wrap} className="cal-wrap">
           {month ? (
             <div className="cal-month">

@@ -5,7 +5,7 @@ import { animate, AnimatePresence, m, useDragControls, useMotionValue, useTransf
 import { useMotion } from './motion.tsx';
 import { reloadAll } from './api.ts';
 import { vibrate } from './haptics.ts';
-import { RefreshIcon } from './icons.tsx';
+import { AlertIcon, RefreshIcon } from './icons.tsx';
 
 /** Componentes base compartidos. Las pantallas de los módulos usan estos y no variantes propias. */
 
@@ -27,6 +27,20 @@ export function EmptyState({ icon: Icon, title, children, action }: { icon: Comp
       {action}
     </div>
   );
+}
+
+/** Error de carga: qué pasó y "Reintentar". Un solo formato para todas las pantallas. */
+export function ErrorState({ error, onRetry }: { error: { message: string }; onRetry(): void }) {
+  return <div className="error-state" role="alert"><AlertIcon /><span>{error.message}</span><button type="button" className="btn" onClick={onRetry}>Reintentar</button></div>;
+}
+
+/** Flechas para un grupo `role=radio`: mueve el foco y elige (patrón WAI-ARIA); el elegido es el único con Tab. */
+export function radioKeys(e: React.KeyboardEvent<HTMLElement>) {
+  const k = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+  if (!k) return;
+  const all = [...e.currentTarget.querySelectorAll<HTMLElement>('[role=radio]')];
+  const next = all[(all.indexOf(document.activeElement as HTMLElement) + k + all.length) % all.length];
+  e.preventDefault(); next?.focus(); next?.click();
 }
 
 /** Bloque de carga: el brillo lo da CSS; con "Sin animaciones" queda quieto. */
@@ -73,10 +87,21 @@ export function Sheet({ open, onClose, label, children }: { open: boolean; onClo
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeRef.current(); };
-    document.addEventListener('keydown', esc);
+    const root = document.getElementById('root');
+    root?.setAttribute('inert', ''); // lo de atrás ni se enfoca ni lo lee el lector de pantalla
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeRef.current(); return; }
+      if (e.key !== 'Tab') return;
+      // Foco atrapado: Tab y Mayús+Tab dan la vuelta dentro de la hoja.
+      const f = [...(ref.current?.querySelectorAll<HTMLElement>('a[href], button:not(:disabled):not(.sheet-grab), input, select, textarea, [tabindex="0"]') ?? [])];
+      if (!f.length) return;
+      const first = f[0]!, last = f[f.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', key);
     ref.current?.querySelector<HTMLElement>('a, button:not(.sheet-grab)')?.focus({ preventScroll: true });
-    return () => { document.removeEventListener('keydown', esc); prev?.focus?.({ preventScroll: true }); };
+    return () => { document.removeEventListener('keydown', key); root?.removeAttribute('inert'); prev?.focus?.({ preventScroll: true }); };
   }, [open]);
   return (
     <Floating><AnimatePresence>

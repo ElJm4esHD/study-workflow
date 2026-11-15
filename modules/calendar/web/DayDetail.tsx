@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router';
 import { AnimatePresence, m } from 'motion/react';
-import { api, ApiError } from '../../../core/web/api.ts';
+import { api, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
-import { formatDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
+import { formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { NEUTRAL } from '../../../core/shared/palette.ts';
 import { BookIcon, CalendarIcon, ClockIcon, EventIcon, FinalIcon, ParcialIcon, PlusIcon, RecuperatorioIcon, SubtasksIcon, UploadIcon } from '../../../core/web/icons.tsx';
@@ -15,6 +15,7 @@ import type { TodoItem } from '../../todo/server/service.ts';
 import type { Occurrence } from '../server/recurrence.ts';
 import { dayDetail, examColor, type AgendaData } from './summary.ts';
 import { KIND_LABELS } from './views.ts';
+import { useToday } from '../../../core/web/useToday.ts';
 
 export const DOWL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 export const eventHref = (o: Occurrence) => `/calendario/evento/${o.eventId}${o.isRecurring ? `?ocurrencia=${o.occurrenceDate}` : ''}`;
@@ -26,13 +27,14 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
   const { off, block } = useBlock();
   const { pathname, search } = useLocation();
   const { spring } = useMotion();
+  const today = useToday();
   const d = dayDetail(data, date);
   const mat = (id: string | null) => materias.find((x) => x.id === id);
   const dow = DOWL[weekdayOf(date) - 1]!;
 
   async function toggle(t: TodoItem) {
     vibrate(t.completed ? 'tick' : 'success');
-    try { await api('PATCH', `/api/todo/${t.id}`, { completed: !t.completed }); } catch (e) { notify(e instanceof ApiError ? e.message : 'Algo salió mal.'); }
+    try { await api('PATCH', `/api/todo/${t.id}`, { completed: !t.completed }); } catch (e) { notify(errMsg(e)); }
     reload();
   }
 
@@ -43,7 +45,7 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
     <div className="dd">
       <div className="dd-head">
         <h2>{dow[0]!.toUpperCase() + dow.slice(1)} {formatDate(date).slice(0, 5)}</h2>
-        {date === todayAR() && <span className="chip dd-today">Hoy</span>}
+        {date === today && <span className="chip dd-today">Hoy</span>}
       </div>
       <p className="dd-total">{total}</p>
       {d.total > 0 && <div className="dd-progress" aria-hidden="true"><m.i initial={false} animate={{ scaleX: d.done / d.total }} transition={spring('sheet')} /></div>}

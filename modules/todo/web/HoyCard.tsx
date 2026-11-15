@@ -1,19 +1,19 @@
 import { Link } from 'react-router';
 import { AnimatePresence, m } from 'motion/react';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
-import { todayAR } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { ChecklistIcon, ChevronRightIcon, PartyIcon } from '../../../core/web/icons.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { useMotion } from '../../../core/web/motion.tsx';
-import { EmptyState, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
+import { EmptyState, Skeleton, TaskRow, ErrorState } from '../../../core/web/ui.tsx';
 import type { TodoItem } from '../server/service.ts';
 import { TaskMeta } from './TodoPage.tsx';
 import { useSubtasks } from './Subtasks.tsx';
 import { groupMinutes, hoyCardData } from './views.ts';
 import './todo.css';
+import { useToday } from '../../../core/web/useToday.ts';
 
 function HoyRow({ item: i, today, onToggle, onSaved }: { item: TodoItem; today: string; onToggle(): void; onSaved(): void }) {
   const mat = useCore().materias.find((x) => x.id === i.materiaId);
@@ -29,18 +29,18 @@ export function HoyCard() {
   const { notify } = useCore();
   const { data, error, reload } = useApi<TodoItem[]>('/api/todo');
   const { spring } = useMotion();
-  const today = todayAR();
+  const today = useToday();
 
   async function toggle(i: TodoItem) {
     vibrate(i.completed ? 'tick' : 'success');
-    try { await api('PATCH', `/api/todo/${i.id}`, { completed: !i.completed }); } catch (e) { notify(e instanceof ApiError ? e.message : 'Algo salió mal.'); }
+    try { await api('PATCH', `/api/todo/${i.id}`, { completed: !i.completed }); } catch (e) { notify(errMsg(e)); }
     reload();
   }
 
   const row = (i: TodoItem) => <HoyRow key={i.id} item={i} today={today} onToggle={() => void toggle(i)} onSaved={reload} />;
 
   const head = <div className="card-head"><h3><ChecklistIcon size={18} />Hoy</h3><Link to="/todo?vista=hoy">To-do<ChevronRightIcon size={16} /></Link></div>;
-  if (error && !data) return <section className="card">{head}<p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p></section>;
+  if (error && !data) return <section className="card">{head}<ErrorState error={error} onRetry={reload} /></section>;
   if (!data) return <section className="card skel-card" role="status" aria-label="Cargando">{head}<Skeleton /><Skeleton w="70%" /><Skeleton w="80%" /></section>;
 
   const { late, lateMore, today: now } = hoyCardData(data, today);

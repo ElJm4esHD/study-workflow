@@ -35,7 +35,7 @@ p { margin: 0 0 .75rem; }
 .muted { color: var(--muted); }
 .pad { padding: 1rem; }
 .eyebrow { font-size: var(--t-micro); font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
-.kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; font: 600 11px/1 inherit; color: var(--faint); }
+.kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; font: 600 calc(11px * var(--fs))/1 inherit; color: var(--faint); }
 .page-title small { display: block; font-size: var(--t-sec); font-weight: 400; color: var(--muted); letter-spacing: 0; }
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: 20px 4px 16px; min-height: 76px; }
 .page-head h1 { margin: 0; }
@@ -52,7 +52,7 @@ p { margin: 0 0 .75rem; }
 /* Navegación del celu: barra de abajo (4 ítems; el resto va en la hoja "Más") */
 .nav { position: fixed; inset: auto 0 0 0; height: var(--nav-h); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 10; padding-bottom: var(--sab);
   background: rgb(22 27 36 / .88); backdrop-filter: blur(16px) saturate(1.4); border-top: 1px solid var(--line); }
-.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 500; cursor: pointer; }
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; color: var(--muted); text-decoration: none; font-size: calc(12px * var(--fs)); font-weight: 500; cursor: pointer; }
 .nav-item .nav-pill { width: 56px; height: 30px; border-radius: 15px; display: grid; place-items: center; position: relative; }
 .nav-item .nav-pill::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--accent-soft); transform: scaleX(.4); opacity: 0; transition: transform var(--d-screen) var(--ease-out), opacity var(--d-micro); }
 .nav-item .nav-pill svg { position: relative; width: 22px; height: 22px; transition: transform var(--d-micro) var(--ease-out); }
@@ -67,7 +67,7 @@ p { margin: 0 0 .75rem; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; padding: 4px 10px 20px; }
   .brand i { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
   .side .eyebrow { padding: 16px 12px 6px; }
-  .side-item { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 10px; border-radius: var(--r-ctl); color: var(--muted); text-decoration: none; font-size: 14.5px; font-weight: 500; transition: background var(--d-micro), color var(--d-micro); }
+  .side-item { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 10px; border-radius: var(--r-ctl); color: var(--muted); text-decoration: none; font-size: calc(14.5px * var(--fs)); font-weight: 500; transition: background var(--d-micro), color var(--d-micro); }
   .side-item svg { width: 20px; height: 20px; }
   .side-item .kbd { margin-left: auto; opacity: 0; transition: opacity var(--d-micro); }
   .side:hover .side-item .kbd { opacity: 1; }
@@ -164,7 +164,7 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 .error { color: var(--late); margin: 0; }
 
 /* --m = pastel de la materia, --ms = tono fuerte; se setean en el style del elemento o de un ancestro. */
-.chip { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; border-radius: var(--r-chip);
+.chip { display: inline-flex; align-items: center; gap: 4px; min-height: 20px; padding: 0 6px; border-radius: var(--r-chip);
   font-size: var(--t-micro); font-weight: 700; letter-spacing: .02em; background: color-mix(in srgb, var(--m, var(--muted)) 18%, transparent); color: var(--m, var(--muted)); white-space: nowrap; }
 .chip.solid { background: var(--ms); color: var(--on-strong); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m, var(--muted)); flex: none; display: inline-block; }
@@ -217,7 +217,7 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 .ruler b[data-l='3'] { background: color-mix(in srgb, var(--m) 85%, var(--surface-2)); }
 .ruler b.exam { background: var(--ms); }
 .ruler b.today::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: -6px; height: 2px; border-radius: 1px; background: var(--accent); }
-.ruler-days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; margin-top: 8px; font-size: 10.5px; color: var(--faint); text-align: center; }
+.ruler-days { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; margin-top: 8px; font-size: calc(10.5px * var(--fs)); color: var(--faint); text-align: center; }
 
 .swatches { display: flex; flex-wrap: wrap; gap: 4px; }
 /* Zona táctil de 48px; el círculo visible es el background con un anillo interno. */
@@ -314,3 +314,9 @@ dialog .row { margin-top: 16px; }
 .mat-row .mat-edit span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mat-row .mat-edit > svg { color: var(--faint); }
 @media (hover: hover) { .mat-row .mat-edit:hover { background: var(--surface-2); } }
+
+/* Error de carga (ErrorState) y texto solo para lector de pantalla */
+.error-state { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--r-card); background: var(--surface); box-shadow: var(--e1); color: var(--late); margin: 8px 0; }
+.error-state > span { flex: 1; min-width: 12ch; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.field-err { color: var(--late); font-size: var(--t-meta); }

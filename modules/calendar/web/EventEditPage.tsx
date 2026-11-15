@@ -1,17 +1,16 @@
 ﻿import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
 import type { CalendarEvent, EventInput } from '../server/service.ts';
 import { KIND_LABELS } from './views.ts';
 import { KIND_ICON } from './DayDetail.tsx';
-import { PageHeader, Skeleton } from '../../../core/web/ui.tsx';
+import { PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import './calendar.css';
 
-const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 const DAYS = [[1, 'L', 'lunes'], [2, 'M', 'martes'], [3, 'X', 'miércoles'], [4, 'J', 'jueves'], [5, 'V', 'viernes'], [6, 'S', 'sábado'], [7, 'D', 'domingo']] as const;
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange(v: boolean): void }) {
@@ -67,7 +66,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
 
   async function run(fn: () => Promise<unknown>) {
     if (block()) return;
-    try { await fn(); back(); } catch (err) { notify(msg(err)); }
+    try { await fn(); back(); } catch (err) { notify(errMsg(err)); }
   }
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -193,7 +192,7 @@ export function EventEditPage() {
     <>
       <PageHeader title={id ? 'Editar evento' : 'Nuevo evento'} />
       {id && loading && <div className="card form" role="status" aria-label="Cargando"><Skeleton h={44} /><Skeleton w="50%" /><Skeleton h={44} /><Skeleton h={44} /></div>}
-      {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
+      {id && error && <ErrorState error={error} onRetry={reload} />}
       {(!id || data) && <Form item={data} ocurrencia={q.get('ocurrencia')} />}
     </>
   );

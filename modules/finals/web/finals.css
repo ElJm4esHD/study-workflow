@@ -27,7 +27,7 @@
 .fin-filters > .form { padding: 4px 16px 16px; }
 
 /* Línea de tiempo: misma escala en todas las filas; la posición sale de `left` en %. */
-.fin-axis { padding: 0 34px; font-size: 10.5px; color: var(--faint); }
+.fin-axis { padding: 0 34px; font-size: calc(10.5px * var(--fs)); color: var(--faint); }
 .fin-axis .fin-line { height: 14px; margin: 0; background: none; }
 .fin-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .fin-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { popShared } from '../../../core/web/shared.ts';
-import { api, ApiError } from '../../../core/web/api.ts';
+import { api, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { PALETTE } from '../../../core/shared/palette.ts';
 import { formatDate } from '../../../core/shared/dates.ts';
@@ -18,7 +18,6 @@ import { EmptyState, PageHeader } from '../../../core/web/ui.tsx';
 import './import.css';
 
 type Res = { mode: 'create'; color: string } | { mode: 'existing'; materiaId: string };
-const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 
 export function ImportPage() {
   const { materias, notify, reloadMaterias } = useCore();
@@ -59,7 +58,7 @@ export function ImportPage() {
       setPreview(p);
       setChecked(new Set(p.items.filter((i) => !i.duplicate && !i.errors.length).map((i) => i.index)));
       setRes(Object.fromEntries(p.unresolvedMaterias.map((u) => [u.key, { mode: 'create', color: PALETTE[0]!.hex } as Res])));
-    } catch (e) { setError(msg(e)); }
+    } catch (e) { setError(errMsg(e)); }
     setBusy(false);
   }
 
@@ -78,7 +77,7 @@ export function ImportPage() {
       notify(`Plan importado: ${checked.size} ítems.`);
       reloadMaterias();
       navigate('/importar/planes');
-    } catch (e) { notify(msg(e)); }
+    } catch (e) { notify(errMsg(e)); }
     setBusy(false);
   }
 

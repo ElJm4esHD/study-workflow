@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
@@ -9,13 +9,12 @@ import { AnimatePresence, m } from 'motion/react';
 import { CheckIcon, ChevronIcon, CloseIcon, FinalIcon, ImportIcon, InboxIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { useMotion } from '../../../core/web/motion.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
-import { EmptyState, PageHeader, Skeleton } from '../../../core/web/ui.tsx';
+import { EmptyState, PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import './finals.css';
 
 type Plan = Filters & { noRinde: string[] };
 const PLAN0: Plan = { minDias: 1, antes: null, excluir: [], orden: 'separacion', noRinde: [] };
 const SHOWN = 50;
-const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 const dm = (d: string) => formatDate(d).slice(0, 5);
 const when = (d: { date: string; time: string | null }) => `${dm(d.date)}${d.time ? ` ${d.time}` : ''}`;
 const dias = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
@@ -40,7 +39,7 @@ function Importar({ onDone }: { onDone(): void }) {
       const r = await api<{ materias: number; fechas: number }>('POST', '/api/finals/import', body);
       notify(`Importé ${r.fechas} fechas de ${r.materias} ${r.materias === 1 ? 'materia' : 'materias'}.`);
       onDone();
-    } catch (e) { notify(msg(e)); }
+    } catch (e) { notify(errMsg(e)); }
   }
 
   return (
@@ -81,7 +80,7 @@ function FechaForm({ materiaId, item, onDone }: { materiaId: string; item?: Fina
   const [time, setTime] = useState(item?.time ?? '');
   async function run(fn: () => Promise<unknown>) {
     if (block()) return;
-    try { await fn(); onDone(); } catch (e) { notify(msg(e)); }
+    try { await fn(); onDone(); } catch (e) { notify(errMsg(e)); }
   }
   const body = { materiaId, date, time: time || null };
   return (
@@ -123,7 +122,7 @@ export function FinalesPage() {
   async function setPlan(p: Partial<Plan>) {
     if (block()) return;
     setShown(SHOWN);
-    try { await patchSettings({ 'finals.plan': { ...plan, ...p } }); } catch (e) { notify(msg(e)); }
+    try { await patchSettings({ 'finals.plan': { ...plan, ...p } }); } catch (e) { notify(errMsg(e)); }
   }
   async function choose(c: Combo | null) {
     if (block()) return;
@@ -132,7 +131,7 @@ export function FinalesPage() {
       vibrate(c ? 'success' : 'tick');
       notify(c ? 'Listo: los finales están en el calendario.' : 'Saqué los finales del calendario.');
       reload();
-    } catch (e) { notify(msg(e)); }
+    } catch (e) { notify(errMsg(e)); }
   }
   const done = () => { setEditing(null); setImporting(false); reload(); };
 
@@ -140,7 +139,7 @@ export function FinalesPage() {
     <>
       <PageHeader title="Finales" sub={data && rinde.length ? `${rinde.length} ${rinde.length === 1 ? 'materia' : 'materias'} para rendir` : undefined}
         actions={!importing && <button className="btn" aria-disabled={off} onClick={() => { if (!block()) setImporting(true); }}><ImportIcon size={18} />Importar fechas</button>} />
-      {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
+      {error && !data && <ErrorState error={error} onRetry={reload} />}
       {!data && !error && <div className="card skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={18} /><Skeleton /><Skeleton w="70%" /><Skeleton w="85%" /></div>}
       {data && <div className="fin-page">
         <div className="fin-side">

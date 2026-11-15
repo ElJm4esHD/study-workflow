@@ -3,6 +3,9 @@ import { appendCopy, applyPending, enqueue, flush, isQueueable, lastCopyAt, merg
 import { apiBase, isNative } from './server.ts';
 import { markWidgetDone, refreshWidgets } from './widgets.ts';
 
+/** Texto de un error para mostrar: el del servidor, o uno genérico que dice qué hacer. */
+export const errMsg = (e: unknown): string => (e instanceof ApiError ? e.message : 'No se pudo completar. Revisá la conexión y probá de nuevo.');
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -86,7 +89,7 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
     throw blocked();
   }
   if (r.status >= 400) {
-    throw new ApiError(r.status, r.json?.error?.code ?? 'error', r.json?.error?.message ?? 'Algo salió mal.');
+    throw new ApiError(r.status, r.json?.error?.code ?? 'error', r.json?.error?.message ?? 'No se pudo completar. Probá de nuevo.');
   }
   if (native) {
     const j = r.json;

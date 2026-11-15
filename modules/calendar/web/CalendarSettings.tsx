@@ -1,4 +1,4 @@
-﻿import { ApiError } from '../../../core/web/api.ts';
+﻿import { errMsg } from '../../../core/web/api.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
 import { VIEWS } from './views.ts';
 import './calendar.css';
@@ -7,7 +7,7 @@ export function CalendarSettings() {
   const { settings, patchSettings, notify } = useCore();
   const current = (settings['calendar.initialView'] as string | undefined) ?? 'mes';
   async function pick(id: string) {
-    try { await patchSettings({ 'calendar.initialView': id }); } catch (e) { notify(e instanceof ApiError ? e.message : 'Algo salió mal.'); }
+    try { await patchSettings({ 'calendar.initialView': id }); } catch (e) { notify(errMsg(e)); }
   }
   return (
     <div className="card radios" role="radiogroup" aria-label="Vista inicial del calendario">

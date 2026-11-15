@@ -3,7 +3,7 @@ import { makeSigla } from '../shared/sigla.ts';
 import { PALETTE } from '../shared/palette.ts';
 import type { Materia } from '../server/registry.ts';
 import { webModules } from '../../modules/web.ts';
-import { api, ApiError } from './api.ts';
+import { api, errMsg } from './api.ts';
 import { BLOCKED, useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
 import { ArchiveIcon, ChevronIcon, ChevronRightIcon, GaugeIcon, PlusIcon, TypeIcon, UnarchiveIcon, VibrateIcon } from './icons.tsx';
@@ -14,7 +14,6 @@ import { ServerForm } from './ConnectScreen.tsx';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
 
-const msg = (err: unknown) => (err instanceof ApiError ? err.message : 'Algo salió mal.');
 
 function Swatches({ value, onChange }: { value: string; onChange(hex: string): void }) {
   return (
@@ -43,7 +42,7 @@ function MateriaForm({ initial, onDone }: { initial?: Materia; onDone(): void })
       notify(initial ? 'Materia guardada.' : 'Materia creada.');
       onDone();
     } catch (err) {
-      setError(msg(err));
+      setError(errMsg(err));
     }
   }
   return (
@@ -75,7 +74,7 @@ function Materias() {
       reloadMaterias();
       notify(m.archived ? 'Materia desarchivada.' : 'Materia archivada.');
     } catch (err) {
-      notify(msg(err));
+      notify(errMsg(err));
     }
   }
   const row = (m: Materia) => editing === m.id
@@ -135,7 +134,7 @@ function Modulos() {
       await patchSettings({ 'modules.enabled': flags });
       if (dependents.length) notify(`También se desactiva ${dependents.map((m) => m.name).join(', ')}.`);
     } catch (err) {
-      notify(msg(err));
+      notify(errMsg(err));
     }
   }
   return (
@@ -168,7 +167,7 @@ function Dispositivo() {
         <h2>Movimiento{isNative() ? ' y vibración' : ''}</h2>
         <div className="card set-card">
           <div className="set-row">
-            <div className="set-label"><b><GaugeIcon size={18} />Velocidad de animaciones</b><span>Si el sistema tiene “Reducir movimiento” activado, arranca en “Sin animaciones”.</span></div>
+            <div className="set-label"><b><GaugeIcon size={18} />Velocidad de animaciones</b><span>Si el sistema pide reducir el movimiento, arranca en “Sin animaciones”; desde acá podés cambiarlo.</span></div>
             <div className="radios" role="radiogroup" aria-label="Velocidad de animaciones">
               {SPEEDS.map(([v, label, hint]) => (
                 <button key={v} type="button" role="radio" aria-checked={prefs.speed === v} onClick={() => { setPref('speed', v); vibrate('tick'); }}>

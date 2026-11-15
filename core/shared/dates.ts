@@ -22,3 +22,23 @@ export const addDays = (date: string, n: number): string => iso(parse(date) + n 
 export const weekdayOf = (date: string): number => new Date(parse(date)).getUTCDay() || 7;
 
 export const formatDate = (date: string): string => date.split('-').reverse().join('/');
+
+const dm = (d: string) => formatDate(d).slice(0, 5);
+const days = (a: string, b: string): number => Math.round((parse(a) - parse(b)) / 86_400_000);
+
+/** "Hoy", "Mañana", "En 3 días", "Ayer", "Hace 3 días"; más lejos, `dd/mm`. */
+export function relDate(date: string, today: string): string {
+  const n = days(date, today);
+  if (n === 0) return 'Hoy';
+  if (n === 1) return 'Mañana';
+  if (n === -1) return 'Ayer';
+  if (n >= 2 && n <= 6) return `En ${n} días`;
+  if (n <= -2 && n >= -6) return `Hace ${-n} días`;
+  return dm(date);
+}
+
+/** Para lo que ya venció: "Vencida ayer", "Vencida hace 2 días", "Vencida el 03/11". */
+export function lateText(date: string, today: string): string {
+  const n = days(today, date);
+  return n === 1 ? 'Vencida ayer' : n <= 6 ? `Vencida hace ${n} días` : `Vencida el ${dm(date)}`;
+}

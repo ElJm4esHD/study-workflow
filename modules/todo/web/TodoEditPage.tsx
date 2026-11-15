@@ -1,6 +1,6 @@
 ﻿import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
-import { api, ApiError, reloadAll, useApi } from '../../../core/web/api.ts';
+import { api, reloadAll, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { isValidDate } from '../../../core/shared/dates.ts';
@@ -9,14 +9,13 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
 import type { Subtask, TodoItem } from '../server/service.ts';
 import { BookIcon, CheckIcon, CloseIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
-import { Skeleton } from '../../../core/web/ui.tsx';
+import { Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
 import { keepSearch } from './views.ts';
 import './todo.css';
 
 const PRESETS = [15, 30, 45, 60, 90];
 const CAT_ICON: Record<TodoCategory, React.ReactNode> = { tarea: <CheckIcon />, entrega: <UploadIcon />, estudio: <BookIcon /> };
-const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
 
 function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const { materias, notify } = useCore();
@@ -51,7 +50,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     try {
       if (item) await api('PATCH', `/api/todo/${item.id}`, body); else await api('POST', '/api/todo', body);
       back();
-    } catch (err) { notify(msg(err)); }
+    } catch (err) { notify(errMsg(err)); }
   }
   // Las subtareas sin título (recién borrado el texto) se descartan al guardar.
   const cleanSubs = (list = subs) => list.filter((s) => s.title.trim());
@@ -67,11 +66,11 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     if (!item) { setSubs(next); return; }
     if (block()) return;
     setSubs(next);
-    try { await api('PATCH', `/api/todo/${item.id}`, { subtasks: cleanSubs(next) }); reloadAll(); } catch (err) { setSubs(subs); notify(msg(err)); }
+    try { await api('PATCH', `/api/todo/${item.id}`, { subtasks: cleanSubs(next) }); reloadAll(); } catch (err) { setSubs(subs); notify(errMsg(err)); }
   }
   async function remove() {
     if (!item || block() || !confirm(`¿Borrar "${item.title}"?`)) return;
-    try { await api('DELETE', `/api/todo/${item.id}`); vibrate('warn'); back(); } catch (err) { notify(msg(err)); }
+    try { await api('DELETE', `/api/todo/${item.id}`); vibrate('warn'); back(); } catch (err) { notify(errMsg(err)); }
   }
   // Las archivadas no se ofrecen, salvo la que ya tiene el ítem, para no perderla al guardar.
   const options = materias.filter((m) => !m.archived || m.id === item?.materiaId);
@@ -157,7 +156,7 @@ export function TodoEditPage({ embedded }: { embedded?: boolean }) {
     <div className="card todo-edit">
       <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3>{!embedded && <Link className="icon-btn" aria-label="Cerrar" to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace><CloseIcon /></Link>}</div>
       {id && loading && !data && <div className="form" role="status" aria-label="Cargando"><Skeleton h={44} /><Skeleton w="40%" /><Skeleton h={44} /><Skeleton h={44} /></div>}
-      {id && error && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
+      {id && error && <ErrorState error={error} onRetry={reload} />}
       {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} embedded={embedded} />}
     </div>
   );

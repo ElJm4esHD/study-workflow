@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import {
-  Archive, ArchiveRestore, BookOpen, Calendar, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Ellipsis, Flag, Gauge,
+  Archive, ArchiveRestore, CircleAlert, BookOpen, Calendar, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Ellipsis, Flag, Gauge,
   GraduationCap, House, Inbox, List, ListChecks, ListTree, PartyPopper, PenLine, Plus, RefreshCw, RotateCcw, Settings, Trash2,
   Type, Upload, Vibrate, X, type LucideIcon, type LucideProps,
 } from 'lucide-react';
@@ -8,6 +8,7 @@ import {
 /** Set único de íconos (Lucide: trazo de 2 px, grilla de 24). Los módulos importan de acá, nunca de lucide-react. */
 const make = (I: LucideIcon) => (p: LucideProps) => createElement(I, { size: 24, 'aria-hidden': true, ...p });
 
+export const AlertIcon = make(CircleAlert);
 export const SettingsIcon = make(Settings);
 export const ChevronIcon = make(ChevronDown);
 export const ChevronRightIcon = make(ChevronRight);

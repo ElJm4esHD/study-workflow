@@ -4,24 +4,23 @@ import { AnimatePresence } from 'motion/react';
 import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { api, ApiError, useApi } from '../../../core/web/api.ts';
+import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { BookIcon, ClockIcon, InboxIcon, PartyIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
-import { formatDate, todayAR } from '../../../core/shared/dates.ts';
+import { lateText, relDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
-import { EmptyState, Floating, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow } from '../../../core/web/ui.tsx';
+import { EmptyState, Floating, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow, ErrorState } from '../../../core/web/ui.tsx';
 import { useSubtasks } from './Subtasks.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
 import { TodoEditPage } from './TodoEditPage.tsx';
 import './todo.css';
+import { useToday } from '../../../core/web/useToday.ts';
 
 const VIEWS = [['hoy', 'Hoy'], ['proximas', 'Próximas'], ['sin-fecha', 'Sin fecha'], ['materia', 'Por materia'], ['completadas', 'Completadas']] as const;
-const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Algo salió mal.');
-const dm = (d: string) => formatDate(d).slice(0, 5);
 
 /** Meta de una tarea (materia, categoría, subtareas, vencida/hora/fecha). Compartida con la tarjeta Hoy. */
 export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; today: string; sigla?: string; showDate: boolean }) {
@@ -30,9 +29,9 @@ export function TaskMeta({ item, today, sigla, showDate }: { item: TodoItem; tod
   return <>
     {sigla && <span className="chip">{sigla}</span>}
     {item.category !== 'tarea' && <span className={`tag mi-tag ${item.category}`}>{item.category === 'entrega' ? <UploadIcon /> : <BookIcon />}{cat.label}</span>}
-    {late && <span className="tag late mi-tag"><ClockIcon />venció {dm(item.dueDate!)}</span>}
+    {late && <span className="tag late mi-tag"><ClockIcon />{lateText(item.dueDate!, today)}</span>}
     {item.dueTime && !late && <span className="tag mi-tag"><ClockIcon />{item.dueTime}</span>}
-    {!late && showDate && item.dueDate !== null && <span className="tag">{dm(item.dueDate)}</span>}
+    {!late && showDate && item.dueDate !== null && <span className="tag">{relDate(item.dueDate, today)}</span>}
   </>;
 }
 
@@ -79,7 +78,7 @@ export function TodoPage() {
   const [dndBusy, setDndBusy] = useState(false);
   const timers = useRef(new Map<string, number>());
   const [title, setTitle] = useState('');
-  const today = todayAR();
+  const today = useToday();
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -95,7 +94,7 @@ export function TodoPage() {
   const groups = groupTodos(shown, view, today, materiaId);
 
   async function patch(id: string, p: Record<string, unknown>, rollback: () => void) {
-    try { await api('PATCH', `/api/todo/${id}`, p); } catch (e) { rollback(); notify(msg(e)); }
+    try { await api('PATCH', `/api/todo/${id}`, p); } catch (e) { rollback(); notify(errMsg(e)); }
   }
 
   function toggle(id: string) {
@@ -143,7 +142,7 @@ export function TodoPage() {
       setItems((xs) => [...xs, created]);
       setTitle('');
       vibrate('tick');
-    } catch (err) { notify(msg(err)); }
+    } catch (err) { notify(errMsg(err)); }
   }
 
   const setMateria = (v: string | null) => setParams(v ? { vista: 'materia', materia: v } : { vista: 'materia' }, { replace: true });
@@ -176,7 +175,7 @@ export function TodoPage() {
           aria-label="Agregar tarea rápido" enterKeyHint="send" aria-disabled={off} />
         <kbd className="kbd">Enter</kbd>
       </form>
-      {error && !data && <p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>}
+      {error && !data && <ErrorState error={error} onRetry={reload} />}
       {!data && !error && <ListSkeleton />}
       {data && empty && (view === 'hoy'
         ? <EmptyState icon={PartyIcon} title="Todo listo por hoy" action={<button className="btn" onClick={() => setParams({ vista: 'proximas' }, { replace: true })}>Ver próximas</button>}>No quedan tareas para hoy.</EmptyState>

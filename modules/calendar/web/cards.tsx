@@ -6,14 +6,15 @@ import type { ApiError } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
 import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
-import { addDays, formatDate, todayAR, weekdayOf } from '../../../core/shared/dates.ts';
+import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import type { AgendaData } from './summary.ts';
 import { cellLevel, countdownLabel, daysUntil, examColor, examWhat, nextExams, weekSummary, whenLabel } from './summary.ts';
 import { KIND_LABELS } from './views.ts';
 import { CalendarIcon, ChevronRightIcon, FinalIcon, InboxIcon } from '../../../core/web/icons.tsx';
-import { EmptyState, Skeleton } from '../../../core/web/ui.tsx';
+import { EmptyState, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import './calendar.css';
+import { useToday } from '../../../core/web/useToday.ts';
 
 const LETTER = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const DOW = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -34,14 +35,14 @@ function useCard(from: string, to: string, title: string, className: string, ico
     <section className={`card ${className}`}><div className="card-head"><h3>{icon}{title}</h3><Link to={link}>Calendario<ChevronRightIcon size={16} /></Link></div>{body}</section>
   );
   const state = error && !data
-    ? wrap(<p className="error" role="alert">{error.message} <button className="btn" onClick={reload}>Reintentar</button></p>)
+    ? wrap(<ErrorState error={error} onRetry={reload} />)
     : !data ? wrap(<div className="skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={36} /><Skeleton w="60%" /><Skeleton h={22} /></div>) : null;
   return { data, state, wrap };
 }
 
 export function ExamCard() {
   const { materias } = useCore();
-  const today = todayAR();
+  const today = useToday();
   const { data, state, wrap } = useCard(today, addDays(today, 120), 'Próximo examen', 'exam-card', <FinalIcon size={18} />);
   if (state || !data) return state;
   const [next, after] = nextExams(data.events, today);
@@ -71,7 +72,7 @@ export function ExamCard() {
 
 export function WeekCard() {
   const { materias } = useCore();
-  const today = todayAR();
+  const today = useToday();
   const from = addDays(today, 1);
   const { data, state, wrap } = useCard(from, addDays(from, 6), 'Próximos 7 días', '', <CalendarIcon size={18} />);
   if (state || !data) return state;
