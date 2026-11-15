@@ -4,8 +4,8 @@ import { makeSigla, normalizeSigla } from '../shared/sigla.ts';
 import { httpError } from '../shared/errors.ts';
 import type { Collection, Materia, MateriasService } from './registry.ts';
 
-// Se guarda sin `colorStrong` (sale de la paleta al leer).
-type Doc = Omit<Materia, 'colorStrong'>;
+// `colorStrong` se guarda también en el documento solo para que el widget (Kotlin) no tenga que repetir la paleta; al leer se recalcula.
+type Doc = Materia;
 const toMateria = (d: Doc): Materia => ({ ...d, colorStrong: strongOf(d.color) });
 
 function checkName(name: string): string {
@@ -38,7 +38,7 @@ export function makeMaterias(col: Collection<Doc>): MateriasService {
       const sg = sigla == null || (typeof sigla === 'string' && !sigla.trim()) ? makeSigla(n) : checkSigla(sigla);
       if (svc.findByNameKey(nameKey(n))) throw dup();
       const now = new Date().toISOString();
-      const doc: Doc = { id: id ?? crypto.randomUUID(), name: n, color, sigla: sg, archived: false, createdAt: now, updatedAt: now };
+      const doc: Doc = { id: id ?? crypto.randomUUID(), name: n, color, colorStrong: strongOf(color), sigla: sg, archived: false, createdAt: now, updatedAt: now };
       col.put(doc);
       return toMateria(doc);
     },
@@ -51,7 +51,7 @@ export function makeMaterias(col: Collection<Doc>): MateriasService {
       const sigla = patch.sigla === undefined ? cur.sigla : checkSigla(patch.sigla);
       const other = svc.findByNameKey(nameKey(name));
       if (other && other.id !== id) throw dup();
-      const doc: Doc = { ...cur, name, color, sigla, archived: patch.archived ?? cur.archived, updatedAt: new Date().toISOString() };
+      const doc: Doc = { ...cur, name, color, colorStrong: strongOf(color), sigla, archived: patch.archived ?? cur.archived, updatedAt: new Date().toISOString() };
       col.put(doc);
       return toMateria(doc);
     },

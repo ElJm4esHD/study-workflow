@@ -2,6 +2,11 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.0.0-beta.4', fecha: '15/11/2026', titulo: 'Widget y recordatorios desde el celu (prueba)', items: [
+    'El widget y los recordatorios leen los datos guardados en el celu: andan sin conexión y se actualizan al instante con lo que hacés en la app.',
+    'Tildar en el widget se guarda al toque y sube solo cuando hay conexión; si la misma tarea cambió en otro dispositivo, gana el cambio más nuevo.',
+    'Los cambios de la compu llegan al widget y a las alarmas en segundo plano.',
+  ] },
   { version: '2.0.0-beta.3', fecha: '15/11/2026', titulo: 'La app funciona sola (prueba)', items: [
     'Los datos y la lógica de todos los módulos ahora viven en el dispositivo: crear, editar, borrar e importar andan sin conexión, en la web y en el celu.',
     'El servidor solo guarda y entrega cambios. Se sincroniza al abrir, al volver la red, cada 5 minutos y 2 segundos después de cada cambio; si dos dispositivos tocan lo mismo gana el cambio más nuevo.',

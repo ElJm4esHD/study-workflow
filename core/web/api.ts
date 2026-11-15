@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { local } from './local.ts';
-import { refreshWidgets } from './widgets.ts';
 
 /** Texto de un error para mostrar: el de la app, o uno genérico que dice qué hacer. */
 export const errMsg = (e: unknown): string => (e instanceof ApiError ? e.message : 'No se pudo completar. Probá de nuevo.');
@@ -33,7 +32,6 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
     const e = (r.body as { error?: { code?: string; message?: string } } | undefined)?.error;
     throw new ApiError(r.status, e?.code ?? 'error', e?.message ?? 'No se pudo completar. Probá de nuevo.');
   }
-  if (method !== 'GET') refreshWidgets();
   return r.body as T;
 }
 

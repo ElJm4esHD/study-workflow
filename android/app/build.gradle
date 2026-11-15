@@ -30,7 +30,8 @@ android {
         versionName project.findProperty('swVersionName') ?: '1.0'
         // npm run apk -- --next: app aparte (otro id y nombre) para probar la versión nueva al lado de la real.
         if (project.hasProperty('swNext')) applicationId "ar.federico.studyworkflow.next"
-        manifestPlaceholders = [appLabel: project.hasProperty('swNext') ? 'Study (nuevo)' : '@string/app_name']
+        // http solo en el APK de prueba (para probar el sync contra un server local con adb reverse).
+        manifestPlaceholders = [appLabel: project.hasProperty('swNext') ? 'Study (nuevo)' : '@string/app_name', cleartext: project.hasProperty('swNext') ? 'true' : 'false']
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -66,6 +67,8 @@ dependencies {
     implementation 'androidx.glance:glance-appwidget:1.1.1'
     implementation 'androidx.work:work-runtime-ktx:2.10.1'
     testImplementation "junit:junit:$junitVersion"
+    // org.json real: en los tests de la JVM el de Android viene vacío y los casos compartidos son JSON.
+    testImplementation 'org.json:json:20231013'
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')

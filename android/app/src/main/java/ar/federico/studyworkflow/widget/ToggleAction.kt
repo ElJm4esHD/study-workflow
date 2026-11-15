@@ -5,7 +5,7 @@ import androidx.glance.GlanceId
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.action.ActionCallback
 
-/** Tilda en la copia local, redibuja al toque y manda el cambio en segundo plano (la cola cubre el modo avión). */
+/** Tilda en la base del dispositivo (con un HLC nuevo), redibuja al toque y sube el cambio en segundo plano. */
 class ToggleAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val id = parameters[idKey] ?: return

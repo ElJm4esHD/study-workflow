@@ -17,7 +17,7 @@ import java.time.ZoneId
 import org.json.JSONArray
 
 /**
- * Recordatorios: se calculan de la copia local (WidgetStore) y se programan con AlarmManager,
+ * Recordatorios: se calculan de la base del dispositivo (WidgetStore → SwDb) y se programan con AlarmManager,
  * así suenan sin conexión y con la app cerrada. Reprogramar es idempotente: la clave sale de la tarea o del evento.
  */
 object ReminderScheduler {
@@ -37,7 +37,7 @@ object ReminderScheduler {
     @Synchronized
     fun reschedule(ctx: Context) {
         val am = ctx.getSystemService(AlarmManager::class.java) ?: return
-        val list = reminders(WidgetStore.todos(ctx).orEmpty(), WidgetStore.agenda(ctx)?.first.orEmpty(), System.currentTimeMillis(), AR)
+        val list = reminders(WidgetStore.todos(ctx), WidgetStore.events(ctx, java.time.LocalDate.now(AR)), System.currentTimeMillis(), AR)
         val keys = list.map { it.key }.toSet()
         // Lo que ya no está (tarea completada o borrada, recordatorio quitado) se cancela.
         val old = JSONArray(prefs(ctx).getString("keys", "[]"))

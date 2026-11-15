@@ -1,4 +1,5 @@
 import { Capacitor, registerPlugin, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import type { Row } from './sync/db.ts';
 
 interface WidgetsPlugin {
   setServer(o: { url: string | null }): Promise<void>;
@@ -8,11 +9,14 @@ interface WidgetsPlugin {
   setAccent(o: { hex: string; light: string }): Promise<void>;
   setTheme(o: { mode: 'dark' | 'light' | 'system' }): Promise<void>;
   testReminder(o: { insistent: boolean }): Promise<void>;
+  dbLoad(): Promise<{ rows: Row[]; meta: Record<string, string> }>;
+  dbApply(o: { put: Row[]; del: [string, string][]; meta?: Record<string, string> }): Promise<void>;
+  addListener(ev: 'dbChanged', fn: () => void): Promise<{ remove(): Promise<void> }>;
   addListener(ev: 'route', fn: (d: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
 }
 // Plugin local en Kotlin (android/.../widget/WidgetsPlugin); solo existe en nativo.
 // No importa server.ts para no crear un import circular.
-const plugin = Capacitor.isNativePlatform() ? registerPlugin<WidgetsPlugin>('Widgets') : null;
+export const plugin = Capacitor.isNativePlatform() ? registerPlugin<WidgetsPlugin>('Widgets') : null;
 
 // Un fallo del widget nunca debe romper la app.
 export const setWidgetServer = (url: string | null): void => void plugin?.setServer({ url }).catch(() => {});

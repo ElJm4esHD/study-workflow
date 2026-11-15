@@ -1,0 +1,146 @@
+{
+  "_doc": "Casos compartidos del motor de sincronización: los corren vitest (TypeScript, core/web/sync/cases.test.ts) y JUnit (Kotlin, SyncCasesTest). Si uno cambia la regla, tiene que cambiar acá y pasar en los dos. Los HLC son ms(13)-contador(4 hex)-nodo.",
+  "hlc": [
+    {
+      "name": "tick sube el contador en el mismo ms, no retrocede con el reloj atrás, y recv deja todo por encima",
+      "node": "aaa",
+      "steps": [
+        { "op": "tick", "now": 1000, "expect": "0000000001000-0000-aaa" },
+        { "op": "tick", "now": 1000, "expect": "0000000001000-0001-aaa" },
+        { "op": "tick", "now": 500, "expect": "0000000001000-0002-aaa" },
+        { "op": "tick", "now": 1001, "expect": "0000000001001-0000-aaa" },
+        { "op": "recv", "now": 2000, "hlc": "0000000009000-0007-zzz" },
+        { "op": "tick", "now": 2000, "expect": "0000000009000-0009-aaa" },
+        { "op": "recv", "now": 20000, "hlc": "0000000009000-0001-zzz" },
+        { "op": "tick", "now": 20000, "expect": "0000000020000-0001-aaa" }
+      ]
+    },
+    {
+      "name": "recv con el mismo ms local y remoto toma el contador mayor + 1",
+      "node": "bbb",
+      "steps": [
+        { "op": "tick", "now": 5000, "expect": "0000000005000-0000-bbb" },
+        { "op": "recv", "now": 100, "hlc": "0000000005000-0005-aaa" },
+        { "op": "tick", "now": 100, "expect": "0000000005000-0007-bbb" }
+      ]
+    }
+  ],
+  "merge": [
+    {
+      "name": "lo remoto más nuevo pisa lo local aunque esté sin subir; lo viejo se ignora; las marcas de borrado se respetan",
+      "local": [
+        { "t": "todo", "id": "a", "data": { "v": "local" }, "hlc": "0000000000005-0000-x", "dirty": 1 },
+        { "t": "todo", "id": "b", "data": { "v": "local" }, "hlc": "0000000000009-0000-x", "dirty": 1 },
+        { "t": "todo", "id": "c", "data": { "v": "local" }, "hlc": "0000000000005-0000-x", "dirty": 0 }
+      ],
+      "remote": [
+        { "t": "todo", "id": "a", "data": { "v": "remoto" }, "hlc": "0000000000006-0000-y" },
+        { "t": "todo", "id": "b", "data": { "v": "remoto" }, "hlc": "0000000000008-0000-y" },
+        { "t": "todo", "id": "c", "data": null, "hlc": "0000000000006-0000-y" },
+        { "t": "todo", "id": "d", "data": { "v": "nuevo" }, "hlc": "0000000000001-0000-y" }
+      ],
+      "expect": [
+        { "t": "todo", "id": "a", "data": { "v": "remoto" }, "hlc": "0000000000006-0000-y", "dirty": 0 },
+        { "t": "todo", "id": "b", "data": { "v": "local" }, "hlc": "0000000000009-0000-x", "dirty": 1 },
+        { "t": "todo", "id": "c", "data": null, "hlc": "0000000000006-0000-y", "dirty": 0 },
+        { "t": "todo", "id": "d", "data": { "v": "nuevo" }, "hlc": "0000000000001-0000-y", "dirty": 0 }
+      ],
+      "expectChanged": 3
+    },
+    {
+      "name": "mismo ms y contador: desempata el nodo (texto mayor gana)",
+      "local": [{ "t": "todo", "id": "a", "data": { "v": "a" }, "hlc": "0000000000005-0000-aaa", "dirty": 0 }],
+      "remote": [{ "t": "todo", "id": "a", "data": { "v": "b" }, "hlc": "0000000000005-0000-bbb" }],
+      "expect": [{ "t": "todo", "id": "a", "data": { "v": "b" }, "hlc": "0000000000005-0000-bbb", "dirty": 0 }],
+      "expectChanged": 1
+    }
+  ],
+  "flow": [
+    {
+      "name": "sube lo sucio, baja páginas, no se pisa lo local más nuevo y guarda el cursor",
+      "node": "dev",
+      "now": 1700000000000,
+      "meta": { "cursor": "c1" },
+      "local": [
+        { "t": "todo", "id": "a", "data": { "v": 1 }, "hlc": "1700000000000-0000-dev", "dirty": 1 },
+        { "t": "todo", "id": "b", "data": { "v": 2 }, "hlc": "1600000000000-0000-dev", "dirty": 0 }
+      ],
+      "pages": [
+        { "records": [{ "t": "todo", "id": "b", "data": { "v": 3 }, "hlc": "1650000000000-0000-otro" }], "cursor": "c2", "more": true },
+        { "records": [{ "t": "todo", "id": "a", "data": { "v": 9 }, "hlc": "1500000000000-0000-otro" }, { "t": "todo", "id": "z", "data": { "v": 4 }, "hlc": "1650000000001-0000-otro" }], "cursor": "c3", "more": false }
+      ],
+      "expectPulls": ["c1", "c2"],
+      "expectPushed": ["todo/a@1700000000000-0000-dev"],
+      "expectRows": [
+        { "t": "todo", "id": "a", "data": { "v": 1 }, "hlc": "1700000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "b", "data": { "v": 3 }, "hlc": "1650000000000-0000-otro", "dirty": 0 },
+        { "t": "todo", "id": "z", "data": { "v": 4 }, "hlc": "1650000000001-0000-otro", "dirty": 0 }
+      ],
+      "expectCursor": "c3"
+    },
+    {
+      "name": "reset purged: baja todo, descarta lo que el server ya no tiene y conserva lo sucio; el cursor se guarda al final",
+      "node": "dev",
+      "now": 1700000000000,
+      "meta": { "cursor": "viejo" },
+      "local": [
+        { "t": "todo", "id": "borrada", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "sigue", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "mia", "data": { "v": 1 }, "hlc": "1690000000000-0000-dev", "dirty": 1 }
+      ],
+      "pages": [
+        { "records": [{ "t": "todo", "id": "sigue", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev" }], "cursor": "n1", "more": true, "reset": "purged" },
+        { "records": [{ "t": "todo", "id": "mia", "data": { "v": 1 }, "hlc": "1690000000000-0000-dev" }], "cursor": "n2", "more": false }
+      ],
+      "expectPulls": ["viejo", "n1"],
+      "expectPushed": ["todo/mia@1690000000000-0000-dev"],
+      "expectRows": [
+        { "t": "todo", "id": "mia", "data": { "v": 1 }, "hlc": "1690000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "sigue", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev", "dirty": 0 }
+      ],
+      "expectCursor": "n2"
+    },
+    {
+      "name": "reset epoch (otro server): no borra nada local, vuelve a subir todo",
+      "node": "dev",
+      "now": 1700000000000,
+      "meta": { "cursor": "viejo" },
+      "local": [
+        { "t": "todo", "id": "a", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "b", "data": null, "hlc": "1699999999999-0000-dev", "dirty": 0 }
+      ],
+      "pages": [{ "records": [], "cursor": "nuevo", "more": false, "reset": "epoch" }],
+      "expectPulls": ["viejo"],
+      "expectPushed": ["todo/a@1600000000000-0000-dev", "todo/b@1699999999999-0000-dev"],
+      "expectRows": [
+        { "t": "todo", "id": "a", "data": { "v": 1 }, "hlc": "1600000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "b", "data": null, "hlc": "1699999999999-0000-dev", "dirty": 0 }
+      ],
+      "expectCursor": "nuevo"
+    },
+    {
+      "name": "las marcas de borrado de más de 180 días se limpian una vez subidas (también las que se acaban de subir); las recientes no",
+      "node": "dev",
+      "now": 1700000000000,
+      "meta": {},
+      "local": [
+        { "t": "todo", "id": "vieja", "data": null, "hlc": "1680000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "reciente", "data": null, "hlc": "1699000000000-0000-dev", "dirty": 0 },
+        { "t": "todo", "id": "sucia", "data": null, "hlc": "1680000000001-0000-dev", "dirty": 1 }
+      ],
+      "pages": [{ "records": [], "cursor": "c", "more": false }],
+      "expectPulls": [null],
+      "expectPushed": ["todo/sucia@1680000000001-0000-dev"],
+      "expectRows": [
+        { "t": "todo", "id": "reciente", "data": null, "hlc": "1699000000000-0000-dev", "dirty": 0 }
+      ],
+      "expectCursor": "c"
+    }
+  ],
+  "series": [
+    { "name": "lun y mié en una semana", "event": { "startDate": "2026-11-02", "repeatWeekdays": [1, 3], "repeatUntil": null }, "exdates": [], "from": "2026-11-02", "to": "2026-11-08", "expect": ["2026-11-02", "2026-11-04"] },
+    { "name": "repeatUntil inclusive y exdates", "event": { "startDate": "2026-11-02", "repeatWeekdays": [1, 3], "repeatUntil": "2026-11-11" }, "exdates": ["2026-11-04"], "from": "2026-11-01", "to": "2026-11-30", "expect": ["2026-11-02", "2026-11-09", "2026-11-11"] },
+    { "name": "empieza después del rango", "event": { "startDate": "2026-12-01", "repeatWeekdays": [2], "repeatUntil": null }, "exdates": [], "from": "2026-11-01", "to": "2026-11-30", "expect": [] },
+    { "name": "domingo es 7", "event": { "startDate": "2026-11-01", "repeatWeekdays": [7], "repeatUntil": null }, "exdates": [], "from": "2026-11-01", "to": "2026-11-15", "expect": ["2026-11-01", "2026-11-08", "2026-11-15"] }
+  ]
+}

@@ -3,6 +3,7 @@ package ar.federico.studyworkflow.widget
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.DayOfWeek
 
 data class Todo(
     val id: String, val title: String, val dueDate: String?, val dueTime: String?,
@@ -15,7 +16,6 @@ data class Ev(
     val reminderMin: Int? = null, val insistent: Boolean = false,
 )
 data class Mat(val id: String, val sigla: String, val color: String, val colorStrong: String)
-data class QueueOp(val id: String, val completed: Boolean, val baseUpdatedAt: String?, val at: String)
 
 private val byDue = compareBy<Todo>({ it.dueDate ?: "9999-99-99" }, { it.dueTime == null }, { it.dueTime ?: "" }, { it.sortOrder })
 
@@ -25,18 +25,6 @@ fun todoList(items: List<Todo>, keep: Set<String>): List<Todo> =
 
 fun isOverdue(t: Todo, today: String): Boolean = t.dueDate != null && t.dueDate < today
 
-/** Un tilde nuevo de la misma tarea reemplaza al anterior y conserva la base del primero. */
-fun enqueueOp(queue: List<QueueOp>, op: QueueOp): List<QueueOp> {
-    val prev = queue.find { it.id == op.id } ?: return queue + op
-    return queue.map { if (it.id == op.id) op.copy(baseUpdatedAt = prev.baseUpdatedAt) else it }
-}
-
-/** Misma regla que flush() en core/web/offline.ts: si desde la compu cambió la tarea, gana el servidor. */
-fun shouldSend(op: QueueOp, status: Int, serverUpdatedAt: String?): Boolean {
-    if (status == 404 || serverUpdatedAt == null) return false
-    val stale = if (op.baseUpdatedAt == null) serverUpdatedAt >= op.at else serverUpdatedAt != op.baseUpdatedAt
-    return !stale
-}
 
 data class Reminder(val key: String, val at: Long, val title: String, val text: String, val route: String, val insistent: Boolean)
 
@@ -60,4 +48,21 @@ fun reminders(todos: List<Todo>, events: List<Ev>, nowMs: Long, zone: ZoneId, ma
         )
     }
     return (t + e).filter { it.at > nowMs }.sortedBy { it.at }.take(max)
+}
+
+/**
+ * Fechas de una serie semanal dentro de [from, to] (ambas inclusive). Es el mismo cálculo que seriesDates de
+ * modules/calendar/app/recurrence.ts; los dos corren los "series" de core/shared/sync-cases.json.
+ */
+fun seriesDates(startDate: String, weekdays: List<Int>, until: String?, from: String, to: String, exdates: Set<String> = emptySet()): List<String> {
+    val last = if (until != null && until < to) until else to
+    val out = mutableListOf<String>()
+    var d = LocalDate.parse(if (from > startDate) from else startDate)
+    val end = LocalDate.parse(last)
+    while (!d.isAfter(end)) {
+        val s = d.toString()
+        if (d.dayOfWeek.value in weekdays && s !in exdates) out.add(s)
+        d = d.plusDays(1)
+    }
+    return out
 }

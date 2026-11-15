@@ -23,8 +23,7 @@ class TodoWidget : GlanceAppWidget() {
             val s = remember(rev) { snapshot(ctx) }
             Root {
                 when {
-                    s == null || (s.server != null && s.todos == null) -> Message("No pude cargar. Tocá para reintentar.", actionRunCallback<RefreshAction>())
-                    s.server == null -> Message("Abrí Study Workflow para conectar.", openApp(null))
+                    s == null || s.todos == null -> Message("No pude cargar. Tocá para reintentar.", actionRunCallback<RefreshAction>())
                     else -> {
                         val rows = todoList(s.todos!!, s.keep)
                         Header("To-do", s.todos.count { !it.completed }, route = "/todo", plusRoute = "/todo/nueva")

@@ -70,13 +70,13 @@ Anda con la app cerrada o abierta. Si es la primera vez, antes te pide la direcc
 
 ## Widget To-do
 
-1. Abrí la app una vez con conexión (si no, el widget dice "Abrí Study Workflow para conectar.").
+1. Abrí la app una vez (el widget lee los datos que la app guarda en el celu; no necesita conexión para mostrarlos).
 2. Mantené apretada la pantalla de inicio → **Widgets** → **Study Workflow** → arrastrá "To-do". Para redimensionarlo, mantenelo apretado y tirá de los bordes.
 3. **Batería (importante en Samsung):** **Ajustes → Aplicaciones → Study Workflow → Batería → Sin restricciones**. Sin esto, One UI puede frenar los refrescos y la sincronización de los tildes hechos sin señal.
 
-Se actualizan al cambiar algo en la app, al salir de la app, al tildar desde el widget y cada 30 minutos. Un tilde hecho sin señal se sube solo al volver la red; si la tarea se cambió desde la compu mientras tanto, gana ese cambio.
+Se redibuja al instante cuando cambia algo en la app o al tildar desde el widget (el tilde se guarda en el celu en el momento). Los cambios se suben al servidor y se bajan los de la compu en segundo plano: al tildar, al volver la red y cada 30 minutos con el widget puesto. Si la misma tarea se cambió en dos dispositivos, gana el cambio más nuevo.
 
-Si un tilde sin señal no se sube: revisá la batería "Sin restricciones" y abrí la app una vez.
+Si un tilde sin señal no se sube: revisá la batería "Sin restricciones"; igual no se pierde, queda guardado en el celu hasta que haya conexión.
 
 Las tareas con subtareas muestran el progreso (`2/4`); tildar en el widget completa la tarea principal.
 
@@ -92,7 +92,7 @@ En una tarea con fecha o en un evento, elegí **Recordatorio**: a la hora, 15 mi
 - **Eventos que se repiten:** suena en cada ocurrencia.
 - Funciona sin conexión, con la app cerrada y después de reiniciar el celu. Tocar la notificación abre la tarea o el día.
 - Al completar o borrar la tarea, o sacarle la fecha, el recordatorio se cancela solo.
-- **Cuándo se entera el celu:** al cambiar algo en la app del celu, al instante. Si lo pusiste desde la compu, en la próxima sincronización: al abrir la app o cada 30 minutos con el widget To-do puesto. Se programan los 60 más próximos dentro de los próximos 30 días.
+- **Cuándo se entera el celu:** al cambiar algo en la app del celu, al instante. Si lo pusiste desde la compu, en la próxima sincronización: al abrir la app o en el sync de fondo (cada 30 minutos con el widget To-do puesto). Se programan los 60 más próximos dentro de los próximos 30 días.
 - **Batería:** necesita "Sin restricciones", igual que el widget (paso 3 de arriba).
 - Si el celu estaba apagado a la hora del recordatorio, ese no suena.
 
@@ -108,7 +108,7 @@ Volvé a correr `npm run apk` e instalá el APK nuevo encima del viejo (camino A
 
 Copiá la carpeta `%USERPROFILE%\.study-workflow\` (tiene `release.jks` y `keystore.properties`) a un pendrive o a tu nube. Para abrirla, pegá esa ruta en la barra del Explorador.
 
-Si la perdés, el próximo APK va a tener otra firma y Android no lo deja instalar encima: hay que desinstalar la app e instalarla de nuevo. No perdés datos (están en el servidor), solo la copia sin conexión y la dirección guardada. Para recuperar la llave, poné la carpeta de vuelta en el mismo lugar antes de compilar.
+Si la perdés, el próximo APK va a tener otra firma y Android no lo deja instalar encima: hay que desinstalar la app e instalarla de nuevo. No perdés datos (están en el servidor), ni los datos del servidor, pero sí lo que el celu todavía no había subido y la dirección guardada. Para recuperar la llave, poné la carpeta de vuelta en el mismo lugar antes de compilar.
 
 ## 7. Problemas comunes
 

@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import org.json.JSONArray
+import org.json.JSONObject
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -36,6 +38,9 @@ class WidgetsPlugin : Plugin() {
         }
     }
 
+    override fun load() { SwDb.onNativeWrite = { notifyListeners("dbChanged", JSObject()) } }
+    override fun handleOnDestroy() { SwDb.onNativeWrite = null }
+
     fun deliver() {
         // Sin listener (app en Conectar o rutas sin montar) la ruta se queda para takeRoute().
         if (!hasListeners("route")) return
@@ -53,7 +58,7 @@ class WidgetsPlugin : Plugin() {
 
     @PluginMethod
     fun refresh(call: PluginCall) {
-        SyncWorker.schedule(context)
+        SyncWorker.refreshLocal(context)
         call.resolve()
     }
 
@@ -74,7 +79,7 @@ class WidgetsPlugin : Plugin() {
             val light = call.getString("light")?.takeIf { runCatching { android.graphics.Color.parseColor(it) }.isSuccess }
             val changed = WidgetStore.accent(context) != android.graphics.Color.parseColor(hex) || light != null && WidgetStore.accentLight(context) != android.graphics.Color.parseColor(light)
             WidgetStore.setAccent(context, hex, light)
-            if (changed) SyncWorker.schedule(context)
+            if (changed) SyncWorker.refreshLocal(context)
         }
         call.resolve()
     }
@@ -85,7 +90,7 @@ class WidgetsPlugin : Plugin() {
         val mode = call.getString("mode")?.takeIf { it in setOf("dark", "light", "system") } ?: return call.reject("Tema inválido")
         if (WidgetStore.theme(context) != mode) {
             WidgetStore.setTheme(context, mode)
-            SyncWorker.schedule(context)
+            SyncWorker.refreshLocal(context)
         }
         applyNightMode(context, mode)
         call.resolve()
@@ -98,15 +103,37 @@ class WidgetsPlugin : Plugin() {
         call.resolve()
     }
 
+    /** La app arranca: una sola lectura de todo (la app trabaja en memoria y persiste cada cambio con dbApply). */
     @PluginMethod
-    fun setDone(call: PluginCall) {
-        val id = call.getString("id")
-        if (id != null) runCatching {
-            WidgetStore.setCompletedLocal(context, id, call.getBoolean("completed", true) == true)
-            ReminderScheduler.reschedule(context)
-        }
-        SyncWorker.schedule(context)
-        call.resolve()
+    fun dbLoad(call: PluginCall) {
+        Thread {
+            runCatching {
+                val (rows, meta) = SqlStore(SwDb.get(context)).load()
+                val arr = JSONArray()
+                rows.forEach { arr.put(JSONObject().put("t", it.t).put("id", it.id).put("data", it.data?.let(::JSONObject) ?: JSONObject.NULL).put("hlc", it.hlc).put("dirty", if (it.dirty) 1 else 0)) }
+                call.resolve(JSObject().put("rows", arr).put("meta", JSONObject(meta)))
+            }.onFailure { call.reject("No se pudo leer la base del dispositivo: " + it.message) }
+        }.start()
+    }
+
+    /** Persiste lo que la app cambió: filas a guardar (solo si su HLC no es menor), claves a borrar y meta. Después refresca recordatorios y widget. */
+    @PluginMethod
+    fun dbApply(call: PluginCall) {
+        Thread {
+            runCatching {
+                val store = SqlStore(SwDb.get(context), notify = false)
+                val put = call.getArray("put")
+                val rows = (0 until put.length()).map { put.getJSONObject(it) }.map {
+                    Row(it.getString("t"), it.getString("id"), if (it.isNull("data")) null else it.getJSONObject("data").toString(), it.getString("hlc"), it.optInt("dirty") == 1)
+                }
+                if (rows.isNotEmpty()) store.put(rows)
+                val del = call.getArray("del")
+                store.delete((0 until del.length()).map { del.getJSONArray(it) }.map { it.getString(0) to it.getString(1) })
+                call.getObject("meta")?.let { m -> m.keys().forEach { k -> store.setMeta(k, m.optString(k)) } }
+                if (rows.isNotEmpty() || del.length() > 0) SyncWorker.refreshLocal(context)
+                call.resolve()
+            }.onFailure { call.reject("No se pudo guardar en el dispositivo: " + it.message) }
+        }.start()
     }
 
     @PluginMethod

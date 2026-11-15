@@ -83,7 +83,7 @@ class Snap(
 fun snapshot(ctx: Context): Snap? = runCatching {
     Snap(
         WidgetStore.server(ctx), WidgetStore.todos(ctx), WidgetStore.mats(ctx),
-        WidgetStore.offline(ctx), WidgetStore.savedAt(ctx), WidgetStore.queue(ctx).size, WidgetStore.keep(ctx),
+        WidgetStore.offline(ctx), WidgetStore.savedAt(ctx), WidgetStore.queued(ctx), WidgetStore.keep(ctx),
         LocalDate.now(AR).toString(),
     )
 }.getOrNull()

@@ -31,6 +31,7 @@ export const syncNowNow = () => syncNow();
 /** `onRemote`: se llama cuando llegaron cambios de otro dispositivo (para recargar las pantallas). */
 export function startSync(db: LocalDb, onRemote: () => void): void {
   const run = makeSyncer(db, serverTarget(call));
+  db.onExternal(onRemote);
   const refresh = () => set({ pending: db.pendingCount(), saveError: db.error !== null, lastSync: db.getMeta('lastSync') ?? null });
   syncNow = async () => {
     if (syncBase() === null) { set({ enabled: false }); return; }

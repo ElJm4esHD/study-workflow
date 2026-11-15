@@ -6,6 +6,8 @@ export interface LocalStore {
   load(): Promise<{ rows: Row[]; meta: Record<string, string> }>;
   /** Una transacción: guarda `put`, borra `del` (pares [t, id]) y mezcla `meta`. */
   apply(put: Row[], del: [string, string][], meta?: Record<string, string>): Promise<void>;
+  /** Avisa cuando otro proceso (el widget o el sync de fondo del celu) escribió en el mismo almacenamiento. */
+  subscribe?(fn: () => void): () => void;
 }
 
 export class LocalDb {
@@ -13,6 +15,7 @@ export class LocalDb {
   private clock: Clock;
   private chain: Promise<void> = Promise.resolve();
   private listeners = new Set<() => void>();
+  private external = new Set<() => void>();
   private undo: Map<string, Row | undefined> | null = null; // dentro de transaction(): lo que había antes
   private txPut = new Map<string, Row>();
   /** Último error al persistir (la UI lo puede mostrar); null si todo va bien. */
@@ -36,8 +39,28 @@ export class LocalDb {
       meta.deviceId = [...crypto.getRandomValues(new Uint8Array(3))].map((b) => b.toString(16).padStart(2, '0')).join('');
       await store.apply([], [], { deviceId: meta.deviceId });
     }
-    return new LocalDb(store, rows.filter((r) => isHlc(r.hlc)), meta, now);
+    const db = new LocalDb(store, rows.filter((r) => isHlc(r.hlc)), meta, now);
+    store.subscribe?.(() => void db.refreshFromStore());
+    return db;
   }
+
+  /** Toma lo que escribió otro proceso: gana el HLC mayor; si es el mismo, vale que ya esté subido. */
+  async refreshFromStore(): Promise<void> {
+    const { rows } = await this.store.load();
+    let changed = false;
+    for (const r of rows) {
+      if (!isHlc(r.hlc)) continue;
+      const mine = this.cols.get(r.t)?.get(r.id);
+      if (!mine || newer(r.hlc, mine.hlc)) {
+        this.clock.recv(r.hlc);
+        this.col(r.t).set(r.id, r);
+        changed = true;
+      } else if (r.hlc === mine.hlc && mine.dirty && !r.dirty) mine.dirty = 0;
+    }
+    if (changed) { this.emit(); this.external.forEach((f) => f()); }
+  }
+  /** Avisa solo cuando cambió algo escrito por otro proceso (para recargar las pantallas). */
+  onExternal(fn: () => void): () => void { this.external.add(fn); return () => void this.external.delete(fn); }
 
   private col(t: string) {
     let c = this.cols.get(t);

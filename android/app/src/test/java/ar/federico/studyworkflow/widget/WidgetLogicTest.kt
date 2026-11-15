@@ -19,18 +19,6 @@ class WidgetLogicTest {
         assertTrue(todoList(items, setOf("hecha")).any { it.id == "hecha" })
     }
 
-    @Test fun enqueueOp_colapsa() {
-        val q = enqueueOp(listOf(QueueOp("a", true, "u1", "t1")), QueueOp("a", false, "u2", "t2"))
-        assertEquals(listOf(QueueOp("a", false, "u1", "t2")), q)
-    }
-
-    @Test fun shouldSend_regla() {
-        assertFalse(shouldSend(QueueOp("a", true, "u1", "t"), 404, "x"))
-        assertTrue(shouldSend(QueueOp("a", true, "u1", "t"), 200, "u1"))
-        assertFalse(shouldSend(QueueOp("a", true, "u1", "t"), 200, "u2"))
-        assertTrue(shouldSend(QueueOp("a", true, null, "2026-11-06T10:00:00Z"), 200, "2026-11-06T09:00:00Z"))
-    }
-
     @Test fun reminders_calcula() {
         val zone = java.time.ZoneId.of("America/Argentina/Buenos_Aires")
         fun ms(iso: String) = java.time.OffsetDateTime.parse(iso).toInstant().toEpochMilli()

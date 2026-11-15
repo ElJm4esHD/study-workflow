@@ -10,7 +10,7 @@ import { getPrefs } from './prefs.ts';
 import { initLocal, local } from './local.ts';
 import { reloadAll } from './api.ts';
 import { firstSync, startSync } from './sync/auto.ts';
-import { getServerUrl } from './server.ts';
+import { DEFAULT_SERVER, getServerUrl } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
 import { parentOf } from './back.ts';
 import { MotionRoot } from './motion.tsx';
@@ -85,7 +85,7 @@ const start = () => (boot ??= (async () => {
 export function App() {
   const [state, setState] = useState<'loading' | 'ready' | Error>('loading');
   // Instalaciones ya configuradas: el nativo todavía no conoce la URL.
-  useEffect(() => { setWidgetServer(getServerUrl()); }, []);
+  useEffect(() => { setWidgetServer(getServerUrl() ?? (DEFAULT_SERVER || null)); }, []);
   useEffect(() => { start().then(() => setState('ready'), (e) => setState(e instanceof Error ? e : new Error(String(e)))); }, []);
   if (state instanceof Error) return <div className="center-screen" role="alert"><h1>No se pudo abrir la app</h1><p>{state.message}</p><button className="btn primary" onClick={() => location.reload()}>Reintentar</button></div>;
   if (state === 'loading') return <div className="main"><PageSkeleton /></div>;

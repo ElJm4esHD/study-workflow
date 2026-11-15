@@ -16,7 +16,7 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 - [ ] Nueva tarea: los campos dicen su nombre (Título, Fecha, Hora…). Escribir `930` en Hora lo deja en 09:30.
 - [ ] El botón del calendario de Fecha abre el selector; se recorre día por día y cada uno dice "martes 17 de noviembre de 2026".
 - [ ] "Deshacer" después de borrar se anuncia y se puede tocar.
-- [ ] La barra "Sin conexión" se anuncia sola al apagar la red.
+- [ ] Si falla la sincronización, el aviso de arriba ("Sin conexión…" / "N cambios sin subir") se anuncia solo.
 - [ ] La búsqueda (Más › Buscar) anuncia "N resultados".
 
 ## 3. Letra grande
@@ -32,10 +32,10 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 
 ## 5. Modo avión
 - [ ] Con red: abrir Inicio, To-do y Calendario. Activar modo avión.
-- [ ] Aparece "Sin conexión. Datos del …" arriba.
-- [ ] Se puede tildar una tarea; las demás acciones avisan "Sin conexión: solo podés tildar tareas".
-- [ ] Ajustes muestra solo lo que anda sin red (General, Apariencia, Datos › vaciar copia, Acerca de).
-- [ ] Desactivar modo avión: la barra desaparece y el tilde se sincroniza (verlo en la compu).
+- [ ] Arriba aparece un aviso de sincronización (sin red); la app sigue andando entera.
+- [ ] Crear, editar, borrar y tildar tareas y eventos, e importar un plan: todo anda.
+- [ ] El widget (si está puesto) refleja esos cambios al instante, también en modo avión.
+- [ ] Desactivar modo avión: el aviso desaparece y los cambios se sincronizan (verlos en la compu).
 
 ## 6. Recordatorios
 - [ ] Ajustes › Recordatorios › Probar sonido: aparece la notificación y suena (con el celu en silencio también, es sonido de alarma).
@@ -49,7 +49,9 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 - [ ] Tildar una tarea en el widget la completa (y se ve en la app).
 - [ ] El botón + abre "Nueva tarea".
 - [ ] Cambiar el color de acento en Ajustes › Apariencia cambia el contador y el + del widget (puede tardar unos segundos).
-- [ ] Sin conexión, el widget sigue mostrando lo último y deja tildar.
+- [ ] Sin conexión, el widget sigue mostrando todo y deja tildar; el tilde se ve en la app al abrirla y sube solo al volver la red.
+- [ ] Tildar en el widget una tarea con recordatorio cancela el recordatorio.
+- [ ] Cambiar algo en la compu: el widget lo muestra después del sync de fondo (o al abrir la app).
 - [ ] Con el tema Claro, el widget se ve claro; con "Según el sistema", cambia al pasar el celu de claro a oscuro.
 
 ## 7 bis. Tema
@@ -71,4 +73,5 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 ## 9. Datos
 - [ ] Ajustes › Datos › Exportar abre el navegador y baja `study-workflow-AAAA-MM-DD.json`.
 - [ ] (Solo si querés probar el ciclo completo) Importar ese archivo en una base de pruebas: reemplaza todo y la app recarga.
-- [ ] Vaciar copia offline: pide confirmación y, con red, la app vuelve a bajar los datos.
+- [ ] Sincronizar ahora (Ajustes › Datos): muestra "Sincronizado hace instantes" y, con la compu, aparecen los cambios de la otra.
+- [ ] Exportar e importar usan el formato v2 (solo registros); un backup 1.x no se acepta (se convierte en la migración).

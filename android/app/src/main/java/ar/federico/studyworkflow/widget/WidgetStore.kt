@@ -1,10 +1,14 @@
 package ar.federico.studyworkflow.widget
 
 import android.content.Context
+import java.time.LocalDate
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Copia local de lo último que bajó el servidor, la cola de tildes y las tachadas de 3 s. */
+/**
+ * Lo que el widget y los recordatorios leen: los datos salen de la base del dispositivo (SwDb, la misma que usa la app);
+ * acá quedan solo las preferencias de este celu (servidor, acento, tema) y las tachadas de 3 s.
+ */
 object WidgetStore {
     private fun p(ctx: Context) = ctx.getSharedPreferences("sw_widgets", Context.MODE_PRIVATE)
     private fun JSONObject.str(k: String): String? = if (isNull(k)) null else optString(k)
@@ -17,11 +21,8 @@ object WidgetStore {
         o.optJSONArray("subtasks")?.objs()?.count { it.optBoolean("done") } ?: 0, o.optJSONArray("subtasks")?.length() ?: 0,
         o.int("reminderMin"), o.optBoolean("reminderInsistent"),
     )
-    private fun toEv(o: JSONObject) = Ev(
-        o.getString("id"), o.optString("title"), o.optString("kind", "evento"), o.optBoolean("allDay"),
-        o.getString("startDate"), o.optString("endDate", o.getString("startDate")), o.str("startTime"), o.str("materiaId"),
-        o.int("reminderMin"), o.optBoolean("reminderInsistent"),
-    )
+
+    private fun store(ctx: Context) = SqlStore(SwDb.get(ctx))
 
     fun server(ctx: Context): String? = p(ctx).getString("server", null)?.takeIf { it.isNotBlank() }
     /** Color de acento elegido en la app (Ajustes › Apariencia); el widget lo usa en el contador y el botón +. */
@@ -33,29 +34,48 @@ object WidgetStore {
     fun setTheme(ctx: Context, mode: String) = p(ctx).edit().putString("theme", mode).apply()
     fun setServer(ctx: Context, url: String?) = p(ctx).edit().putString("server", url?.trimEnd('/')).apply()
 
-    fun todos(ctx: Context): List<Todo>? = p(ctx).getString("todos", null)?.let { JSONArray(it).objs().map(::toTodo) }
-    fun agenda(ctx: Context): Pair<List<Ev>, List<Todo>>? = p(ctx).getString("agenda", null)?.let {
-        val o = JSONObject(it)
-        o.getJSONArray("events").objs().map(::toEv) to o.getJSONArray("todos").objs().map(::toTodo)
-    }
-    fun mats(ctx: Context): Map<String, Mat> = p(ctx).getString("mats", null)?.let { s ->
-        JSONArray(s).objs().associate {
-            val c = it.optString("color", "#b6bcc8")
-            it.getString("id") to Mat(it.getString("id"), it.optString("sigla"), c, it.optString("colorStrong", c))
-        }
-    } ?: emptyMap()
+    fun todos(ctx: Context): List<Todo> = store(ctx).docs("todo_items").map(::toTodo)
 
-    fun savedAt(ctx: Context): Long? = p(ctx).getLong("savedAt", 0).takeIf { it > 0 }
+    /** Eventos de hoy a `days` días; una serie se expande en una ocurrencia por fecha (id "<serie>:<fecha>"). */
+    fun events(ctx: Context, from: LocalDate, days: Long = 30): List<Ev> {
+        val to = from.plusDays(days)
+        return store(ctx).docs("calendar_events").flatMap { e ->
+            val id = e.getString("id")
+            val start = e.getString("startDate")
+            val wd = e.optJSONArray("repeatWeekdays")
+            fun ev(date: String, key: String) = Ev(
+                key, e.optString("title"), e.optString("kind", "evento"), e.optBoolean("allDay"), date, date, e.str("startTime"), e.str("materiaId"),
+                e.int("reminderMin"), e.optBoolean("reminderInsistent"),
+            )
+            if (wd == null || e.isNull("repeatWeekdays")) listOf(ev(start, id).copy(endDate = e.optString("endDate", start)))
+            else {
+                val ex = e.optJSONArray("exdates")?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() }.orEmpty()
+                seriesDates(start, (0 until wd.length()).map { wd.getInt(it) }, e.str("repeatUntil"), from.toString(), to.toString(), ex).map { ev(it, "$id:$it") }
+            }
+        }
+    }
+
+    fun mats(ctx: Context): Map<String, Mat> = store(ctx).docs("materias").associate {
+        val c = it.optString("color", "#b6bcc8")
+        it.getString("id") to Mat(it.getString("id"), it.optString("sigla"), c, it.optString("colorStrong", c))
+    }
+
+    /** Cambios del dispositivo todavía sin subir al servidor. */
+    fun queued(ctx: Context): Int = store(ctx).dirty().size
+    /** Última vez que se sincronizó con el servidor (la app o el sync de fondo). */
+    fun savedAt(ctx: Context): Long? = store(ctx).meta("lastSync")?.let { runCatching { java.time.Instant.parse(it).toEpochMilli() }.getOrNull() }
+    /** El último sync de fondo no pudo conectar. */
     fun offline(ctx: Context): Boolean = p(ctx).getBoolean("offline", false)
     fun setOffline(ctx: Context, v: Boolean) = p(ctx).edit().putBoolean("offline", v).apply()
 
-    fun queue(ctx: Context): List<QueueOp> = JSONArray(p(ctx).getString("queue", "[]")).objs().map {
-        QueueOp(it.getString("id"), it.getBoolean("completed"), it.str("baseUpdatedAt"), it.getString("at"))
-    }
-    fun setQueue(ctx: Context, q: List<QueueOp>) {
-        val a = JSONArray()
-        q.forEach { a.put(JSONObject().put("id", it.id).put("completed", it.completed).put("baseUpdatedAt", it.baseUpdatedAt ?: JSONObject.NULL).put("at", it.at)) }
-        p(ctx).edit().putString("queue", a.toString()).apply()
+    /** Tilda o destilda desde el widget, directo en la base del dispositivo, y deja la tachada 3 s. */
+    fun toggle(ctx: Context, id: String, completed: Boolean) {
+        val db = SwDb.get(ctx)
+        val s = SqlStore(db)
+        SyncCore.setCompleted(s, s.clock(), id, completed, SyncCore.nowIso())
+        val keep = keepMap(ctx)
+        if (completed) keep.put(id, System.currentTimeMillis() + 3000) else keep.remove(id)
+        p(ctx).edit().putString("keep", keep.toString()).apply()
     }
 
     private fun keepMap(ctx: Context) = JSONObject(p(ctx).getString("keep", "{}"))
@@ -68,60 +88,5 @@ object WidgetStore {
         val now = System.currentTimeMillis()
         val m = keepMap(ctx)
         return m.keys().asSequence().map { m.getLong(it) }.filter { it > now }.minOrNull()
-    }
-
-    /** Cambia `completed` (y `updatedAt` si viene) de ese id en un JSON guardado: array de tareas o {events, todos}. */
-    private fun patch(json: String, id: String, completed: Boolean?, updatedAt: String?): String {
-        fun fix(a: JSONArray) = a.objs().forEach {
-            if (it.optString("id") == id && it.has("completed")) {
-                if (completed != null) it.put("completed", completed)
-                if (updatedAt != null) it.put("updatedAt", updatedAt)
-            }
-        }
-        return if (json.startsWith("[")) JSONArray(json).also(::fix).toString()
-        else JSONObject(json).also { fix(it.getJSONArray("todos")) }.toString()
-    }
-
-    /** Saca de la cola el op ya enviado, salvo que el usuario haya vuelto a tocar (otro `at`). */
-    @Synchronized
-    fun dropOp(ctx: Context, op: QueueOp) = setQueue(ctx, queue(ctx).filterNot { it.id == op.id && it.at == op.at })
-
-    @Synchronized
-    fun toggle(ctx: Context, id: String, completed: Boolean) {
-        val base = (todos(ctx).orEmpty() + agenda(ctx)?.second.orEmpty()).firstOrNull { it.id == id }?.updatedAt
-        setQueue(ctx, enqueueOp(queue(ctx), QueueOp(id, completed, base, java.time.Instant.now().toString())))
-        val e = p(ctx).edit()
-        for (k in listOf("todos", "agenda")) p(ctx).getString(k, null)?.let { e.putString(k, patch(it, id, completed, null)) }
-        val keep = keepMap(ctx)
-        if (completed) keep.put(id, System.currentTimeMillis() + 3000) else keep.remove(id)
-        e.putString("keep", keep.toString()).apply()
-    }
-
-    /** Tilde hecho sin conexión dentro de la app: actualiza la copia sin encolar (la cola es la de la app). */
-    // shortcut: si el celu sincroniza antes de que la app suba su cola, la copia vuelve a "pendiente" hasta ese momento.
-    @Synchronized
-    fun setCompletedLocal(ctx: Context, id: String, completed: Boolean) {
-        val e = p(ctx).edit()
-        for (k in listOf("todos", "agenda")) p(ctx).getString(k, null)?.let { e.putString(k, patch(it, id, completed, null)) }
-        e.apply()
-    }
-
-    fun setUpdatedAt(ctx: Context, id: String, updatedAt: String) {
-        val e = p(ctx).edit()
-        for (k in listOf("todos", "agenda")) p(ctx).getString(k, null)?.let { e.putString(k, patch(it, id, null, updatedAt)) }
-        e.apply()
-    }
-
-    /** Guarda lo bajado; los tildes todavía en cola ganan sobre lo que dice el servidor. */
-    @Synchronized
-    fun saveAll(ctx: Context, todoJson: String, agendaJson: String, matsJson: String) {
-        var t = todoJson
-        var a = agendaJson
-        for (op in queue(ctx)) {
-            t = patch(t, op.id, op.completed, null)
-            a = patch(a, op.id, op.completed, null)
-        }
-        p(ctx).edit().putString("todos", t).putString("agenda", a).putString("mats", matsJson)
-            .putLong("savedAt", System.currentTimeMillis()).apply()
     }
 }

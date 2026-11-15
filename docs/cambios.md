@@ -70,3 +70,11 @@ Sin cambios de uso todavía: se agregó el motor de sincronización, el almacena
 - Backup nuevo (formato v2, solo registros). Los backups de la 1.x se convierten en la migración (etapa 5).
 - El servidor ya no tiene `/api/todo`, `/api/calendar`, etc.: solo `/api/sync/*` y `/api/health`.
 - Pendiente (etapa 4): widget y recordatorios del celu leyendo del dispositivo.
+
+## 2.0.0-beta.4 (widget y recordatorios desde el dispositivo)
+
+- El widget y los recordatorios leen los datos del celu (no del servidor): funcionan sin conexión y se actualizan al instante con lo que hacés en la app.
+- Tildar en el widget se guarda en el celu y se sube solo cuando hay conexión; ya no hay cola aparte ni regla "gana el servidor": gana el cambio más nuevo.
+- Los cambios de la compu llegan al widget y a las alarmas en segundo plano, sin abrir la app.
+- Los recordatorios de eventos que se repiten se calculan en el celu.
+- Sin dirección del servidor la app y el widget andan igual (solo local).
