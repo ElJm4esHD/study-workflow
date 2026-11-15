@@ -142,3 +142,33 @@ test('dos dispositivos: lo que se crea en uno aparece en el otro, y también lo 
   await b.getByRole('button', { name: 'Guardar' }).click();
   await expect(async () => { await a.reload(); await expect(a.getByText(`${title} editada`)).toBeVisible({ timeout: 1500 }); }).toPass({ timeout: 20000 });
 });
+
+test('sin conexión: se crea, edita y borra, y al volver la red se sincroniza al otro dispositivo', async ({ browser }) => {
+  const mk = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await ctx.newPage();
+    await page.goto('/todo?vista=sin-fecha');
+    await page.waitForLoadState('networkidle');
+    return { ctx, page };
+  };
+  const a = await mk();
+  const b = await mk();
+  const t1 = `Offline uno ${Date.now()}`;
+  const t2 = `Offline dos ${Date.now()}`;
+  await a.ctx.setOffline(true);
+  for (const t of [t1, t2]) {
+    await a.page.getByLabel('Agregar tarea rápido').fill(t);
+    await a.page.keyboard.press('Enter');
+    await expect(a.page.getByText(t)).toBeVisible();
+  }
+  await a.page.getByText(t2).first().click(); // editar
+  await a.page.getByLabel('Título').fill(`${t2} editada`);
+  await a.page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(a.page.getByText(`${t2} editada`)).toBeVisible();
+  await expect(a.page.getByRole('status').filter({ hasText: /Sin conexión|cambio/ }).first()).toBeVisible({ timeout: 15000 }); // aviso de pendientes
+  await b.page.reload();
+  await expect(b.page.getByText(t1)).toHaveCount(0); // todavía no llegó nada
+  await a.ctx.setOffline(false);
+  await a.page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await expect(async () => { await b.page.reload(); await expect(b.page.getByText(`${t2} editada`)).toBeVisible({ timeout: 1500 }); await expect(b.page.getByText(t1)).toBeVisible({ timeout: 1500 }); }).toPass({ timeout: 25000 });
+});
