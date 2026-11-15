@@ -1,7 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { setWidgetServer } from './widgets.ts';
 
-export const DEFAULT_SERVER = 'https://tu-server.tu-tailnet.ts.net:8443';
+// Sale de .env.deploy al compilar (vite.config.ts); vacío si no hay .env.deploy o en los tests.
+export const DEFAULT_SERVER: string = typeof __DEFAULT_SERVER__ === 'string' ? __DEFAULT_SERVER__ : '';
 const KEY = 'sw.server';
 
 export const isNative = (): boolean => Capacitor.isNativePlatform();

@@ -6,7 +6,7 @@ Todos los comandos se corren en PowerShell dentro de `C:\PROYECTS\study-workflow
 - **Server:** `tu-server.tu-tailnet.ts.net` (usuario `tu-usuario`).
 - **Puertos:** la app escucha en `127.0.0.1:8110` en el server y se publica en `https://tu-server.tu-tailnet.ts.net:8443`.
 - **Dónde se configura:** host y puertos salen **solo** de `.env.deploy`. No se commitea y ya está creado. Si cambiás un puerto, cambialo ahí y nada más.
-- **Lo que no se toca:** `otra-app`, que usa el 8080, y `otra-app`, que está en `tailscale serve` 443 `/` hacia `127.0.0.1:8100`.
+- **Lo que no se toca:** cualquier otra app que ya tengas en el server (puertos ocupados o publicada con `tailscale serve`). Revisalo en el paso 1.4.
 
 ---
 
@@ -24,7 +24,7 @@ Abrí `http://localhost:5173`, creá una tarea y cerralo con Ctrl+C. Lo que cree
 ## 1. Preparar el acceso (una sola vez)
 
 ### 1.1 HTTPS en Tailscale
-En https://login.tailscale.com/admin/dns tienen que estar activados **MagicDNS** y **HTTPS Certificates**. Como otra-app ya anda por HTTPS, seguramente ya lo están.
+En https://login.tailscale.com/admin/dns tienen que estar activados **MagicDNS** y **HTTPS Certificates**. Si otra app tuya ya anda por HTTPS, seguramente ya lo están.
 
 ### 1.2 Clave SSH
 ```
@@ -48,7 +48,7 @@ ssh tu-usuario@tu-server.tu-tailnet.ts.net "id -u; ss -ltn | grep ':8110 '; tail
 ```
 - La primera línea tiene que ser `1000`.
 - `ss` no tiene que mostrar nada para `:8110`. Si muestra algo, ese puerto está ocupado: elegí otro en `.env.deploy`.
-- `tailscale serve status` muestra lo que ya está publicado. Tiene que aparecer otra-app en `:443` y **nada en `:8443`**. Si te pide permisos, corrélo con `ssh -t ... sudo tailscale serve status`.
+- `tailscale serve status` muestra lo que ya está publicado. Pueden aparecer otras apps tuyas (por ejemplo en `:443`), pero **nada en `:8443`**. Si te pide permisos, corrélo con `ssh -t ... sudo tailscale serve status`.
 
 ### 1.4 Revisar `.env.deploy`
 ```
@@ -83,11 +83,11 @@ Al final imprime el comando de `tailscale serve`, que tiene que ser con `--https
 ```
 ssh -t tu-usuario@tu-server.tu-tailnet.ts.net "sudo tailscale serve --bg --https=8443 http://127.0.0.1:8110"
 ```
-Esto **agrega** el 8443 y no toca el 443 de otra-app. Para confirmarlo:
+Esto **agrega** el 8443 y no toca lo que ya tengas publicado en otros puertos. Para confirmarlo:
 ```
 ssh -t tu-usuario@tu-server.tu-tailnet.ts.net "sudo tailscale serve status"
 ```
-Tienen que aparecer las dos: otra-app en `:443` y study-workflow en `:8443`.
+Tiene que aparecer study-workflow en `:8443`, junto a lo que ya tenías.
 
 ---
 
@@ -103,7 +103,7 @@ npm run deploy
 
 Abrí **https://tu-server.tu-tailnet.ts.net:8443** en la compu y en el celu, con Tailscale prendido en el celu.
 
-Revisá también que otra-app siga andando en `https://tu-server.tu-tailnet.ts.net`.
+Si tenías otras apps publicadas, revisá que sigan andando.
 
 ---
 
@@ -127,7 +127,7 @@ Revisá también que otra-app siga andando en `https://tu-server.tu-tailnet.ts.n
   - Borrá un plan con "Mantener los exámenes" tildado.
   - Los parciales todavía no se ven porque el calendario es el Hito B, pero quedan guardados.
 - [ ] **Errores.** Con Tailscale apagado en el celu, la app tiene que mostrar un error en español y nunca una pantalla en blanco.
-- [ ] **Reinicio.** Corré `ssh -t tu-usuario@tu-server.tu-tailnet.ts.net sudo reboot`. Al minuto, `https://tu-server.tu-tailnet.ts.net:8443` tiene que volver a andar sola, y otra-app también.
+- [ ] **Reinicio.** Corré `ssh -t tu-usuario@tu-server.tu-tailnet.ts.net sudo reboot`. Al minuto, `https://tu-server.tu-tailnet.ts.net:8443` tiene que volver a andar sola, y tus otras apps también.
 
 ---
 

@@ -55,7 +55,7 @@ Cada vez que quieras instalar o actualizar, en la terminal:
 ## 4. Primera apertura
 
 1. Prendé **Tailscale** en el celu.
-2. Abrí **Study Workflow**. Pide la dirección del servidor; ya viene puesta `https://tu-server.tu-tailnet.ts.net:8443`.
+2. Abrí **Study Workflow**. Pide la dirección del servidor; ya viene puesta la de tu `.env.deploy` (`https://DEPLOY_HOST:HTTPS_PORT`, por ejemplo `https://tu-server.tu-tailnet.ts.net:8443`). Si compilaste sin `.env.deploy`, escribila a mano.
 3. Tocá **Probar y guardar**. Si anda, entra a Inicio.
 
 La dirección se cambia después en Ajustes → Servidor.

@@ -8,3 +8,26 @@ data/
 *.jks
 *.keystore
 keystore.properties
+# Datos reales del server y notas locales de Claude
+CLAUDE.local.md
+.claude/
+.env
+.env.*
+!.env.deploy.example
+# Builds, pruebas y backups
+*.apk
+*.aab
+test-results/
+playwright-report/
+backups/
+*.log
+# Certificados y claves
+*.pem
+*.p12
+*.key
+id_*
+# Editor y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

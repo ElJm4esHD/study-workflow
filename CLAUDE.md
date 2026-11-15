@@ -27,10 +27,10 @@ Interfaz en español (Argentina). Zona horaria `America/Argentina/Buenos_Aires`,
 
 ## Servidor
 
-- Ubuntu Server 24.04, `tu-server.tu-tailnet.ts.net`, usuario `tu-usuario`. Docker + Compose.
+- Ubuntu Server 24.04 con Docker + Compose. Host, usuario y puertos reales: `CLAUDE.local.md` y `.env.deploy` (ninguno se commitea; el repo es público).
 - **Sin exposición a internet.** Acceso solo por Tailscale.
 - Esta app: `127.0.0.1:8110`, publicada con `tailscale serve` en `https://tu-server.tu-tailnet.ts.net:8443`. Host y puertos salen solo de `.env.deploy`.
-- **No tocar** otras apps del server: otra-app (`tailscale serve` 443 → 8100), otra-app (8080) y otras apps.
+- **No tocar** las otras apps del server (lista en `CLAUDE.local.md`).
 - Datos en `/srv/study-workflow/` (1000:1000). Backup automático antes de cada deploy.
 - Filosofía: self-hosted, sin servicios de terceros, sin costos. Sin login (el acceso ya está limitado a mi tailnet).
 

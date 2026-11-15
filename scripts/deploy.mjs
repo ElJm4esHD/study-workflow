@@ -16,8 +16,8 @@ const env = Object.fromEntries(
   readFileSync(envFile, 'utf8').split(/\r?\n/)
     .map((l) => l.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/)).filter(Boolean).map((m) => [m[1], m[2]]),
 );
-const { DEPLOY_HOST: host, DEPLOY_USER: user = 'tu-usuario', PORT: port, HTTPS_PORT: httpsPort } = env;
-if (!host || !port || !httpsPort) die('Faltan DEPLOY_HOST, PORT o HTTPS_PORT en .env.deploy (ver .env.deploy.example).');
+const { DEPLOY_HOST: host, DEPLOY_USER: user, PORT: port, HTTPS_PORT: httpsPort } = env;
+if (!host || !user || !port || !httpsPort) die('Faltan DEPLOY_HOST, DEPLOY_USER, PORT o HTTPS_PORT en .env.deploy (ver .env.deploy.example).');
 const target = `${user}@${host}`;
 
 if (process.argv.includes('--setup')) {
