@@ -18,12 +18,12 @@
 .fin-mt em { font-style: normal; font-weight: 500; font-size: var(--t-micro); color: var(--muted); }
 
 /* 2 · fechas: una fila por materia */
-.fin-row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.fin-row { display: grid; grid-template-columns: 46px 1fr; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
 .fin-sig { font-weight: 750; font-size: var(--t-meta); text-align: center; padding: 4px 4px; border-radius: 6px; border-left: 3px solid var(--m);
   background: color-mix(in srgb, var(--m) var(--tint), transparent); overflow: hidden; text-overflow: ellipsis; }
-.fin-dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.fin-dp { min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: var(--t-sec); cursor: pointer; }
-.fin-dp.add { width: 44px; min-height: 36px; padding: 0; display: grid; place-items: center; background: none; border-style: dashed; border-color: var(--line-strong); color: var(--accent); }
+.fin-dates { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.fin-dp { min-height: 40px; padding: 0 9px; border-radius: 20px; white-space: nowrap; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: var(--t-sec); cursor: pointer; }
+.fin-dp.add { width: 40px; min-height: 40px; padding: 0; display: grid; place-items: center; background: none; border-style: dashed; border-color: var(--line-strong); color: var(--accent); }
 .fin-none { color: var(--muted); font-size: var(--t-sec); }
 
 /* 3 · filtros como chips que abren su ajuste */
