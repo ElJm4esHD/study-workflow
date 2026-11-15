@@ -49,7 +49,7 @@ En el celu, el JSON también se puede mandar con **Compartir → Study Workflow*
 
 ## Las skills de Claude
 
-Están en [`skills/`](skills/), en versión genérica:
+Están en [`skills/`](skills/), en versión genérica, y como `.zip` listos para subir en cada [Release](https://github.com/ElJm4esHD/study-workflow/releases/latest):
 
 | Skill | Qué hace |
 |---|---|
@@ -58,7 +58,7 @@ Están en [`skills/`](skills/), en versión genérica:
 
 **En claude.ai o la app de escritorio:**
 
-1. Comprimí la carpeta de la skill (por ejemplo `skills/cargar-app/`) en un `.zip` con el `SKILL.md` adentro.
+1. Bajá `skill-cargar-app.zip` (o `skill-cargar-finales.zip`) del último Release. También podés comprimir vos la carpeta `skills/cargar-app/`.
 2. Andá a **Configuración → Capacidades → Skills**, tocá **Subir skill** y elegí el `.zip`.
 3. Activala, y en cualquier chat escribí `/cargar-app` o pedí "cargá el plan a la app".
 
@@ -82,18 +82,32 @@ npm run deploy                       # push al server, build, backup de la base,
 - Antes de cada deploy se hace un backup de la base (`/srv/study-workflow/backups/`).
 - **Guía paso a paso** (clave SSH en Windows, permisos, verificación, restore y problemas comunes): [`DEPLOY.md`](DEPLOY.md).
 
-## APK para Android
+## Instalar en el celu
 
-Necesitás Android Studio (trae el JDK y el SDK).
+No hace falta Android Studio: el APK ya compilado está en **[Releases](https://github.com/ElJm4esHD/study-workflow/releases/latest)**. Antes tenés que tener tu server andando (sección anterior) y Tailscale instalado y conectado en el celu.
+
+1. **Bajá el APK.** Desde el celu, abrí el [último Release](https://github.com/ElJm4esHD/study-workflow/releases/latest) y tocá `study-workflow-X.Y.Z.apk`. Si Chrome avisa que el archivo puede ser dañino, tocá **Descargar de todas formas**.
+2. **Permití instalar apps desconocidas.** Abrí el APK desde la notificación de descarga (o desde **Mis archivos › Descargas**). La primera vez Android dice que no puede instalar apps de esa fuente: tocá **Configuración**, activá **Permitir de esta fuente** y volvé.
+3. **Si tenés un Samsung con "Bloqueador automático"** (One UI 6 o más nuevo), Android no te deja instalar nada que no venga de una tienda. Desactivalo en **Ajustes › Seguridad y privacidad › Bloqueador automático**, instalá y volvé a activarlo si querés.
+4. **Instalá.** Tocá **Instalar**. Si aparece **Play Protect** ("App no reconocida" o "App bloqueada"), es porque la app no viene de Play Store: tocá **Más detalles › Instalar de todos modos**. Si te ofrece mandarla a analizar, podés tocar **No enviar**.
+5. **Primera apertura.** La app pide la dirección de tu server: `https://tu-server.tu-tailnet.ts.net:PUERTO` (el `DEPLOY_HOST` y el `HTTPS_PORT` de tu `.env.deploy`). Tocá **Probar y guardar**. Después se cambia en Ajustes › Servidor.
+6. **Widget y recordatorios.** Mantené apretada la pantalla de inicio › **Widgets** › Study Workflow. Para que suenen los recordatorios, aceptá los permisos de notificaciones y de alarmas cuando la app los pida.
+
+**Para actualizar**, bajá el APK nuevo del Release e instalalo encima: tus datos están en el server y no se pierden. Si antes habías compilado la app vos, Android la rechaza porque tiene otra firma. En ese caso desinstalala primero.
+
+### Compilar el APK vos
+
+Si cambiaste el código, o preferís no instalar un APK de otra persona. Necesitás Android Studio, que trae el JDK y el SDK.
 
 ```powershell
 npm run apk -- --check   # verifica JDK, SDK y llave de firma
-npm run apk              # arma dist/study-workflow.apk firmado, con widget y recordatorios
+npm run apk              # dist/study-workflow.apk con la dirección de tu .env.deploy precargada
+npm run apk:public       # dist/study-workflow-X.Y.Z.apk genérico: pide la dirección al abrir
 ```
 
 - La primera vez crea la llave de firma en `%USERPROFILE%\.study-workflow\`, fuera del repo. **Hacele backup**: sin ella no podés actualizar la app instalada.
-- La dirección del server viene precargada desde tu `.env.deploy` (`https://DEPLOY_HOST:HTTPS_PORT`) y se puede cambiar en Ajustes › Servidor.
-- Cómo instalarlo en el celu (cable o adb), la primera apertura, el widget, los permisos de alarmas y problemas comunes: [`docs/android.md`](docs/android.md). Checklist de prueba: [`docs/checklist-s25.md`](docs/checklist-s25.md).
+- Cómo pasarlo al celu por cable o adb, el widget, los permisos de alarmas y problemas comunes: [`docs/android.md`](docs/android.md). Checklist de prueba: [`docs/checklist-s25.md`](docs/checklist-s25.md).
+- Cómo se publica una versión nueva en Releases: [`docs/release.md`](docs/release.md).
 
 ## Desarrollo
 

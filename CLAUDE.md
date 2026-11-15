@@ -65,3 +65,4 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 - Cuidado con el CSS: un `display` en un selector de `dialog` lo deja visible aunque esté cerrado (poner el `display` solo en `[open]`).
 - Actualizar `README.md` y `docs/` cuando cambie el uso. Los cambios de uso de cada versión van en `docs/cambios.md`.
 - **Repo público** (GitHub, AGPL-3.0, remote `github`): nunca commitear datos reales (host, tailnet, usuario, IPs, rutas de mi máquina, datos de uso). Van en `.env.deploy` o `CLAUDE.local.md`; docs y ejemplos usan `tu-server.tu-tailnet.ts.net` y `tu-usuario`. Capturas y fixtures, solo con datos de ejemplo.
+- **Releases:** `npm run release` (APK público sin `.env.deploy` + auditoría + zips de skills + `gh release`). Checklist en `docs/release.md`. `npm run apk` sigue siendo el APK personal con mi server precargado.
