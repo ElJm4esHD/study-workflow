@@ -75,7 +75,8 @@ p { margin: 0 0 .75rem; }
   .side-item[aria-current='page'] { background: var(--surface-2); color: var(--text); font-weight: 650; }
   .side-item[aria-current='page'] svg { color: var(--accent); }
   .side .bottom { margin-top: auto; }
-  .main { margin-left: var(--side-w); max-width: none; padding: 0 var(--s8) 48px; }
+  /* Contenido centrado y con tope en pantallas muy anchas (hasta ~2560 px) */
+  .main { margin-left: var(--side-w); max-width: none; padding: 0 max(var(--s8), calc((100vw - var(--side-w) - 1440px) / 2)) 48px; }
   .page-head { padding: 28px 4px 20px; min-height: 92px; }
 }
 

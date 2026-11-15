@@ -32,6 +32,7 @@ import androidx.glance.semantics.contentDescription
 import androidx.glance.semantics.semantics
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.LocalContext
 import androidx.glance.text.TextDecoration
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
@@ -97,17 +98,18 @@ fun Message(text: String, onClick: Action) {
 
 @Composable
 fun Header(title: String, count: Int, route: String?, plusRoute: String? = null) {
+    val accent = Color(WidgetStore.accent(LocalContext.current))
     Row(GlanceModifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(GlanceModifier.defaultWeight().padding(start = 8.dp).clickable(openApp(route)), verticalAlignment = Alignment.CenterVertically) {
             Text(title, maxLines = 1, style = TextStyle(color = ColorProvider(Pal.text), fontSize = 16.sp, fontWeight = FontWeight.Bold))
             if (count > 0) Text(
-                "$count", style = TextStyle(color = ColorProvider(Pal.accent), fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                "$count", style = TextStyle(color = ColorProvider(accent), fontSize = 12.sp, fontWeight = FontWeight.Bold),
                 modifier = GlanceModifier.padding(start = 6.dp).background(Pal.surface2).cornerRadius(10.dp).padding(horizontal = 7.dp, vertical = 1.dp),
             )
         }
         if (plusRoute != null) {
             Box(GlanceModifier.size(48.dp).clickable(openApp(plusRoute)).semantics { contentDescription = "Nueva tarea" }, contentAlignment = Alignment.Center) {
-                Box(GlanceModifier.size(34.dp).background(Pal.accent).cornerRadius(11.dp), contentAlignment = Alignment.Center) {
+                Box(GlanceModifier.size(34.dp).background(accent).cornerRadius(11.dp), contentAlignment = Alignment.Center) {
                     Image(ImageProvider(R.drawable.ic_w_plus), null, GlanceModifier.size(20.dp), colorFilter = ColorFilter.tint(ColorProvider(Pal.onAccent)))
                 }
             }

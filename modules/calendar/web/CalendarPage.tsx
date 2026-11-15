@@ -1,15 +1,6 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import FullCalendar, { useCalendarController } from '@fullcalendar/react';
 import type { DatesSetInfo, EventDisplayInfo, EventInput } from '@fullcalendar/react';
-import classicTheme from '@fullcalendar/react/themes/classic';
-import dayGrid from '@fullcalendar/react/daygrid';
-import timeGrid from '@fullcalendar/react/timegrid';
-import interaction from '@fullcalendar/react/interaction';
-import es from '@fullcalendar/react/locales/es';
-import '@fullcalendar/react/skeleton.css';
-import '@fullcalendar/react/themes/classic/theme.css';
-import '@fullcalendar/react/themes/classic/palette.css';
 import { onReload, errMsg } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
@@ -27,7 +18,10 @@ import { dayCell, examColor, type AgendaData } from './summary.ts';
 import { DayDetail, DOWL, eventHref } from './DayDetail.tsx';
 import { KIND_LABELS, VIEWS } from './views.ts';
 import { useSwipe } from './useSwipe.ts';
+import type { WeekApi } from './WeekView.tsx';
 import './calendar.css';
+
+const WeekView = lazy(() => import('./WeekView.tsx'));
 import { useToday } from '../../../core/web/useToday.ts';
 
 // Las fechas son texto local y FullCalendar trabaja en la zona del dispositivo: no se convierte nada.
@@ -59,7 +53,7 @@ export function CalendarPage() {
   const nav = useNavigate();
   const wide = useWide();
   const [params, setParams] = useSearchParams();
-  const controller = useCalendarController();
+  const week = useRef<WeekApi>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<AgendaData>({ events: [], todos: [] });
   const [fcTitle, setFcTitle] = useState('');
@@ -87,9 +81,9 @@ export function CalendarPage() {
     setParams(q, { replace: !push });
   }
   const moveMonth = (n: number) => go({ fecha: shiftMonth(first, n), dia: null });
-  const prev = () => (month ? moveMonth(-1) : controller.prev());
-  const next = () => (month ? moveMonth(1) : controller.next());
-  const toToday = () => (month ? go({ fecha: today, dia: null }) : controller.today());
+  const prev = () => (month ? moveMonth(-1) : week.current?.prev());
+  const next = () => (month ? moveMonth(1) : week.current?.next());
+  const toToday = () => (month ? go({ fecha: today, dia: null }) : week.current?.today());
   function pick(d: string) {
     if (!dia) pushed.current = true;
     go({ dia: d }, !dia);
@@ -213,33 +207,20 @@ export function CalendarPage() {
               </AnimatePresence>
             </div>
           ) : (
-            <FullCalendar
-              key={vista}
-              controller={controller}
-              plugins={[classicTheme, dayGrid, timeGrid, interaction]}
-              locale={es}
-              firstDay={1}
-              headerToolbar={false}
-              initialView={VIEWS.find((v) => v.id === vista)!.fc}
-              initialDate={fecha}
-              height={wide ? '100%' : 'auto'}
-              scrollTime="07:00:00"
-              noEventsText="No hay nada en estas fechas."
-              events={events}
-              eventContent={content}
-              datesSet={onDatesSet}
-              dateClick={(i) => {
-                if (block()) return;
-                const q = new URLSearchParams({ fecha: i.dateStr.slice(0, 10) });
-                if (!i.allDay) q.set('hora', i.dateStr.slice(11, 16));
-                nav(`/calendario/evento/nuevo?${q}`);
-              }}
-              eventClick={(i) => {
-                const { occ, todo } = i.event.extendedProps as Extra;
-                if (todo) nav(`/todo/${todo.id}`);
-                else if (occ) nav(eventHref(occ));
-              }}
-            />
+            <Suspense fallback={<div className="card" role="status" aria-label="Cargando"><Skeleton h={320} /></div>}>
+              <WeekView key={vista} api={week} view={VIEWS.find((v) => v.id === vista)!.fc} date={fecha} wide={wide} events={events} content={content} onDates={onDatesSet}
+                onDateClick={(i) => {
+                  if (block()) return;
+                  const q = new URLSearchParams({ fecha: i.dateStr.slice(0, 10) });
+                  if (!i.allDay) q.set('hora', i.dateStr.slice(11, 16));
+                  nav(`/calendario/evento/nuevo?${q}`);
+                }}
+                onEventClick={(i) => {
+                  const { occ, todo } = i.event.extendedProps as Extra;
+                  if (todo) nav(`/todo/${todo.id}`);
+                  else if (occ) nav(eventHref(occ));
+                }} />
+            </Suspense>
           )}
         </div>
         {month && (

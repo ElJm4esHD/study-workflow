@@ -14,7 +14,8 @@
     "deploy": "node scripts/deploy.mjs",
     "server-setup": "node scripts/deploy.mjs --setup",
     "apk": "node scripts/apk.mjs",
-    "a11y": "node -e \"require('fs').rmSync('data/e2e.sqlite',{force:true})\" && vite build && playwright test"
+    "a11y": "node -e \"require('fs').rmSync('data/e2e.sqlite',{force:true})\" && vite build && playwright test",
+    "capturas": "node -e \"require('fs').rmSync('data/capturas.sqlite',{force:true})\" && vite build && playwright test -c playwright.capturas.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

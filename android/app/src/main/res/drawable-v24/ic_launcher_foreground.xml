@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Mismo dibujo que scripts/icons.mjs (favicon y PWA): casilla de acento con tilde del color del fondo. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#B7C4FF"
-        android:strokeWidth="4"
-        android:pathData="M42,36h24a6,6 0,0 1,6 6v24a6,6 0,0 1,-6 6h-24a6,6 0,0 1,-6 -6v-24a6,6 0,0 1,6 -6z" />
+        android:fillColor="#B7C4FF"
+        android:pathData="M41,26h26a15,15 0 0 1,15 15v26a15,15 0 0 1,-15 15h-26a15,15 0 0 1,-15 -15v-26a15,15 0 0 1,15 -15z" />
     <path
         android:fillColor="#00000000"
-        android:strokeColor="#B7C4FF"
-        android:strokeWidth="5"
+        android:strokeColor="#0E1117"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M44,54l7,7l13,-14" />
+        android:pathData="M41,55l10,10l18,-22" />
 </vector>

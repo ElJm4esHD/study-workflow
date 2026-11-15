@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { setWidgetAccent } from './widgets.ts';
 
 /** Ajustes de este dispositivo (no se sincronizan con el servidor): velocidad de animaciones, vibración y letra. */
 export type Speed = 'lenta' | 'normal' | 'rapida' | 'off';
@@ -44,6 +45,7 @@ function apply() {
   s.setProperty('--fs', String(FONT_K[prefs.font]));
   const hex = ACCENTS[prefs.accent].hex;
   s.setProperty('--accent', hex);
+  setWidgetAccent(hex); // no hace nada fuera del APK; en el APK solo redibuja el widget si cambió
   s.setProperty('--accent-hover', `color-mix(in srgb, ${hex}, white 25%)`);
   s.setProperty('--accent-soft', `color-mix(in srgb, ${hex} 14%, transparent)`);
   document.documentElement.dataset.motion = prefs.speed === 'off' ? 'off' : 'on';

@@ -20,6 +20,11 @@ function offlineText({ copyAt, pending }: Connection) {
 type Item = { key: string; to: string; label: string; Icon: ComponentType; more: boolean };
 const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
+const SUBTITLES: [RegExp, string][] = [
+  [/^[/]todo[/]nueva/, 'Nueva tarea'], [/^[/]todo[/]./, 'Editar tarea'], [/^[/]calendario[/]evento[/]nuevo/, 'Nuevo evento'], [/^[/]calendario[/]evento[/]/, 'Editar evento'],
+  [/^[/]importar[/]planes/, 'Planes importados'], [/^[/]ajustes[/]novedades/, 'Novedades'],
+];
+
 export function Shell() {
   const { enabledModules, connection } = useCore();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -41,6 +46,11 @@ export function Shell() {
   const inMore = moreItems.some((i) => pathname.startsWith(i.to));
   const hasTodo = enabledModules.some((x) => x.id === 'todo');
   const section = pathname.split('/')[1] ?? '';
+  // Título de la pestaña según la pantalla (compu: historial, pestañas y la app instalada).
+  useEffect(() => {
+    const here = SUBTITLES.find(([r]) => r.test(pathname))?.[1] ?? items.find((i) => (i.to === '/' ? pathname === '/' : pathname.startsWith(i.to)))?.label;
+    document.title = here ? `${here} · Study Workflow` : 'Study Workflow';
+  }, [pathname, items.map((i) => i.label).join()]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Deslizar entre las secciones de la barra de abajo (celu): la pantalla sigue al dedo y la siguiente entra desde ese lado.
   const x = useMotionValue(0);

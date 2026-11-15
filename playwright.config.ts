@@ -4,6 +4,7 @@ import { defineConfig } from '@playwright/test';
 /** Auditoría de accesibilidad (axe) sobre la app compilada, con una base temporal y datos de ejemplo. */
 export default defineConfig({
   testDir: 'e2e',
+  testIgnore: 'capturas.spec.ts',
   workers: 1,
   reporter: 'list',
   use: { baseURL: 'http://127.0.0.1:4173' },

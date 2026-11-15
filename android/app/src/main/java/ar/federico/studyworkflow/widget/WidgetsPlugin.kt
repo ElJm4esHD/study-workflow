@@ -59,6 +59,18 @@ class WidgetsPlugin : Plugin() {
         call.resolve()
     }
 
+    /** El color de acento de la app: se guarda y, si cambió, se vuelve a dibujar el widget. */
+    @PluginMethod
+    fun setAccent(call: PluginCall) {
+        val hex = call.getString("hex")
+        if (hex != null && runCatching { android.graphics.Color.parseColor(hex) }.isSuccess) {
+            val changed = WidgetStore.accent(context) != android.graphics.Color.parseColor(hex)
+            WidgetStore.setAccent(context, hex)
+            if (changed) SyncWorker.schedule(context)
+        }
+        call.resolve()
+    }
+
     /** "Probar sonido" de Ajustes: un recordatorio de verdad, ahora, para oír el canal. */
     @PluginMethod
     fun testReminder(call: PluginCall) {

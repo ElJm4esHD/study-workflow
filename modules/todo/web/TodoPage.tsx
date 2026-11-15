@@ -21,6 +21,7 @@ import { todoDefaults } from './TodoSettings.tsx';
 import './todo.css';
 import { useToday } from '../../../core/web/useToday.ts';
 
+const PAGE = 30;
 const VIEWS = [['hoy', 'Hoy'], ['proximas', 'Próximas'], ['sin-fecha', 'Sin fecha'], ['materia', 'Por materia'], ['completadas', 'Completadas']] as const;
 
 /** Meta de una tarea (materia, categoría, subtareas, vencida/hora/fecha). Compartida con la tarjeta Hoy. */
@@ -81,6 +82,8 @@ export function TodoPage() {
   const timers = useRef(new Map<string, number>());
   const [title, setTitle] = useState('');
   const adding = useRef(false);
+  // Listas largas: se dibujan de a PAGE por grupo (con 200+ tareas el celu tardaba segundos); "Mostrar más" suma otra página.
+  const [extra, setExtra] = useState<Record<string, number>>({});
   const today = useToday();
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -188,7 +191,8 @@ export function TodoPage() {
         : <EmptyState icon={InboxIcon} title={view === 'completadas' ? 'Todavía nada completado' : 'Nada pendiente por acá'}>{view === 'completadas' ? 'Lo que tildes queda acá.' : 'Las tareas nuevas aparecen acá.'}</EmptyState>)}
       <div className="cols">
       {groups.filter((g) => g.items.length).map((g) => {
-        const sortable = g.reorderable ? g.items.filter((i) => !i.dueTime) : [];
+        const gk = `${view}:${g.key}`, cap = PAGE + (extra[gk] ?? 0), listed = g.items.slice(0, cap), rest = g.items.length - listed.length;
+        const sortable = g.reorderable ? listed.filter((i) => !i.dueTime) : [];
         const { minutes, unestimated } = groupMinutes(g.items);
         const total = [minutes && fmtDuration(minutes), unestimated && `${unestimated} sin estimar`].filter(Boolean).join(', ');
         return (
@@ -198,7 +202,7 @@ export function TodoPage() {
               <SortableContext items={sortable.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                 <ul className="card rows">
                   <AnimatePresence initial={false}>
-                    {g.items.map((i) => {
+                    {listed.map((i) => {
                       const m = materiaOf(i.materiaId);
                       return <Row key={i.id} item={real.get(i.id) ?? i} today={today} view={view} sigla={m?.sigla} color={m?.color}
                         selected={editing === i.id} sortable={g.reorderable && !i.dueTime} layout={!dndBusy}
@@ -209,6 +213,7 @@ export function TodoPage() {
                 </ul>
               </SortableContext>
             </DndContext>
+            {rest > 0 && <button type="button" className="btn more-btn" onClick={() => setExtra((x) => ({ ...x, [gk]: (x[gk] ?? 0) + PAGE }))}>Mostrar {Math.min(PAGE, rest)} más ({rest} sin mostrar)</button>}
           </section>
         );
       })}
