@@ -50,11 +50,16 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 - **Recordatorios:** `reminderMin` (minutos antes) + `reminderInsistent` en tareas y eventos; el celu los programa en nativo (AlarmManager) desde la copia del sync del widget. Selector compartido en `core/web/ReminderField.tsx`.
 - **Atrás en el APK:** `MainActivity` llama a `window.swBack()` (`core/web/App.tsx`, regla en `core/web/back.ts`).
 - **Estilo (Hito C):** tema oscuro fijo, tarjetas, densidad compacta, esquinas medias, fuente del sistema, animaciones sutiles. Tokens en `core/web/styles.css`. Zonas táctiles ≥ 44–48 px.
-- Diseños y planes anteriores: `docs/superpowers/specs/` y `docs/superpowers/plans/`.
+- **Ajustes** en secciones: General (pantalla de inicio, guía), Materias, Módulos, Tareas (duración y categoría por defecto, ocultar completadas tras N días; panel del módulo `todo`), Calendario, Recordatorios (anticipación e insistente por defecto, probar sonido), Apariencia (letra, color de acento, animaciones, vibración), Datos, Servidor y Acerca de (versiones y Novedades en `core/web/novedades.ts`: sumá una entrada por versión que cambie el uso). Lo de "este dispositivo" va en `core/web/prefs.ts` (localStorage, anda sin conexión); lo compartido, en `settings` del servidor.
+- **Búsqueda global** (`/` o Ctrl+K; "Buscar" en Más): `GET /api/search`; cada módulo aporta `search(ctx, q)` en su `ServerModule`. **Backup** (`GET/POST /api/backup`): exporta e importa todas las tablas sin conocer los módulos; antes de restaurar deja una copia en `backups/` junto a la base.
+- **Guía de primera vez** (`core/web/Onboarding.tsx`), **selectores de fecha y hora propios** (`core/web/DateTime.tsx`: se tipean rápido o se eligen en un calendario), **borrar con "Deshacer"** en vez de confirmar, **aviso de cambios sin guardar** (`useUnsaved`), guardado sin doble envío (`useSubmit`), fechas relativas ("Hoy", "Vencida hace 2 días") y "Reducir movimiento" del sistema como valor inicial de animaciones.
+- **Producto:** ícono adaptativo con versión monocromática (el dibujo se comparte con la web: `scripts/icons.mjs`), web instalable (manifest), servidor con compresión Brotli/gzip, la vista Semana se carga bajo demanda, listas largas del To-do de a 30 por grupo.
+- Diseños y planes anteriores: `docs/superpowers/specs/` y `docs/superpowers/plans/`. El pulido final (auditoría y cada etapa) está en `docs/pedidos/2026-11-15-pulido-final*.md`.
 
 ## Calidad
 
 - Tests: API y lógica de dominio. UI: lo justo.
 - Validar entradas en el backend. Errores visibles en la UI (nunca pantalla en blanco).
-- Accesibilidad básica: contraste, tamaños táctiles, labels.
+- Accesibilidad: contraste AA, tamaños táctiles, labels, foco visible, teclado. Antes de dar por terminado un cambio de UI: `npm run a11y` (axe + Playwright, 412 y 1440 px) tiene que dar 0 violaciones. `npm run capturas` actualiza `docs/capturas/`. Checklist para el S25: `docs/checklist-s25.md`.
+- Cuidado con el CSS: un `display` en un selector de `dialog` lo deja visible aunque esté cerrado (poner el `display` solo en `[open]`).
 - Actualizar `README.md` y `docs/` cuando cambie el uso.
