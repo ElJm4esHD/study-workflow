@@ -50,10 +50,19 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 - [ ] El botón + abre "Nueva tarea".
 - [ ] Cambiar el color de acento en Ajustes › Apariencia cambia el contador y el + del widget (puede tardar unos segundos).
 - [ ] Sin conexión, el widget sigue mostrando lo último y deja tildar.
+- [ ] Con el tema Claro, el widget se ve claro; con "Según el sistema", cambia al pasar el celu de claro a oscuro.
+
+## 7 bis. Tema
+- [ ] Ajustes › Apariencia › Tema › Claro: toda la app pasa a claro, la barra de estado tiene íconos oscuros.
+- [ ] Cerrar la app y abrirla: el splash sale claro, sin destello oscuro.
+- [ ] "Según el sistema" sigue al modo del celu (Ajustes rápidos › Modo oscuro) sin reiniciar la app.
+- [ ] Volver a Oscuro: todo vuelve, splash incluido.
 
 ## 8. Gestos
 - [ ] Deslizar de izquierda a derecha entre Inicio, To-do y Calendario cambia de sección.
 - [ ] En el mes del calendario, deslizar cambia de mes (no de sección).
+- [ ] En Semana, deslizar mueve de a 3 días; tocar un hueco muestra "+ HH:MM" y al tocarlo abre Nuevo evento con fecha y hora.
+- [ ] En Semana, tildar una tarea desde la grilla o desde "Todo el día".
 - [ ] Tirar hacia abajo desde arriba refresca.
 - [ ] Mantener apretada una tarea y moverla la reordena (solo las que no tienen hora).
 - [ ] Atrás: desde una tarea vuelve a la lista; desde una pantalla principal minimiza la app.

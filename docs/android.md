@@ -96,6 +96,10 @@ En una tarea con fecha o en un evento, elegí **Recordatorio**: a la hora, 15 mi
 - **Batería:** necesita "Sin restricciones", igual que el widget (paso 3 de arriba).
 - Si el celu estaba apagado a la hora del recordatorio, ese no suena.
 
+## Tema
+
+El tema que elegís en Ajustes › Apariencia también lo usan el widget y, desde Android 12, la pantalla de arranque (la app fija su propio modo claro/oscuro con `UiModeManager`, que el sistema recuerda). Si elegís "Según el sistema", el widget cambia solo cuando el celu cambia de modo.
+
 ## 5. Actualizar
 
 Volvé a correr `npm run apk` e instalá el APK nuevo encima del viejo (camino A o B). No hace falta desinstalar: tus datos están en el servidor y la app sigue configurada.

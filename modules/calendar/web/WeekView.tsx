@@ -88,7 +88,7 @@ export function WeekView({ start, days: n, today, data, reload, onDay }: {
     const exam = EXAM_KINDS.includes(o.kind);
     return (
       <Link key={t.key} to={eventHref(o)} className={`wk-ev${exam ? ' exam' : ''}${short ? ' short' : ''}`} style={{ ...vars(o.materiaId), ...style }}>
-        {exam && <span className="tag">{KIND_LABELS[o.kind]}</span>}
+        {exam && <span className="wk-tag">{KIND_LABELS[o.kind]}</span>}
         <b>{o.title}</b><small>{hhmm(t.from)}{t.to - t.from >= 60 ? ` – ${hhmm(t.to)}` : ''}</small>
       </Link>
     );
