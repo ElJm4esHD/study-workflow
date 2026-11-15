@@ -1,6 +1,6 @@
 ﻿import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { api, useApi, errMsg } from '../../../core/web/api.ts';
+import { api, reloadAll, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
@@ -9,6 +9,9 @@ import { KIND_LABELS } from './views.ts';
 import { KIND_ICON } from './DayDetail.tsx';
 import { PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
+import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
+import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
+import { useUnsaved } from '../../../core/web/useUnsaved.tsx';
 import './calendar.css';
 
 const DAYS = [[1, 'L', 'lunes'], [2, 'M', 'martes'], [3, 'X', 'miércoles'], [4, 'J', 'jueves'], [5, 'V', 'viernes'], [6, 'S', 'sábado'], [7, 'D', 'domingo']] as const;
@@ -45,6 +48,10 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   const [repeat, setRepeat] = useState(isSeries);
   const [weekdays, setWeekdays] = useState<number[]>(item?.repeatWeekdays ?? []);
   const [until, setUntil] = useState(item?.repeatUntil ?? '');
+  const sub = useSubmit();
+  const snap = () => JSON.stringify([title, kind, materiaId, allDay, startDate, startTime, endDate, endTime, notes, reminder, repeat, weekdays, until]);
+  const init = useRef(snap());
+  const unsaved = useUnsaved(snap() !== init.current);
   const rep0 = useRef({ repeat, weekdays: weekdays.join(), until });
   const [action, setAction] = useState<'save' | 'delete'>('save');
   const dlg = useRef<HTMLDialogElement>(null);
@@ -66,11 +73,13 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
 
   async function run(fn: () => Promise<unknown>) {
     if (block()) return;
-    try { await fn(); back(); } catch (err) { notify(errMsg(err)); }
+    if (await sub.run(fn)) { unsaved.release(); back(); }
   }
-  function submit(e: FormEvent) {
+  function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (block()) return;
+    const bad = firstInvalid(e.currentTarget);
+    if (bad) { sub.fail(bad); return; }
     if (asksScope && repChanged) { run(() => api('PATCH', url, seriesPatch())); return; }
     if (asksScope) { setAction('save'); dlg.current?.showModal(); return; }
     run(() => {
@@ -82,7 +91,12 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   function remove() {
     if (block()) return;
     if (asksScope) { setAction('delete'); dlg.current?.showModal(); return; }
-    if (confirm(`¿Borrar "${item!.title}"?`)) run(() => api('DELETE', url));
+    // Sin pregunta: avisa y deja "Deshacer", que lo vuelve a crear.
+    void sub.run(() => api('DELETE', url)).then((ok) => {
+      if (!ok) return;
+      unsaved.release(); back();
+      notify(`Evento borrado: ${item!.title}`, () => { api('POST', '/api/calendar/events', body(isSeries)).then(() => reloadAll()).catch((e) => notify(errMsg(e))); });
+    });
   }
   // Toda la serie: la fecha solo se manda si el usuario la cambió (si no, correría el inicio de la serie a la ocurrencia).
   function seriesPatch() {
@@ -106,9 +120,10 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
 
   return (
     <>
-      <form className="card form cal-form" onSubmit={submit}>
+      <form className="card form cal-form" onSubmit={submit} noValidate>
+        {unsaved.dialog}
         <label>Título
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*S.*" autoFocus={!item} />
         </label>
         <div className="cal-field" role="group" aria-label="Tipo">
           <span>Tipo</span>
@@ -129,25 +144,11 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
           </div>
         </div>
         <Switch label="Todo el día" checked={allDay} onChange={setAllDay} />
-        <label>Fecha de inicio
-          <input type="date" value={startDate} required
-            onChange={(e) => { setStartDate(e.target.value); if (endDate < e.target.value) setEndDate(e.target.value); }} />
-        </label>
-        {!allDay && (
-          <label>Hora de inicio
-            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
-          </label>
-        )}
-        {!repeat && (
-          <label>Fecha de fin
-            <input type="date" value={endDate} min={startDate} onChange={(e) => setEndDate(e.target.value)} required />
-          </label>
-        )}
-        {!allDay && (
-          <label>Hora de fin
-            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-          </label>
-        )}
+        <DateField label="Fecha de inicio" value={startDate} required
+          onChange={(v) => { setStartDate(v); if (v && endDate < v) setEndDate(v); }} />
+        {!allDay && <TimeField label="Hora de inicio" value={startTime} onChange={setStartTime} required />}
+        {!repeat && <DateField label="Fecha de fin" value={endDate} min={startDate} onChange={setEndDate} required />}
+        {!allDay && <TimeField label="Hora de fin (opcional)" value={endTime} onChange={setEndTime} />}
         <ReminderField value={reminder.min} insistent={reminder.insistent} onChange={(min, insistent) => setReminder({ min, insistent })} />
         <label>Notas
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
@@ -161,15 +162,14 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
                 <button type="button" key={d} className="cal-day" aria-pressed={weekdays.includes(d)} aria-label={long} onClick={() => toggleDay(d)}>{short}</button>
               ))}
             </div>
-            <label>Hasta (opcional)
-              <input type="date" value={until} min={startDate} onChange={(e) => setUntil(e.target.value)} />
-            </label>
+            <DateField label="Repetir hasta (opcional)" value={until} min={startDate} onChange={setUntil} />
           </>
         )}
+        {sub.error && <p className="error" role="alert">{sub.error}</p>}
         <div className="row">
-          {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off}>Borrar</button>}
+          {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off} disabled={sub.saving}>Borrar</button>}
           <button type="button" className="btn" onClick={back}>Cancelar</button>
-          <button className="btn primary" aria-disabled={off}>Guardar</button>
+          <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
         </div>
       </form>
       <dialog ref={dlg} className="cal-dialog" aria-labelledby="cal-scope">

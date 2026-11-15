@@ -92,7 +92,7 @@ export function CoreProvider({ children }: { children: ReactNode }) {
       {value ? <Ctx value={value}>{children}</Ctx> : (
         err ? (
           <div className="center-screen" role="alert">
-            <h1>No se pudo cargar</h1>
+            <h1>No se pudo cargar la app</h1>
             <p>{err.message}</p>
             <button className="btn primary" onClick={() => { m.reload(); s.reload(); }}>Reintentar</button>
           </div>

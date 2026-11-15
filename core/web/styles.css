@@ -320,3 +320,23 @@ dialog .row { margin-top: 16px; }
 .error-state > span { flex: 1; min-width: 12ch; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .field-err { color: var(--late); font-size: var(--t-meta); }
+
+/* Selectores de fecha y hora (core/web/DateTime.tsx) */
+.dt-row { display: flex; align-items: center; gap: 4px; }
+.dt-row input { flex: 1; min-width: 0; }
+.dt input { width: 100%; }
+.dt input[aria-invalid='true'] { border-color: var(--late); }
+dialog.picker { width: min(340px, 92vw); padding: 12px; }
+.picker-head { display: flex; align-items: center; justify-content: space-between; }
+.picker-head h2 { margin: 0; text-transform: capitalize; }
+.picker-dow, .picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.picker-dow { font-size: var(--t-micro); color: var(--faint); text-align: center; padding: 4px 0; }
+.picker-day { height: 44px; border: 0; border-radius: var(--r-ctl); background: none; cursor: pointer; font-size: var(--t-body); }
+.picker-day.out { color: var(--faint); }
+.picker-day.today { box-shadow: inset 0 0 0 1px var(--accent); }
+.picker-day[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); font-weight: 650; }
+.picker-day:disabled { opacity: .35; cursor: default; }
+@media (hover: hover) { .picker-day:not(:disabled):not([aria-pressed='true']):hover { background: var(--surface-2); } }
+
+/* El botón de borrar queda aparte de los normales */
+.form .row .btn.danger { margin-right: auto; }

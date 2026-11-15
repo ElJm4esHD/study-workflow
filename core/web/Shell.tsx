@@ -111,6 +111,17 @@ export function Shell() {
     return () => document.removeEventListener('keydown', onKey);
   }, [items.map((i) => i.to).join(), hasTodo, moreOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Celu: al abrir el teclado, el campo enfocado queda a la vista.
+  useEffect(() => {
+    if (!matchMedia('(pointer: coarse)').matches) return;
+    const f = (e: FocusEvent) => {
+      const t = e.target;
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) setTimeout(() => { if (document.activeElement === t) t.scrollIntoView({ block: 'center' }); }, 350);
+    };
+    document.addEventListener('focusin', f);
+    return () => document.removeEventListener('focusin', f);
+  }, []);
+
   const side = (i: Item) => (
     <NavLink key={i.key} to={i.to} end={i.to === '/'} className="side-item">
       <i.Icon /><span>{i.label}</span><kbd className="kbd">{items.indexOf(i) + 1}</kbd>

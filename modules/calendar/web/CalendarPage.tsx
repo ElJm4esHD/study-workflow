@@ -17,7 +17,7 @@ import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { AnimatePresence, m } from 'motion/react';
 import { useMotion } from '../../../core/web/motion.tsx';
-import { Floating, PullToRefresh, Segmented, Sheet, ErrorState } from '../../../core/web/ui.tsx';
+import { Floating, PullToRefresh, Segmented, Sheet, ErrorState, Skeleton } from '../../../core/web/ui.tsx';
 import { addDays, formatDate, isValidDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { NEUTRAL, strongOf } from '../../../core/shared/palette.ts';
 import type { TodoItem } from '../../todo/server/service.ts';
@@ -65,6 +65,7 @@ export function CalendarPage() {
   const [fcTitle, setFcTitle] = useState('');
   const [fcRange, setFcRange] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [loaded, setLoaded] = useState(false);
   const seq = useRef(0);
   const pushed = useRef(false); // el detalle se abrió con push: cerrarlo es volver atrás
   const { spring } = useMotion();
@@ -112,7 +113,7 @@ export function CalendarPage() {
     const me = ++seq.current; // ignora respuestas viejas si el usuario sigue deslizando
     try {
       const r = await loadAgenda(...range.match(/\d{4}-\d{2}-\d{2}/g) as [string, string]);
-      if (me === seq.current) { setData(r); setLoadError(''); }
+      if (me === seq.current) { setData(r); setLoadError(''); setLoaded(true); }
     } catch (e) {
       if (me === seq.current) setLoadError(errMsg(e));
     }
@@ -176,6 +177,7 @@ export function CalendarPage() {
         aria-label={`${DOWL[weekdayOf(d) - 1]} ${formatDate(d).slice(0, 5)}${label ? `: ${label}` : ''}`} aria-pressed={d === selected && (wide || !!dia)}>
         <span className="n">{+d.slice(8)}</span>
         {ex && <span className="ex">{materias.find((m) => m.id === ex.materiaId)?.sigla ?? KIND_LABELS[ex.kind]}<small>{KIND_LABELS[ex.kind]}</small></span>}
+        {!loaded && !loadError && <Skeleton w="60%" h={10} />}
         <span className="dots" aria-hidden="true">{c.chips.filter((ch) => !ch.exam).slice(0, 4).map((ch) => <i key={ch.materiaId ?? '-'} style={materiaVars(ch.color)} className={ch.allDone && d < today ? 'past' : undefined} />)}</span>
         {c.chips.map((ch) => (
           <span key={`${ch.materiaId}:${ch.exam}`} className={`chip${ch.exam ? ' solid' : ''}${ch.allDone && d < today ? ' past' : ''}`} style={materiaVars(ch.color)}>
@@ -199,7 +201,7 @@ export function CalendarPage() {
           <button type="button" className="icon-btn" onClick={next} aria-label="Siguiente"><ChevronRightIcon /></button>
         </div>
         {loadError && <ErrorState error={{ message: loadError }} onRetry={() => void load()} />}
-        <div ref={wrap} className="cal-wrap">
+        <div ref={wrap} className="cal-wrap" aria-busy={!loaded && !loadError}>
           {month ? (
             <div className="cal-month">
               <div className="cal-dow" aria-hidden="true">{['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((x) => <span key={x}>{x}</span>)}</div>
@@ -241,7 +243,7 @@ export function CalendarPage() {
           )}
         </div>
         {month && (
-          <div className="cal-legend" aria-label="Materias">
+          <div className="cal-legend" role="group" aria-label="Materias">
             {materias.filter((m) => !m.archived).map((m) => (
               <span key={m.id} style={materiaVars(m.color)}><i className="dot" aria-hidden="true" />{m.sigla} {m.name}</span>
             ))}

@@ -9,7 +9,8 @@ import type { WebModule } from './registry.ts';
 import { ArchiveIcon, ChevronIcon, ChevronRightIcon, GaugeIcon, PlusIcon, TypeIcon, UnarchiveIcon, VibrateIcon } from './icons.tsx';
 import { setPref, usePrefs } from './prefs.ts';
 import { vibrate } from './haptics.ts';
-import { PageHeader, Segmented } from './ui.tsx';
+import { PageHeader, radioKeys, Segmented } from './ui.tsx';
+import { useSubmit } from './useSubmit.ts';
 import { ServerForm } from './ConnectScreen.tsx';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
@@ -17,9 +18,9 @@ import { MateriaChip } from './MateriaChip.tsx';
 
 function Swatches({ value, onChange }: { value: string; onChange(hex: string): void }) {
   return (
-    <div className="swatches" role="radiogroup" aria-label="Color">
+    <div className="swatches" role="radiogroup" aria-label="Color" onKeyDown={radioKeys}>
       {PALETTE.map((p) => (
-        <button type="button" key={p.hex} role="radio" aria-checked={value === p.hex} aria-label={p.name}
+        <button type="button" key={p.hex} role="radio" aria-checked={value === p.hex} aria-label={p.name} tabIndex={value === p.hex ? 0 : -1}
           className="swatch" style={{ background: p.hex }} onClick={() => onChange(p.hex)} />
       ))}
     </div>
@@ -32,21 +33,18 @@ function MateriaForm({ initial, onDone }: { initial?: Materia; onDone(): void })
   const [color, setColor] = useState(initial?.color ?? PALETTE[7].hex);
   const [sigla, setSigla] = useState(initial?.sigla ?? '');
   const [siglaTouched, setSiglaTouched] = useState(!!initial);
-  const [error, setError] = useState('');
+  const sub = useSubmit();
   async function submit(e: FormEvent) {
     e.preventDefault();
-    try {
-      if (initial) await api('PATCH', `/api/materias/${initial.id}`, { name, color, sigla });
-      else await api('POST', '/api/materias', { name, color, sigla });
-      reloadMaterias();
-      notify(initial ? 'Materia guardada.' : 'Materia creada.');
-      onDone();
-    } catch (err) {
-      setError(errMsg(err));
-    }
+    if (!name.trim()) { sub.fail('Escribí el nombre de la materia.'); return; }
+    const ok = await sub.run(() => (initial ? api('PATCH', `/api/materias/${initial.id}`, { name: name.trim(), color, sigla }) : api('POST', '/api/materias', { name: name.trim(), color, sigla })));
+    if (!ok) return;
+    reloadMaterias();
+    notify(initial ? 'Materia guardada.' : 'Materia creada.');
+    onDone();
   }
   return (
-    <form className="card form" onSubmit={submit}>
+    <form className="card form" onSubmit={submit} noValidate>
       <label>Nombre
         <input value={name} onChange={(e) => { setName(e.target.value); if (!siglaTouched) setSigla(makeSigla(e.target.value)); }} maxLength={60} required autoFocus />
       </label>
@@ -54,10 +52,10 @@ function MateriaForm({ initial, onDone }: { initial?: Materia; onDone(): void })
         <input value={sigla} onChange={(e) => { setSigla(e.target.value.toUpperCase()); setSiglaTouched(true); }} maxLength={5} />
       </label>
       <Swatches value={color} onChange={setColor} />
-      {error && <p className="error" role="alert">{error}</p>}
+      {sub.error && <p className="error" role="alert">{sub.error}</p>}
       <div className="row">
         <button type="button" className="btn" onClick={onDone}>Cancelar</button>
-        <button className="btn primary">Guardar</button>
+        <button className="btn primary" disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
       </div>
     </form>
   );
@@ -168,9 +166,9 @@ function Dispositivo() {
         <div className="card set-card">
           <div className="set-row">
             <div className="set-label"><b><GaugeIcon size={18} />Velocidad de animaciones</b><span>Si el sistema pide reducir el movimiento, arranca en “Sin animaciones”; desde acá podés cambiarlo.</span></div>
-            <div className="radios" role="radiogroup" aria-label="Velocidad de animaciones">
+            <div className="radios" role="radiogroup" aria-label="Velocidad de animaciones" onKeyDown={radioKeys}>
               {SPEEDS.map(([v, label, hint]) => (
-                <button key={v} type="button" role="radio" aria-checked={prefs.speed === v} onClick={() => { setPref('speed', v); vibrate('tick'); }}>
+                <button key={v} type="button" role="radio" aria-checked={prefs.speed === v} tabIndex={prefs.speed === v ? 0 : -1} onClick={() => { setPref('speed', v); vibrate('tick'); }}>
                   <span className="r" /><span>{label}<small>{hint}</small></span>
                 </button>
               ))}

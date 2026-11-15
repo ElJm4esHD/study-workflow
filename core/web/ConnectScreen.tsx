@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { DEFAULT_SERVER, getServerUrl, normalizeServerUrl, setServerUrl, testServer } from './server.ts';
 
-const FAIL = 'No pude conectar con el servidor. ¿Tailscale está prendido en el celu?';
+const FAIL = 'No se pudo conectar con el servidor. Revisá que Tailscale esté prendido y que la dirección sea correcta.';
 
 /** Campo + botón para probar y guardar la URL; lo usan la pantalla inicial y Ajustes. */
 export function ServerForm({ onDone }: { onDone(): void }) {

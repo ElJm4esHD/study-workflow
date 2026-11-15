@@ -1,4 +1,4 @@
-﻿import { useState, type FormEvent } from 'react';
+﻿import { useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, reloadAll, useApi, errMsg } from '../../../core/web/api.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
@@ -11,6 +11,9 @@ import type { Subtask, TodoItem } from '../server/service.ts';
 import { BookIcon, CheckIcon, CloseIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import { ReminderField } from '../../../core/web/ReminderField.tsx';
+import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
+import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
+import { useUnsaved } from '../../../core/web/useUnsaved.tsx';
 import { keepSearch } from './views.ts';
 import './todo.css';
 
@@ -37,20 +40,24 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const [newSub, setNewSub] = useState('');
   const [focusOther, setFocusOther] = useState(false); // foco en Minutos solo si recién se tocó "Otra…"
   const { search } = useLocation();
+  const sub = useSubmit();
+  // Qué cuenta como "cambió": todo menos el tilde de las subtareas (ese se guarda solo).
+  const snap = () => JSON.stringify([title, notes, dueDate, dueTime, materiaId, category, durationMin, reminder, subs.map((s) => [s.id, s.title])]);
+  const init = useRef(snap());
+  const unsaved = useUnsaved(snap() !== init.current);
   const back = () => volver?.startsWith('/') && !volver.startsWith('//') ? nav(volver, { replace: true }) : nav({ pathname: '/todo', search: keepSearch(search) }, { replace: true });
 
-  async function save(e: FormEvent) {
+  async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (block()) return;
+    const bad = firstInvalid(e.currentTarget);
+    if (bad) { sub.fail(bad); return; }
     const body = {
-      title, notes: notes.trim() || null, dueDate: dueDate || null, dueTime: dueDate && dueTime ? dueTime : null,
+      title: title.trim(), notes: notes.trim() || null, dueDate: dueDate || null, dueTime: dueDate && dueTime ? dueTime : null,
       materiaId: materiaId || null, category, durationMin, subtasks: cleanSubs(),
       reminderMin: dueDate ? reminder.min : null, reminderInsistent: !!dueDate && reminder.insistent,
     };
-    try {
-      if (item) await api('PATCH', `/api/todo/${item.id}`, body); else await api('POST', '/api/todo', body);
-      back();
-    } catch (err) { notify(errMsg(err)); }
+    if (await sub.run(() => (item ? api('PATCH', `/api/todo/${item.id}`, body) : api('POST', '/api/todo', body)))) { unsaved.release(); back(); }
   }
   // Las subtareas sin título (recién borrado el texto) se descartan al guardar.
   const cleanSubs = (list = subs) => list.filter((s) => s.title.trim());
@@ -68,17 +75,25 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     setSubs(next);
     try { await api('PATCH', `/api/todo/${item.id}`, { subtasks: cleanSubs(next) }); reloadAll(); } catch (err) { setSubs(subs); notify(errMsg(err)); }
   }
+  // Borrar no pregunta: avisa y deja "Deshacer", que vuelve a crear la tarea igual.
   async function remove() {
-    if (!item || block() || !confirm(`¿Borrar "${item.title}"?`)) return;
-    try { await api('DELETE', `/api/todo/${item.id}`); vibrate('warn'); back(); } catch (err) { notify(errMsg(err)); }
+    if (!item || block()) return;
+    const { id: _id, createdAt: _c, updatedAt: _u, completed, completedAt: _ca, ...copy } = item as TodoItem & { createdAt?: string; updatedAt?: string };
+    if (await sub.run(() => api('DELETE', `/api/todo/${item.id}`))) {
+      vibrate('warn'); unsaved.release(); back();
+      notify(`Tarea borrada: ${item.title}`, () => {
+        void api<TodoItem>('POST', '/api/todo', copy).then((n) => (completed ? api('PATCH', `/api/todo/${n.id}`, { completed: true }) : undefined)).then(() => reloadAll()).catch((e) => notify(errMsg(e)));
+      });
+    }
   }
   // Las archivadas no se ofrecen, salvo la que ya tiene el ítem, para no perderla al guardar.
   const options = materias.filter((m) => !m.archived || m.id === item?.materiaId);
 
   return (
-    <form className="form" onSubmit={save}>
+    <form className="form" onSubmit={save} noValidate>
+      {unsaved.dialog}
       <label>Título
-        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required autoFocus={!item && !embedded} />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*S.*" autoFocus={!item && !embedded} />
       </label>
       <div className="field" role="group" aria-label="Subtareas">
         <span>Subtareas{subs.length > 0 && ` · ${subs.filter((s) => s.done).length}/${subs.length}`}</span>
@@ -129,21 +144,18 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
         )}
       </div>
       <div className="two">
-        <label>Fecha
-          <input type="date" value={dueDate} onChange={(e) => { setDueDate(e.target.value); if (!e.target.value) setDueTime(''); }} />
-        </label>
-        <label>Hora
-          <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} disabled={!dueDate} />
-        </label>
+        <DateField label="Fecha" value={dueDate} onChange={(v) => { setDueDate(v); if (!v) setDueTime(''); }} />
+        <TimeField label="Hora" value={dueTime} onChange={setDueTime} disabled={!dueDate} />
       </div>
       <ReminderField value={reminder.min} insistent={reminder.insistent} disabled={!dueDate} onChange={(min, insistent) => setReminder({ min, insistent })} />
       <label>Notas
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </label>
+      {sub.error && <p className="error" role="alert">{sub.error}</p>}
       <div className="row">
-        {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off}>Borrar</button>}
+        {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off} disabled={sub.saving}>Borrar</button>}
         <button type="button" className="btn" onClick={back}>Cancelar</button>
-        <button className="btn primary" aria-disabled={off}>Guardar</button>
+        <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
       </div>
     </form>
   );

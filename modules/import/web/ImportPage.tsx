@@ -42,7 +42,7 @@ export function ImportPage() {
       t = await navigator.clipboard.readText();
       if (!t.trim()) throw new Error('vacío');
     } catch {
-      notify('No pude leer el portapapeles. Pegalo abajo.');
+      notify('No se pudo leer el portapapeles. Pegalo abajo.');
       area.current?.focus();
       return;
     }

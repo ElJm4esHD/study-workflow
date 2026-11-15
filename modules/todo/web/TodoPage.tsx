@@ -78,6 +78,7 @@ export function TodoPage() {
   const [dndBusy, setDndBusy] = useState(false);
   const timers = useRef(new Map<string, number>());
   const [title, setTitle] = useState('');
+  const adding = useRef(false);
   const today = useToday();
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -131,7 +132,8 @@ export function TodoPage() {
   async function quickAdd(e: FormEvent) {
     e.preventDefault();
     const t = title.trim();
-    if (!t || block()) return;
+    if (!t || adding.current || block()) return;
+    adding.current = true;
     const body = {
       title: t,
       dueDate: view === 'hoy' ? today : null,
@@ -142,7 +144,7 @@ export function TodoPage() {
       setItems((xs) => [...xs, created]);
       setTitle('');
       vibrate('tick');
-    } catch (err) { notify(errMsg(err)); }
+    } catch (err) { notify(errMsg(err)); } finally { adding.current = false; }
   }
 
   const setMateria = (v: string | null) => setParams(v ? { vista: 'materia', materia: v } : { vista: 'materia' }, { replace: true });

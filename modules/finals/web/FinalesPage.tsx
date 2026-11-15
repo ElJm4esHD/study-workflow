@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { api, useApi, errMsg } from '../../../core/web/api.ts';
+import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
+import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
 import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
@@ -30,7 +32,7 @@ function Importar({ onDone }: { onDone(): void }) {
   const usable = parsed?.ok ? parsed.materias.filter((m) => m.name && m.fechas.length) : [];
 
   async function paste() {
-    try { setText(await navigator.clipboard.readText()); } catch { notify('No pude leer el portapapeles: pegalo a mano.'); }
+    try { setText(await navigator.clipboard.readText()); } catch { notify('No se pudo leer el portapapeles. Pegalo a mano.'); }
   }
   async function save() {
     if (block()) return;
@@ -74,20 +76,21 @@ function Importar({ onDone }: { onDone(): void }) {
 
 /** Alta o edición de una fecha posible. */
 function FechaForm({ materiaId, item, onDone }: { materiaId: string; item?: FinalDate; onDone(): void }) {
-  const { notify } = useCore();
   const { off, block } = useBlock();
   const [date, setDate] = useState(item?.date ?? '');
   const [time, setTime] = useState(item?.time ?? '');
+  const sub = useSubmit();
   async function run(fn: () => Promise<unknown>) {
     if (block()) return;
-    try { await fn(); onDone(); } catch (e) { notify(errMsg(e)); }
+    if (await sub.run(fn)) onDone();
   }
   const body = { materiaId, date, time: time || null };
   return (
-    <form className="fin-form" onSubmit={(e) => { e.preventDefault(); void run(() => (item ? api('PATCH', `/api/finals/dates/${item.id}`, body) : api('POST', '/api/finals/dates', body))); }}>
-      <input type="date" aria-label="Fecha" value={date} onChange={(e) => setDate(e.target.value)} required />
-      <input type="time" aria-label="Hora (opcional)" value={time} onChange={(e) => setTime(e.target.value)} />
-      <button className="btn primary" aria-disabled={off}>Guardar</button>
+    <form className="fin-form" noValidate onSubmit={(e) => { e.preventDefault(); const bad = firstInvalid(e.currentTarget); if (bad) { sub.fail(bad); return; } void run(() => (item ? api('PATCH', `/api/finals/dates/${item.id}`, body) : api('POST', '/api/finals/dates', body))); }}>
+      <DateField label="Fecha" value={date} onChange={setDate} required />
+      <TimeField label="Hora (opcional)" value={time} onChange={setTime} />
+      {sub.error && <p className="error" role="alert">{sub.error}</p>}
+      <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
       {item && <button type="button" className="btn danger" aria-disabled={off} onClick={() => void run(() => api('DELETE', `/api/finals/dates/${item.id}`))}>Borrar</button>}
       <button type="button" className="btn" onClick={onDone}>Cancelar</button>
     </form>
@@ -184,9 +187,7 @@ export function FinalesPage() {
               <input type="number" inputMode="numeric" min={0} max={60} value={plan.minDias}
                 onChange={(e) => void setPlan({ minDias: Math.max(0, Math.min(60, Math.round(Number(e.target.value)) || 0)) })} />
             </label>
-            <label>Terminar el día (o antes)
-              <input type="date" value={plan.antes ?? ''} onChange={(e) => void setPlan({ antes: e.target.value || null })} />
-            </label>
+              <DateField label="Terminar el día (o antes)" value={plan.antes ?? ''} onChange={(v) => void setPlan({ antes: v || null })} />
             <div className="field" role="group" aria-label="Excluir fechas">
               <span>Excluir fechas (un día o un rango)</span>
               {plan.excluir.length > 0 && (
@@ -198,8 +199,8 @@ export function FinalesPage() {
                 </div>
               )}
               <div className="fin-form">
-                <input type="date" aria-label="Excluir desde" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} />
-                <input type="date" aria-label="Excluir hasta (opcional)" value={range.to} min={range.from} onChange={(e) => setRange({ ...range, to: e.target.value })} />
+                <DateField label="Excluir desde" value={range.from} onChange={(v) => setRange({ ...range, from: v })} />
+                <DateField label="Excluir hasta (opcional)" value={range.to} min={range.from} onChange={(v) => setRange({ ...range, to: v })} />
                 <button type="button" className="btn" disabled={!range.from || (!!range.to && range.to < range.from)}
                   onClick={() => { void setPlan({ excluir: [...plan.excluir, { from: range.from, to: range.to || range.from }] }); setRange({ from: '', to: '' }); }}>Excluir</button>
               </div>
