@@ -15,6 +15,5 @@ export const todo: WebModule = {
   routes: [
     { path: '/todo', element: <TodoLayout />, children: [{ path: 'nueva', element: <TodoEditPage /> }, { path: ':id', element: <TodoEditPage /> }] },
   ],
-  prefetch: () => ['/api/todo'],
   dashboard: [{ id: 'hoy', order: 20, column: 'right', Card: HoyCard }],
 };

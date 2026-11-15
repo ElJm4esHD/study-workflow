@@ -5,7 +5,7 @@ import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSen
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { api, useApi, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { BookIcon, ClockIcon, InboxIcon, PartyIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { lateText, relDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -14,7 +14,7 @@ import { vibrate } from '../../../core/web/haptics.ts';
 import { EmptyState, Floating, PageHeader, PullToRefresh, Segmented, Skeleton, TaskRow, ErrorState } from '../../../core/web/ui.tsx';
 import { useSubtasks } from './Subtasks.tsx';
 import { TODO_CATEGORIES } from '../shared.ts';
-import type { TodoItem } from '../server/service.ts';
+import type { TodoItem } from '../app/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
 import { TodoEditPage } from './TodoEditPage.tsx';
 import { todoDefaults } from './TodoSettings.tsx';
@@ -65,7 +65,6 @@ function ListSkeleton() {
 export function TodoPage() {
   const { materias, notify, settings } = useCore();
   const dflt = todoDefaults(settings);
-  const { off, block } = useBlock();
   const [params, setParams] = useSearchParams();
   const view: TodoView = VIEWS.find(([v]) => v === params.get('vista'))?.[0] ?? 'hoy';
   const materiaId = params.get('materia');
@@ -126,7 +125,7 @@ export function TodoPage() {
   function onDragEnd(list: TodoItem[], { active, over }: DragEndEvent) {
     // El reacomodo ya lo hizo dnd-kit: sin animación de layout en este render, si no la fila "vuelve" y salta.
     setTimeout(() => setDndBusy(false), 50);
-    if (!over || active.id === over.id || block()) return;
+    if (!over || active.id === over.id) return;
     vibrate('release');
     const from = list.findIndex((i) => i.id === active.id), to = list.findIndex((i) => i.id === over.id);
     const moved = arrayMove(list, from, to);
@@ -139,7 +138,7 @@ export function TodoPage() {
   async function quickAdd(e: FormEvent) {
     e.preventDefault();
     const t = title.trim();
-    if (!t || adding.current || block()) return;
+    if (!t || adding.current) return;
     adding.current = true;
     const body = {
       title: t, durationMin: dflt.durationMin, category: dflt.category,
@@ -181,7 +180,7 @@ export function TodoPage() {
       <form className="todo-quick" onSubmit={quickAdd}>
         <PlusIcon size={20} />
         <input className="bare" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder={view === 'hoy' ? 'Agregar tarea para hoy…' : 'Agregar tarea…'}
-          aria-label="Agregar tarea rápido" enterKeyHint="send" aria-disabled={off} />
+          aria-label="Agregar tarea rápido" enterKeyHint="send" />
         <kbd className="kbd">Enter</kbd>
       </form>
       {error && !data && <ErrorState error={error} onRetry={reload} />}
@@ -219,7 +218,7 @@ export function TodoPage() {
       })}
       </div>
     </PullToRefresh>
-      {!editing && <Floating><nav aria-label="Acción rápida"><Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></nav></Floating>}
+      {!editing && <Floating><nav aria-label="Acción rápida"><Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea"><PlusIcon /></Link></nav></Floating>}
     </>
   );
 }

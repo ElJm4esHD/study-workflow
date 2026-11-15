@@ -1,16 +1,16 @@
 ﻿import { useState, type FormEvent } from 'react';
 import { makeSigla } from '../shared/sigla.ts';
 import { PALETTE } from '../shared/palette.ts';
-import type { Materia } from '../server/registry.ts';
+import type { Materia } from '../app/registry.ts';
 import { webModules } from '../../modules/web.ts';
 import { api, errMsg } from './api.ts';
-import { BLOCKED, useCore } from './CoreContext.tsx';
+import { useCore } from './CoreContext.tsx';
 import type { WebModule } from './registry.ts';
 import { ArchiveIcon, ChevronIcon, ChevronRightIcon, PlusIcon, UnarchiveIcon } from './icons.tsx';
 import { PageHeader, radioKeys } from './ui.tsx';
 import { AcercaDe, Apariencia, Datos, General, Recordatorios } from './AjustesMas.tsx';
 import { useSubmit } from './useSubmit.ts';
-import { ServerForm } from './ConnectScreen.tsx';
+import { ServerForm } from './ServerForm.tsx';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
 
@@ -154,9 +154,7 @@ function Modulos() {
 }
 
 export function AjustesPage() {
-  const { enabledModules, connection } = useCore();
-  // Sin conexión solo andan las secciones de este dispositivo (no pasan por el servidor).
-  if (connection.offline) return <><PageHeader title="Ajustes" /><p className="muted pad" role="alert">{BLOCKED}</p><div className="cols"><General /><Apariencia /><Datos /><AcercaDe /></div></>;
+  const { enabledModules } = useCore();
   return (
     <>
       <PageHeader title="Ajustes" />

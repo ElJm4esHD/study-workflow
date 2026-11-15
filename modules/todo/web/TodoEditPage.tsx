@@ -1,13 +1,13 @@
 ﻿import { useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, reloadAll, useApi, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { isValidDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
-import type { Subtask, TodoItem } from '../server/service.ts';
+import type { Subtask, TodoItem } from '../app/service.ts';
 import { BookIcon, CheckIcon, CloseIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { Skeleton, ErrorState } from '../../../core/web/ui.tsx';
 import { ReminderField, reminderDefaults } from '../../../core/web/ReminderField.tsx';
@@ -25,7 +25,6 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const { materias, notify, settings } = useCore();
   const dflt = todoDefaults(settings);
   const rdef = reminderDefaults(settings);
-  const { off, block } = useBlock();
   const nav = useNavigate();
   const [params] = useSearchParams();
   const fecha = params.get('fecha');
@@ -52,7 +51,6 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
 
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (block()) return;
     const bad = firstInvalid(e.currentTarget);
     if (bad) { sub.fail(bad); return; }
     const body = {
@@ -74,13 +72,12 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   async function toggleSub(id: string) {
     const next = subs.map((s) => (s.id === id ? { ...s, done: !s.done } : s));
     if (!item) { setSubs(next); return; }
-    if (block()) return;
     setSubs(next);
     try { await api('PATCH', `/api/todo/${item.id}`, { subtasks: cleanSubs(next) }); reloadAll(); } catch (err) { setSubs(subs); notify(errMsg(err)); }
   }
   // Borrar no pregunta: avisa y deja "Deshacer", que vuelve a crear la tarea igual.
   async function remove() {
-    if (!item || block()) return;
+    if (!item) return;
     const { id: _id, createdAt: _c, updatedAt: _u, completed, completedAt: _ca, ...copy } = item as TodoItem & { createdAt?: string; updatedAt?: string };
     if (await sub.run(() => api('DELETE', `/api/todo/${item.id}`))) {
       vibrate('warn'); unsaved.release(); back();
@@ -156,9 +153,9 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
       </label>
       {sub.error && <p className="error" role="alert">{sub.error}</p>}
       <div className="row">
-        {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off} disabled={sub.saving}>Borrar</button>}
+        {item && <button type="button" className="btn danger" onClick={remove} disabled={sub.saving}>Borrar</button>}
         <button type="button" className="btn" onClick={back}>Cancelar</button>
-        <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
+        <button className="btn primary" disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
       </div>
     </form>
   );

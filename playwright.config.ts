@@ -10,7 +10,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4173' },
   webServer: {
     command: 'node core/server/main.ts',
-    url: 'http://127.0.0.1:4173/api/materias',
+    url: 'http://127.0.0.1:4173/api/health',
     env: { PORT: '4173', HOST: '127.0.0.1', DB_PATH: './data/e2e.sqlite', WEB_DIST: join(process.cwd(), 'dist/web') },
     reuseExistingServer: false,
   },

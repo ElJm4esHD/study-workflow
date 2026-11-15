@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { dashboardCards, prefetchUrls, resolveEnabled, type WebModule } from './registry.ts';
+import { dashboardCards, resolveEnabled, type WebModule } from './registry.ts';
 
 const m = (id: string, requires?: string[]) => ({ id, requires }) as WebModule;
 
@@ -22,7 +22,4 @@ test('dashboardCards ordena por order, reparte por column e ignora módulos sin 
   expect(r.right.map((c) => c.id)).toEqual(['b']);
 });
 
-test('prefetchUrls junta las de los módulos y suma materias y settings sin duplicados', () => {
-  const mods = [{ id: 'a', prefetch: () => ['/api/todo', '/api/materias'] }, { id: 'b' }] as WebModule[];
-  expect(prefetchUrls(mods)).toEqual(['/api/todo', '/api/materias', '/api/settings']);
-});
+

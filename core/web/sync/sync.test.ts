@@ -202,7 +202,7 @@ test('limpieza a 180 días: un dispositivo atrasado hace reset, pierde lo borrad
   await a.sync();
   b.db.put('todo', 'mio', { title: 'mío sin subir' });
   // pasan 181 días: el server limpia la marca
-  expect(purgeTombstones(app.ctx.db, T0 + 181 * DAY)).toBe(1);
+  expect(purgeTombstones(app.db, T0 + 181 * DAY)).toBe(1);
   await b.sync();
   expect(titles(b)).toEqual(['mío sin subir', 'z']); // x se fue (no vino ni está en el server)
   await a.sync();
@@ -215,14 +215,14 @@ test('limpieza: quien arrancó de cero después de la limpieza no hace reset inf
   for (let i = 0; i < 10; i++) a.db.put('todo', String(i), { title: `t${i}` });
   for (let i = 0; i < 5; i++) a.db.remove('todo', String(i));
   await a.sync();
-  purgeTombstones(app.ctx.db, T0 + 181 * DAY);
+  purgeTombstones(app.db, T0 + 181 * DAY);
   const c = await device(app, 2);
   await c.sync();
   expect(c.db.all('todo')).toHaveLength(5);
   expect((await c.sync()).pulled).toBe(0);
 });
 
-test('server nuevo (otro epoch): el dispositivo hace reset, sube lo que tenía y no pierde lo no subido', async () => {
+test('server nuevo o restaurado (otro epoch): el dispositivo vuelve a subir todo lo suyo, no pierde nada', async () => {
   const viejo = await makeTestApp();
   const a = await device(viejo);
   a.db.put('todo', 'x', { title: 'x' });
@@ -231,10 +231,11 @@ test('server nuevo (otro epoch): el dispositivo hace reset, sube lo que tenía y
   const t2 = serverTarget(callOf(nuevo));
   a.db.put('todo', 'y', { title: 'y' });
   await sync(a.db, t2); // sube y, pide con el cursor del server viejo → reset
-  expect(titles(a)).toEqual(['y']); // x ya no existe en el nuevo y estaba sincronizado
+  expect(titles(a)).toEqual(['x', 'y']); // x estaba sincronizado con el server viejo: se vuelve a subir al nuevo
   const b = await device(nuevo);
   await b.sync();
-  expect(titles(b)).toEqual(['y']);
+  expect(titles(b)).toEqual(['x', 'y']);
+  expect(a.db.pendingCount()).toBe(0);
 });
 
 test('el estado local sobrevive a reabrir la base y el reloj sigue por encima de lo guardado', async () => {

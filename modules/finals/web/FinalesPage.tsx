@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { api, useApi, errMsg } from '../../../core/web/api.ts';
 import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
 import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { nameKey } from '../../../core/shared/normalize.ts';
@@ -24,7 +24,6 @@ const dias = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
 /** Pegar el JSON de la skill → vista previa → confirmar (en una hoja). */
 function Importar({ onDone }: { onDone(): void }) {
   const { materias, notify } = useCore();
-  const { off, block } = useBlock();
   const [text, setText] = useState('');
   const [map, setMap] = useState<Record<string, string>>({}); // nameKey → id de materia, '' = saltear
   const parsed = useMemo(() => (text.trim() ? parseFinales(text) : null), [text]);
@@ -35,7 +34,6 @@ function Importar({ onDone }: { onDone(): void }) {
     try { setText(await navigator.clipboard.readText()); } catch { notify('No se pudo leer el portapapeles. Pegalo a mano.'); }
   }
   async function save() {
-    if (block()) return;
     try {
       const body = { text, map: Object.fromEntries(usable.map((m) => [nameKey(m.name), target(m) || null])) };
       const r = await api<{ materias: number; fechas: number }>('POST', '/api/finals/import', body);
@@ -68,7 +66,7 @@ function Importar({ onDone }: { onDone(): void }) {
       {usable.length > 0 && <p className="muted">Importar reemplaza las fechas que ya tengan esas materias.</p>}
       <div className="row">
         <button type="button" className="btn" onClick={onDone}>Cancelar</button>
-        <button type="button" className="btn primary" disabled={!usable.some((m) => target(m))} aria-disabled={off} onClick={save}>Importar</button>
+        <button type="button" className="btn primary" disabled={!usable.some((m) => target(m))} onClick={save}>Importar</button>
       </div>
     </div>
   );
@@ -76,12 +74,10 @@ function Importar({ onDone }: { onDone(): void }) {
 
 /** Alta o edición de una fecha posible. */
 function FechaForm({ materiaId, item, onDone }: { materiaId: string; item?: FinalDate; onDone(): void }) {
-  const { off, block } = useBlock();
   const [date, setDate] = useState(item?.date ?? '');
   const [time, setTime] = useState(item?.time ?? '');
   const sub = useSubmit();
   async function run(fn: () => Promise<unknown>) {
-    if (block()) return;
     if (await sub.run(fn)) onDone();
   }
   const body = { materiaId, date, time: time || null };
@@ -90,8 +86,8 @@ function FechaForm({ materiaId, item, onDone }: { materiaId: string; item?: Fina
       <DateField label="Fecha" value={date} onChange={setDate} required />
       <TimeField label="Hora (opcional)" value={time} onChange={setTime} />
       {sub.error && <p className="error" role="alert">{sub.error}</p>}
-      <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
-      {item && <button type="button" className="btn danger" aria-disabled={off} onClick={() => void run(() => api('DELETE', `/api/finals/dates/${item.id}`))}>Borrar</button>}
+      <button className="btn primary" disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
+      {item && <button type="button" className="btn danger" onClick={() => void run(() => api('DELETE', `/api/finals/dates/${item.id}`))}>Borrar</button>}
       <button type="button" className="btn" onClick={onDone}>Cancelar</button>
     </form>
   );
@@ -130,7 +126,6 @@ function MiniMes({ first, picks, excluir, sigla, color }: {
 
 export function FinalesPage() {
   const { materias, settings, patchSettings, notify } = useCore();
-  const { off, block } = useBlock();
   const { data, error, reload } = useApi<FinalsData>('/api/finals');
   const plan: Plan = { ...PLAN0, ...(settings['finals.plan'] as Partial<Plan> | undefined) };
   const [sheet, setSheet] = useState<Sheets>(null);
@@ -154,12 +149,10 @@ export function FinalesPage() {
   const months = best ? [...new Set(best.picks.map((p) => p.date.slice(0, 7)))].sort() : [];
 
   async function setPlan(p: Partial<Plan>) {
-    if (block()) return;
     setShown(SHOWN); setFocus(0);
     try { await patchSettings({ 'finals.plan': { ...plan, ...p } }); } catch (e) { notify(errMsg(e)); }
   }
   async function choose(c: Combo | null) {
-    if (block()) return;
     try {
       if (c) await api('PUT', '/api/finals/chosen', { dateIds: c.picks.map((p) => p.id) }); else await api('DELETE', '/api/finals/chosen');
       vibrate(c ? 'success' : 'tick');
@@ -169,15 +162,15 @@ export function FinalesPage() {
   }
   const done = () => { setSheet(null); reload(); };
   const chooseBtn = (c: Combo) => isChosen(c)
-    ? <span className="fin-cal"><span className="chip fin-chosen-tag"><CheckIcon size={14} />En el calendario</span><button type="button" className="btn" aria-disabled={off} onClick={() => void choose(null)}>Deshacer</button></span>
-    : <button type="button" className="btn primary" aria-disabled={off} onClick={() => void choose(c)}>Elegir</button>;
+    ? <span className="fin-cal"><span className="chip fin-chosen-tag"><CheckIcon size={14} />En el calendario</span><button type="button" className="btn" onClick={() => void choose(null)}>Deshacer</button></span>
+    : <button type="button" className="btn primary" onClick={() => void choose(c)}>Elegir</button>;
   const rangeTxt = (c: Combo) => (c.first === c.last ? dm(c.first) : `${dm(c.first).slice(0, 2)}/${dm(c.first).slice(3)} → ${dm(c.last)}`);
   const editing = sheet?.kind === 'fecha' ? sheet : null;
 
   return (
     <>
       <PageHeader title="Finales" sub={data && rinde.length ? `${rinde.length} ${rinde.length === 1 ? 'materia' : 'materias'} para rendir` : undefined}
-        actions={<button className="btn" aria-disabled={off} onClick={() => { if (!block()) setSheet({ kind: 'importar' }); }}><ImportIcon size={18} />Importar fechas</button>} />
+        actions={<button className="btn" onClick={() => setSheet({ kind: 'importar' })}><ImportIcon size={18} />Importar fechas</button>} />
       {error && !data && <ErrorState error={error} onRetry={reload} />}
       {!data && !error && <div className="card skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={18} /><Skeleton /><Skeleton w="70%" /><Skeleton w="85%" /></div>}
       {data && <div className="fin-page">

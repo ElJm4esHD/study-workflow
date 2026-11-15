@@ -1,19 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { m } from 'motion/react';
 import { api, useApi, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { formatDate, todayAR } from '../../../core/shared/dates.ts';
 import { InboxIcon, TrashIcon } from '../../../core/web/icons.tsx';
 import { useMotion } from '../../../core/web/motion.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { EmptyState, PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
-import type { PlanSummary } from '../server/index.ts';
+import type { PlanSummary } from '../app/index.ts';
 import { deleteCounts } from './logic.ts';
 import './import.css';
 
 export function PlansPage() {
   const { notify } = useCore();
-  const { off, block } = useBlock();
   const { spring } = useMotion();
   const { data, error, reload } = useApi<PlanSummary[]>('/api/import/plans');
   const [target, setTarget] = useState<PlanSummary | null>(null);
@@ -23,7 +22,7 @@ export function PlansPage() {
 
   useEffect(() => { if (target) dlg.current?.showModal(); else dlg.current?.close(); }, [target]);
 
-  function ask(p: PlanSummary) { if (block()) return; setIncl(false); setKeep(true); setTarget(p); }
+  function ask(p: PlanSummary) { setIncl(false); setKeep(true); setTarget(p); }
   async function remove() {
     if (!target) return;
     try {
@@ -50,7 +49,7 @@ export function PlansPage() {
               <m.div initial={{ scaleX: 0 }} animate={{ scaleX: p.tasksTotal ? p.tasksDone / p.tasksTotal : 0 }} transition={spring('sheet')} />
             </div>
             <p className="imp-plan-meta">{p.tasksDone} de {p.tasksTotal} tareas · {p.eventsCount} eventos ({p.examsCount} exámenes)</p>
-            <button className="btn danger" onClick={() => ask(p)} aria-disabled={off}><TrashIcon size={18} />Borrar</button>
+            <button className="btn danger" onClick={() => ask(p)}><TrashIcon size={18} />Borrar</button>
           </div>
         ))}
       </div>

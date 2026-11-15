@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { popShared } from '../../../core/web/shared.ts';
 import { api, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { PALETTE } from '../../../core/shared/palette.ts';
 import { formatDate } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -10,8 +10,8 @@ import { TODO_CATEGORIES } from '../../todo/shared.ts';
 import { nameKey } from '../../../core/shared/normalize.ts';
 import { EXAM_KINDS } from '../../calendar/shared.ts';
 import type { EventKind } from '../../calendar/shared.ts';
-import type { Preview } from '../server/preview.ts';
-import type { PlanSummary } from '../server/index.ts';
+import type { Preview } from '../app/preview.ts';
+import type { PlanSummary } from '../app/index.ts';
 import { neededMaterias } from './logic.ts';
 import { ImportIcon, InboxIcon, ListIcon } from '../../../core/web/icons.tsx';
 import { EmptyState, PageHeader } from '../../../core/web/ui.tsx';
@@ -21,7 +21,6 @@ type Res = { mode: 'create'; color: string } | { mode: 'existing'; materiaId: st
 
 export function ImportPage() {
   const { materias, notify, reloadMaterias } = useCore();
-  const { off, block } = useBlock();
   const navigate = useNavigate();
   const { key } = useLocation();
   const area = useRef<HTMLTextAreaElement>(null);
@@ -36,7 +35,6 @@ export function ImportPage() {
   useEffect(() => { const t = popShared(); if (t) setText(t); }, [key]);
 
   async function fromClipboard() {
-    if (block()) return;
     let t: string;
     try {
       t = await navigator.clipboard.readText();
@@ -51,7 +49,6 @@ export function ImportPage() {
   }
 
   async function doPreview(t = text) {
-    if (block()) return;
     setBusy(true); setError(null); setPreview(null);
     try {
       const p = await api<Preview>('POST', '/api/import/preview', { text: t });
@@ -66,7 +63,6 @@ export function ImportPage() {
   const ready = needed.every((u) => { const r = res[u.key]; return r && (r.mode === 'create' || r.materiaId); });
 
   async function save() {
-    if (block()) return;
     setBusy(true);
     try {
       const materiasBody = Object.fromEntries(needed.map((u) => {
@@ -98,12 +94,12 @@ export function ImportPage() {
       <PageHeader title="Importar plan" actions={<Link to="/importar/planes" className="btn"><ListIcon size={18} />Planes</Link>} />
       <div className="imp-split">
       <div className="card-group">
-        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy} aria-disabled={off}><ImportIcon />Importar desde el portapapeles</button>
+        <button className="btn primary imp-big" onClick={fromClipboard} disabled={busy}><ImportIcon />Importar desde el portapapeles</button>
         <label className="form" style={{ display: 'flex' }}>
           O pegalo acá
           <textarea ref={area} className="imp-text" value={text} onChange={(e) => setText(e.target.value)} />
         </label>
-        <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()} aria-disabled={off}>Ver vista previa</button>
+        <button className="btn" onClick={() => doPreview()} disabled={busy || !text.trim()}>Ver vista previa</button>
       </div>
       <div>
       {error && <div className="imp-err" role="alert">{error}</div>}
@@ -158,7 +154,7 @@ export function ImportPage() {
               </ul>
             </section>
           ))}
-          <button className="btn primary imp-save" disabled={busy || !checked.size || !ready} aria-disabled={off} onClick={save}>
+          <button className="btn primary imp-save" disabled={busy || !checked.size || !ready} onClick={save}>
             Guardar {checked.size} ítems
           </button>
         </>

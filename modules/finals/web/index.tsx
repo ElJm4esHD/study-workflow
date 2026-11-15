@@ -9,5 +9,4 @@ export const finals: WebModule = {
   nav: { path: '/finales', order: 25, more: true },
   requires: ['calendar'],
   routes: [{ path: '/finales', element: <FinalesPage /> }],
-  prefetch: () => ['/api/finals'],
 };

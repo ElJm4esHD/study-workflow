@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { api, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { NEUTRAL } from '../../../core/shared/palette.ts';
 import { CheckIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
-import type { TodoItem } from '../../todo/server/service.ts';
+import type { TodoItem } from '../../todo/app/service.ts';
 import { EXAM_KINDS } from '../shared.ts';
 import { DOWL, eventHref } from './DayDetail.tsx';
 import type { AgendaData } from './summary.ts';
@@ -30,7 +30,6 @@ export function WeekView({ start, days: n, today, data, reload, onDay }: {
   start: string; days: number; today: string; data: AgendaData; reload(): void; onDay(d: string): void;
 }) {
   const { materias, notify } = useCore();
-  const { block } = useBlock();
   const nav = useNavigate();
   const now = useNow();
   const [ghost, setGhost] = useState<{ d: string; m: number } | null>(null);
@@ -65,7 +64,7 @@ export function WeekView({ start, days: n, today, data, reload, onDay }: {
     setGhost(ghost?.d === d && ghost.m === m ? null : { d, m });
   }
   function create() {
-    if (!ghost || block()) return;
+    if (!ghost) return;
     nav(`/calendario/evento/nuevo?${new URLSearchParams({ fecha: ghost.d, hora: hhmm(ghost.m) })}`);
   }
 

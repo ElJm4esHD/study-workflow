@@ -1,20 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api, errMsg } from './api.ts';
-import { useBlock } from './CoreContext.tsx';
 import { SearchIcon } from './icons.tsx';
 
 type Hit = { id: string; kind: string; title: string; detail?: string; to: string };
 const KIND: Record<string, string> = { tarea: 'Tarea', entrega: 'Entrega', estudio: 'Estudio', evento: 'Evento', parcial: 'Parcial', recuperatorio: 'Recuperatorio', final: 'Final' };
 
-/** Búsqueda global de tareas y eventos (`/` o Ctrl+K). Cada módulo aporta sus resultados desde el servidor. */
+/** Búsqueda global de tareas y eventos (`/` o Ctrl+K). Cada módulo aporta sus resultados. */
 export function Search({ open, onClose }: { open: boolean; onClose(): void }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<Hit[] | null>(null);
   const [error, setError] = useState('');
-  const { off } = useBlock();
 
   useEffect(() => {
     const d = dlg.current;
@@ -45,7 +43,7 @@ export function Search({ open, onClose }: { open: boolean; onClose(): void }) {
   };
   const enter = (e: React.KeyboardEvent) => { if (e.key === 'Enter') dlg.current?.querySelector<HTMLElement>('.search-list a')?.click(); };
 
-  const msg = error || (off && !hits ? 'Sin conexión: la búsqueda necesita el servidor.' : q.trim().length < 2 ? 'Escribí al menos 2 letras.' : hits && !hits.length ? 'No se encontró nada.' : '');
+  const msg = error || (q.trim().length < 2 ? 'Escribí al menos 2 letras.' : hits && !hits.length ? 'No se encontró nada.' : '');
   return (
     <dialog ref={dlg} className="search" aria-label="Buscar" onClose={onClose} onKeyDown={move} onClick={(e) => { if (e.target === dlg.current) dlg.current?.close(); }}>
       <div className="search-box">

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import type { TodoItem } from '../server/service.ts';
+import type { TodoItem } from '../app/service.ts';
 import { groupMinutes, groupTodos, hoyCardData, orderBetween, sortDay } from './views.ts';
 
 const today = '2026-11-04';

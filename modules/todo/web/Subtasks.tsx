@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { api, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { vibrate } from '../../../core/web/haptics.ts';
 import { ChevronRightIcon, SubtasksIcon } from '../../../core/web/icons.tsx';
 import { useMotion } from '../../../core/web/motion.tsx';
-import type { Subtask, TodoItem } from '../server/service.ts';
+import type { Subtask, TodoItem } from '../app/service.ts';
 
 /** Subtareas tildables desde la lista: el contador de la fila las despliega debajo y cada tilde se guarda al toque. */
 export function useSubtasks(item: TodoItem, onSaved: (i: TodoItem) => void) {
   const { notify } = useCore();
-  const { block } = useBlock();
   const { spring } = useMotion();
   const [open, setOpen] = useState(false);
   const [subs, setSubs] = useState<Subtask[]>(item.subtasks ?? []);
@@ -18,7 +17,6 @@ export function useSubtasks(item: TodoItem, onSaved: (i: TodoItem) => void) {
   if (subs.length === 0) return {};
 
   async function toggle(id: string) {
-    if (block()) return;
     const prev = subs, next = subs.map((s) => (s.id === id ? { ...s, done: !s.done } : s));
     setSubs(next);
     vibrate(next.every((s) => s.done) ? 'success' : 'tick');

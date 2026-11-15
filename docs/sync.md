@@ -9,4 +9,6 @@ Diseño: `docs/superpowers/specs/2026-11-15-local-first-design.md`. Esta es la r
 - **Mi servidor** (`core/server/sync.ts`, tabla `sync_records`): `POST /api/sync/push`, `GET /api/sync/pull?since=<cursor>&limit=`. Solo valida forma. Cursor = `epoch:seq:purgado`; si cambió el epoch o el cliente quedó atrás de una limpieza, la respuesta trae `reset: true` y el cliente baja todo y descarta lo que el server ya no tiene (conserva lo sucio).
 - **Marcas de borrado**: se limpian a los 180 días (server al arrancar y una vez por día; dispositivo al sincronizar).
 
-Etapa 2: nada de esto está conectado a las pantallas todavía (eso es la etapa 3).
+- **Cómo se conecta** (`core/web/local.ts`, `core/web/sync/auto.ts`): al arrancar se abre la base local y se arma el "server local" (`core/app/`); `api()` resuelve ahí. La sincronización corre al abrir, al volver la red o a primer plano, cada 5 min y 2 s después de un cambio. En un dispositivo sin datos se espera (hasta 8 s) la primera bajada.
+- **Reset**: `reset: 'purged'` (el dispositivo se quedó atrás de una limpieza) baja todo y descarta lo que el server ya no tiene, sin tocar lo sin subir; `reset: 'epoch'` (otro server o base restaurada) **no borra nada local**: vuelve a subir todo lo del dispositivo.
+- La web sincroniza con su propio origen; el APK, con la dirección de Ajustes › Servidor (sin dirección anda solo local).

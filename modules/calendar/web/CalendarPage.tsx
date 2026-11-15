@@ -2,7 +2,7 @@
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { onReload, errMsg } from '../../../core/web/api.ts';
 import { loadAgenda } from './agenda.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from '../../../core/web/icons.tsx';
 import { AnimatePresence, m } from 'motion/react';
@@ -47,7 +47,6 @@ const useWide = () => {
 
 export function CalendarPage() {
   const { materias, settings } = useCore();
-  const { off, block } = useBlock();
   const nav = useNavigate();
   const wide = useWide();
   const [params, setParams] = useSearchParams();
@@ -184,7 +183,7 @@ export function CalendarPage() {
       {month && wide && <aside className="cal-panel" aria-label="Detalle del día"><DayDetail data={data} date={selected} reload={() => void load()} /></aside>}
       {(!wide || !month) && <Sheet open={sheet} onClose={close} label="Detalle del día">{lastDia.current && <DayDetail data={data} date={lastDia.current} reload={() => void load()} />}</Sheet>}
       {!(month && wide) && (
-        <Floating><nav aria-label="Acción rápida"><Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></nav></Floating>
+        <Floating><nav aria-label="Acción rápida"><Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento"><PlusIcon /></Link></nav></Floating>
       )}
     </div>
     </PullToRefresh>

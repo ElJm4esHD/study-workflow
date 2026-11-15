@@ -62,3 +62,11 @@ Lo que cambió para quien usa la app en cada pedido. La lista corta de cada vers
 ## 2.0.0-beta.2 (base de sincronización)
 
 Sin cambios de uso todavía: se agregó el motor de sincronización, el almacenamiento local y las rutas `/api/sync/*` del servidor (ver [docs/sync.md](sync.md)).
+
+## 2.0.0-beta.3 (módulos en la app)
+
+- Todo corre en el dispositivo: sin conexión se puede crear, editar, borrar e importar. No hay más acciones bloqueadas ni "copia offline".
+- Sincronización automática con el servidor (al abrir, al volver la red, cada 5 min, 2 s después de un cambio). Estado y "Sincronizar ahora" en Ajustes › Datos.
+- Backup nuevo (formato v2, solo registros). Los backups de la 1.x se convierten en la migración (etapa 5).
+- El servidor ya no tiene `/api/todo`, `/api/calendar`, etc.: solo `/api/sync/*` y `/api/health`.
+- Pendiente (etapa 4): widget y recordatorios del celu leyendo del dispositivo.

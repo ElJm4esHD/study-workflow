@@ -8,7 +8,6 @@ interface WidgetsPlugin {
   setAccent(o: { hex: string; light: string }): Promise<void>;
   setTheme(o: { mode: 'dark' | 'light' | 'system' }): Promise<void>;
   testReminder(o: { insistent: boolean }): Promise<void>;
-  setDone(o: { id: string; completed: boolean }): Promise<void>;
   addListener(ev: 'route', fn: (d: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
 }
 // Plugin local en Kotlin (android/.../widget/WidgetsPlugin); solo existe en nativo.
@@ -30,8 +29,6 @@ export function setNativeTheme(mode: 'dark' | 'light' | 'system', shown: 'dark' 
 }
 /** Muestra ahora un recordatorio de prueba (mismo canal y sonido que los reales). */
 export const testReminder = (insistent: boolean): void => void plugin?.testReminder({ insistent }).catch(() => {});
-/** Tilde hecho sin conexión en la app: el nativo actualiza su copia y cancela el recordatorio. */
-export const markWidgetDone = (id: string, completed: boolean): void => void plugin?.setDone({ id, completed }).catch(() => {});
 export const takeWidgetRoute = async (): Promise<string | null> => (plugin ? (await plugin.takeRoute().catch(() => ({ route: null }))).route : null);
 
 export function onWidgetRoute(fn: (route: string) => void): () => void {

@@ -1,5 +1,6 @@
 import { mkdirSync } from 'node:fs';
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { seedApi, type SeedApi } from './seed.ts';
 
 /** Pantallas y estados a 412 y 1440 px. Las fases van en orden: vacío → cargando/error → con datos → casos límite. */
 const SIZES = { '412': { width: 412, height: 915 }, '1440': { width: 1440, height: 900 } } as const;
@@ -56,7 +57,7 @@ test('2 · cargando y con error', async ({ page }) => {
   }
 });
 
-async function seed(request: APIRequestContext) {
+async function seed(request: SeedApi) {
   const mk = async (name: string, color: string, sigla: string) => (await (await request.post('/api/materias', { data: { name, color, sigla } })).json()).id as string;
   const m = {
     alg: await mk('Matemática I', '#f4a3a3', 'MAT1'), am2: await mk('Química', '#9fc3f7', 'QUI'), f1: await mk('Física', '#f0d27a', 'FIS'),
@@ -85,7 +86,9 @@ async function seed(request: APIRequestContext) {
 }
 
 test('3 · con datos: todas las pantallas', async ({ page, request }) => {
-  await seed(request);
+  const api = await seedApi(request);
+  await seed(api);
+  await api.flush();
   await welcomed(page);
   for (const size of ['412', '1440'] as const) {
     for (const [name, url] of SCREENS) { await open(page, url, size); await shot(page, size, name, { full: true }); }
@@ -125,13 +128,15 @@ test('3 · con datos: todas las pantallas', async ({ page, request }) => {
 });
 
 test('4 · casos límite y rendimiento', async ({ page, request, context }) => {
-  const mats = await (await request.get('/api/materias')).json();
-  const long = (await (await request.post('/api/materias', { data: { name: 'Introducción a la Teoría de la Computación y los Lenguajes Formales (Electiva)', color: '#c5de8a', sigla: 'ITCLF' } })).json()).id;
-  await request.post('/api/todo', { data: { title: 'Un título larguísimo para probar el corte de línea: entregar el informe final del trabajo práctico integrador con todas las secciones pedidas, los anexos, el código fuente comentado y la presentación para la defensa oral', materiaId: long, dueDate: plus(0), category: 'entrega', durationMin: 90 } });
+  const api = await seedApi(request);
+  const mats = await (await api.get('/api/materias')).json();
+  const long = (await (await api.post('/api/materias', { data: { name: 'Introducción a la Teoría de la Computación y los Lenguajes Formales (Electiva)', color: '#c5de8a', sigla: 'ITCLF' } })).json()).id;
+  await api.post('/api/todo', { data: { title: 'Un título larguísimo para probar el corte de línea: entregar el informe final del trabajo práctico integrador con todas las secciones pedidas, los anexos, el código fuente comentado y la presentación para la defensa oral', materiaId: long, dueDate: plus(0), category: 'entrega', durationMin: 90 } });
   for (const [i, m] of mats.slice(0, 5).entries()) {
-    await request.post('/api/calendar/events', { data: { title: `Final de ${m.name}`, kind: i % 2 ? 'parcial' : 'final', materiaId: m.id, allDay: true, startDate: plus(10), endDate: plus(10), startTime: null, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false } });
+    await api.post('/api/calendar/events', { data: { title: `Final de ${m.name}`, kind: i % 2 ? 'parcial' : 'final', materiaId: m.id, allDay: true, startDate: plus(10), endDate: plus(10), startTime: null, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false } });
   }
-  for (let i = 0; i < 220; i++) await request.post('/api/todo', { data: { title: `Tarea de prueba ${i + 1}: ejercicio ${(i % 12) + 1}`, materiaId: mats[i % mats.length].id, dueDate: plus(i % 5), durationMin: 15 + (i % 4) * 15 } });
+  for (let i = 0; i < 220; i++) await api.post('/api/todo', { data: { title: `Tarea de prueba ${i + 1}: ejercicio ${(i % 12) + 1}`, materiaId: mats[i % mats.length].id, dueDate: plus(i % 5), durationMin: 15 + (i % 4) * 15 } });
+  await api.flush();
   await welcomed(page);
   await page.addInitScript(() => {
     (window as unknown as { __long: number }).__long = 0;

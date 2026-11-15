@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import type { DatabaseSync } from 'node:sqlite';
 import { constants, createBrotliCompress, createGzip } from 'node:zlib';
 import { Readable } from 'node:stream';
 import Fastify, { type FastifyInstance } from 'fastify';
@@ -7,48 +8,17 @@ import { registerAuth } from './auth.ts';
 import { registerCors } from './cors.ts';
 import { openDb } from './db.ts';
 import { HttpError } from './errors.ts';
-import { backfillSiglas, makeMaterias } from './materias.ts';
 import { runMigrations } from './migrate.ts';
-import { makeSettings } from './settings.ts';
-import { registerData } from './data.ts';
 import { registerSync } from './sync.ts';
-import { orderModules, type CoreContext, type ServerModule } from './registry.ts';
 
 const VERSION: string = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 
 const body = (code: string, message: string) => ({ error: { code, message } });
 
-export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; webDist?: string }):
-  Promise<FastifyInstance & { ctx: CoreContext }> {
-  const mods = orderModules(opts.modules);
+/** El server solo recibe y entrega registros de sincronización (ver core/server/sync.ts) y sirve la web: no conoce módulos ni reglas. */
+export async function buildApp(opts: { dbPath: string; webDist?: string }): Promise<FastifyInstance & { db: DatabaseSync }> {
   const db = openDb(opts.dbPath);
-  runMigrations(db, [
-    { module: 'core', dir: new URL('./migrations/', import.meta.url) },
-    ...mods.map((m) => ({ module: m.id, dir: m.migrationsDir })),
-  ]);
-  backfillSiglas(db);
-
-  const settings = makeSettings(db);
-  const services = new Map<string, object>();
-  const ctx: CoreContext = {
-    db,
-    transaction<T>(fn: () => T): T {
-      db.exec('BEGIN IMMEDIATE');
-      try {
-        const r = fn();
-        db.exec('COMMIT');
-        return r;
-      } catch (e) {
-        db.exec('ROLLBACK');
-        throw e;
-      }
-    },
-    materias: makeMaterias(db),
-    settings,
-    modules: { isEnabled: (id) => settings.get<Record<string, boolean>>('modules.enabled', {})[id] ?? true },
-    services: { get: <T>(id: string) => services.get(id) as T | undefined },
-  };
-  for (const m of mods) if (m.service) services.set(m.id, m.service(ctx));
+  runMigrations(db, [{ module: 'sync', dir: new URL('./migrations/', import.meta.url) }]);
 
   const app = Fastify({ logger: !process.env.VITEST });
   registerCors(app, ['https://localhost']);
@@ -78,25 +48,8 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
     return reply.status(500).send(body('error_interno', 'Error interno del servidor.'));
   });
 
-  app.get('/api/materias', async () => ctx.materias.list());
-  app.post('/api/materias', {
-    schema: { body: { type: 'object', required: ['name', 'color'], properties: {
-      id: { type: 'string', minLength: 1 }, name: { type: 'string' }, color: { type: 'string' }, sigla: { type: 'string' } } } },
-  }, async (req, reply) => reply.status(201).send(ctx.materias.create(req.body as { id?: string; name: string; color: string; sigla?: string })));
-  app.patch('/api/materias/:id', {
-    schema: { body: { type: 'object', properties: {
-      name: { type: 'string' }, color: { type: 'string' }, sigla: { type: 'string' }, archived: { type: 'boolean' } } } },
-  }, async (req) => ctx.materias.update((req.params as { id: string }).id, req.body as object));
-  app.get('/api/settings', async () => ctx.settings.getAll());
-  app.patch('/api/settings', { schema: { body: { type: 'object' } } }, async (req) => {
-    ctx.transaction(() => { for (const [k, v] of Object.entries(req.body as object)) ctx.settings.set(k, v); });
-    return ctx.settings.getAll();
-  });
-
-  registerData(app, ctx, mods, opts.dbPath);
   registerSync(app, db);
   app.get('/api/health', async () => ({ ok: true, version: VERSION }));
-  for (const m of mods) await app.register((a) => m.routes(a, ctx), { prefix: `/api/${m.id}` });
 
   const webDist = opts.webDist;
   if (webDist) await app.register(fastifyStatic, { root: webDist });
@@ -106,5 +59,5 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   });
 
   app.addHook('onClose', async () => { db.close(); });
-  return Object.assign(app, { ctx }) as unknown as FastifyInstance & { ctx: CoreContext };
+  return Object.assign(app, { db }) as unknown as FastifyInstance & { db: DatabaseSync };
 }

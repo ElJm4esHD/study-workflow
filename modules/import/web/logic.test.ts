@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deleteCounts, neededMaterias } from './logic.ts';
-import type { Preview } from '../server/preview.ts';
+import type { Preview } from '../app/preview.ts';
 
 const it0 = { subtareas: [], tipo: 'tarea', fecha: '2026-11-05', hora: null, titulo: 't', notas: null, duracion: null, categoria: 'tarea' as const, errors: [], materiaId: null, materiaArchived: false, duplicate: false };
 describe('import logic', () => {

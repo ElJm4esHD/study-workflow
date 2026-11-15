@@ -8,7 +8,7 @@ import { ChecklistIcon, ChevronRightIcon, PartyIcon } from '../../../core/web/ic
 import { vibrate } from '../../../core/web/haptics.ts';
 import { useMotion } from '../../../core/web/motion.tsx';
 import { EmptyState, Skeleton, TaskRow, ErrorState } from '../../../core/web/ui.tsx';
-import type { TodoItem } from '../server/service.ts';
+import type { TodoItem } from '../app/service.ts';
 import { TaskMeta } from './TodoPage.tsx';
 import { useSubtasks } from './Subtasks.tsx';
 import { groupMinutes, hoyCardData } from './views.ts';

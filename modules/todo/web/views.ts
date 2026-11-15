@@ -1,4 +1,4 @@
-import type { TodoItem } from '../server/service.ts';
+import type { TodoItem } from '../app/service.ts';
 import { addDays, formatDate } from '../../../core/shared/dates.ts';
 
 export type TodoView = 'hoy' | 'proximas' | 'sin-fecha' | 'materia' | 'completadas';

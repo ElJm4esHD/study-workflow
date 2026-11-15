@@ -7,11 +7,14 @@ import { InicioPage } from './InicioPage.tsx';
 import { AjustesPage } from './AjustesPage.tsx';
 import { NovedadesPage } from './NovedadesPage.tsx';
 import { getPrefs } from './prefs.ts';
-import { ConnectScreen } from './ConnectScreen.tsx';
-import { getServerUrl, isNative } from './server.ts';
+import { initLocal, local } from './local.ts';
+import { reloadAll } from './api.ts';
+import { firstSync, startSync } from './sync/auto.ts';
+import { getServerUrl } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
 import { parentOf } from './back.ts';
 import { MotionRoot } from './motion.tsx';
+import { PageSkeleton } from './ui.tsx';
 import { onWidgetRoute, setWidgetServer, takeWidgetRoute } from './widgets.ts';
 
 function Routes() {
@@ -71,10 +74,20 @@ function Routes() {
   return <RouterProvider router={router} />;
 }
 
+// Abre la base local, arranca la sincronización y (solo la primera vez en un dispositivo) espera a bajar lo del servidor.
+let boot: Promise<void> | null = null;
+const start = () => (boot ??= (async () => {
+  await initLocal();
+  startSync(local().db, reloadAll);
+  await firstSync(local().db);
+})());
+
 export function App() {
-  const [connected, setConnected] = useState(!isNative() || !!getServerUrl());
+  const [state, setState] = useState<'loading' | 'ready' | Error>('loading');
   // Instalaciones ya configuradas: el nativo todavía no conoce la URL.
   useEffect(() => { setWidgetServer(getServerUrl()); }, []);
-  if (!connected) return <ConnectScreen onDone={() => setConnected(true)} />;
+  useEffect(() => { start().then(() => setState('ready'), (e) => setState(e instanceof Error ? e : new Error(String(e)))); }, []);
+  if (state instanceof Error) return <div className="center-screen" role="alert"><h1>No se pudo abrir la app</h1><p>{state.message}</p><button className="btn primary" onClick={() => location.reload()}>Reintentar</button></div>;
+  if (state === 'loading') return <div className="main"><PageSkeleton /></div>;
   return <ErrorBoundary><MotionRoot><CoreProvider><Routes /></CoreProvider></MotionRoot></ErrorBoundary>;
 }

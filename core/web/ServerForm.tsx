@@ -26,6 +26,3 @@ export function ServerForm({ onDone }: { onDone(): void }) {
   );
 }
 
-export function ConnectScreen({ onDone }: { onDone(): void }) {
-  return <main className="shell"><h1>Conectar con tu servidor</h1><ServerForm onDone={onDone} /></main>;
-}

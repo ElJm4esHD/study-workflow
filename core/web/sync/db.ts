@@ -124,6 +124,12 @@ export class LocalDb {
     }
     if (put.length) this.persist(put);
   }
+  /** El destino perdió datos: todo lo local vuelve a quedar pendiente de subir. */
+  markAllDirty(): void {
+    const put: Row[] = [];
+    for (const c of this.cols.values()) for (const r of c.values()) if (!r.dirty) { r.dirty = 1; put.push(r); }
+    if (put.length) this.persist(put);
+  }
   /** Reset: saca lo que el destino ya no tiene (sin tocar lo no subido). */
   dropUnseen(seen: Set<string>): void {
     const del: [string, string][] = [];

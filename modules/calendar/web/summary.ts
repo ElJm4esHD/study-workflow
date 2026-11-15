@@ -1,6 +1,6 @@
-import type { Occurrence } from '../server/recurrence.ts';
-import type { TodoItem } from '../../todo/server/service.ts';
-import type { Materia } from '../../../core/server/registry.ts';
+import type { Occurrence } from '../app/recurrence.ts';
+import type { TodoItem } from '../../todo/app/service.ts';
+import type { Materia } from '../../../core/app/registry.ts';
 import { EXAM_KINDS } from '../shared.ts';
 import { NEUTRAL, strongOf } from '../../../core/shared/palette.ts';
 import { addDays } from '../../../core/shared/dates.ts';

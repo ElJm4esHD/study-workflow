@@ -1,10 +1,10 @@
 ﻿import { useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, reloadAll, useApi, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { todayAR, weekdayOf } from '../../../core/shared/dates.ts';
-import type { CalendarEvent, EventInput } from '../server/service.ts';
+import type { CalendarEvent, EventInput } from '../app/service.ts';
 import { KIND_LABELS } from './views.ts';
 import { KIND_ICON } from './DayDetail.tsx';
 import { PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
@@ -29,7 +29,6 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 
 function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string | null }) {
   const { materias, notify, settings } = useCore();
-  const { off, block } = useBlock();
   const nav = useNavigate();
   const [q] = useSearchParams();
   const isSeries = !!item?.repeatWeekdays;
@@ -72,12 +71,10 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   });
 
   async function run(fn: () => Promise<unknown>) {
-    if (block()) return;
     if (await sub.run(fn)) { unsaved.release(); back(); }
   }
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (block()) return;
     const bad = firstInvalid(e.currentTarget);
     if (bad) { sub.fail(bad); return; }
     if (asksScope && repChanged) { run(() => api('PATCH', url, seriesPatch())); return; }
@@ -89,7 +86,6 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
     });
   }
   function remove() {
-    if (block()) return;
     if (asksScope) { setAction('delete'); dlg.current?.showModal(); return; }
     // Sin pregunta: avisa y deja "Deshacer", que lo vuelve a crear.
     void sub.run(() => api('DELETE', url)).then((ok) => {
@@ -167,9 +163,9 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
         )}
         {sub.error && <p className="error" role="alert">{sub.error}</p>}
         <div className="row">
-          {item && <button type="button" className="btn danger" onClick={remove} aria-disabled={off} disabled={sub.saving}>Borrar</button>}
+          {item && <button type="button" className="btn danger" onClick={remove} disabled={sub.saving}>Borrar</button>}
           <button type="button" className="btn" onClick={back}>Cancelar</button>
-          <button className="btn primary" aria-disabled={off} disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
+          <button className="btn primary" disabled={sub.saving}>{sub.saving ? 'Guardando…' : 'Guardar'}</button>
         </div>
       </form>
       <dialog ref={dlg} className="cal-dialog" aria-labelledby="cal-scope">

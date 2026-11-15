@@ -1,6 +1,6 @@
 import { nameKey } from '../../../core/shared/normalize.ts';
-import type { Preview } from '../server/preview.ts';
-import type { PlanSummary } from '../server/index.ts';
+import type { Preview } from '../app/preview.ts';
+import type { PlanSummary } from '../app/index.ts';
 
 /** Materias sin resolver que usan los ítems tildados (las de ítems con error o destildados no bloquean). */
 export function neededMaterias(p: Preview, checked: ReadonlySet<number>): { key: string; name: string }[] {

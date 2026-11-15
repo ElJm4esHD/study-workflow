@@ -1,5 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { expect, test } from '@playwright/test';
+import { seedApi, type SeedApi } from './seed.ts';
 
 const SCREENS = [
   ['inicio', '/'], ['todo-hoy', '/todo'], ['todo-proximas', '/todo?vista=proximas'], ['todo-materia', '/todo?vista=materia'], ['todo-completadas', '/todo?vista=completadas'],
@@ -8,7 +10,7 @@ const SCREENS = [
 ] as const;
 const SIZES = [['412', { width: 412, height: 915 }], ['1440', { width: 1440, height: 900 }]] as const;
 
-async function seed(request: APIRequestContext) {
+async function seed(request: SeedApi) {
   const m = await (await request.post('/api/materias', { data: { name: 'Matemática I', color: '#9fc3f7', sigla: 'MAT1' } })).json();
   const f = await (await request.post('/api/materias', { data: { name: 'Física', color: '#f4a3a3', sigla: 'FIS' } })).json();
   const today = new Date().toISOString().slice(0, 10);
@@ -20,7 +22,7 @@ async function seed(request: APIRequestContext) {
   await request.post('/api/calendar/events', { data: { title: 'Parcial 1', kind: 'parcial', materiaId: m.id, allDay: false, startDate: today, startTime: '14:00', endDate: today, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false } });
 }
 
-test.beforeAll(async ({ request }) => { await seed(request); });
+test.beforeAll(async ({ request }) => { const api = await seedApi(request); await seed(api); await api.flush(); });
 
 for (const theme of ['oscuro', 'claro'] as const) for (const [sizeName, viewport] of SIZES) {
   for (const [name, url] of SCREENS) {
@@ -100,17 +102,43 @@ test('guía de inicio: se abre desde Ajustes, es accesible y se saltea', async (
   await expect(dialog).toBeHidden();
 });
 
-test('backup: exportar baja un .json y restaurarlo deja los datos igual', async ({ page, request }) => {
-  const before = await (await request.get('/api/todo')).json();
-  const res = await request.get('/api/backup');
-  expect(res.headers()['content-disposition']).toContain('attachment');
-  const backup = await res.json();
+test('backup: exportar baja un .json y restaurarlo deja los datos igual', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/ajustes');
-  await page.locator('input[type=file]').setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
+  const exportar = async () => {
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar backup' }).click()]);
+    expect(dl.suggestedFilename()).toMatch(/^study-workflow-.*.json$/);
+    return JSON.parse(readFileSync(await dl.path(), 'utf8')) as { format: string; version: number; records: { t: string; id: string }[] };
+  };
+  const key = (b: { records: { t: string; id: string }[] }) => JSON.stringify(b.records.map((r) => r).sort((x, y) => (x.t + x.id).localeCompare(y.t + y.id)));
+  const before = await exportar();
+  expect([before.format, before.version]).toEqual(['study-workflow-backup', 2]);
+  expect(before.records.length).toBeGreaterThan(0);
+  await page.locator('input[type=file]').setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(before)) });
   await expect(page.getByRole('dialog', { name: /Reemplazar todo/ })).toBeVisible();
   await page.getByRole('button', { name: 'Reemplazar todo' }).click();
   await expect(page.getByText('Backup restaurado.')).toBeVisible();
-  const after = await (await request.get('/api/todo')).json();
-  expect(after).toEqual(before);
+  expect(key(await exportar())).toBe(key(before));
+});
+
+test('dos dispositivos: lo que se crea en uno aparece en el otro, y también lo que se edita después', async ({ browser }) => {
+  const open = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await ctx.newPage();
+    await page.goto('/todo?vista=sin-fecha');
+    await page.waitForLoadState('networkidle');
+    return page;
+  };
+  const a = await open();
+  const b = await open();
+  const title = `Desde A ${Date.now()}`;
+  await a.getByLabel('Agregar tarea rápido').fill(title);
+  await a.keyboard.press('Enter');
+  await expect(a.getByText(title)).toBeVisible();
+  // A sincroniza a los ~2 s; B baja al volver a primer plano o recargar
+  await expect(async () => { await b.reload(); await expect(b.getByText(title)).toBeVisible({ timeout: 1500 }); }).toPass({ timeout: 20000 });
+  await b.getByText(title).first().click();
+  await b.getByLabel('Título').fill(`${title} editada`);
+  await b.getByRole('button', { name: 'Guardar' }).click();
+  await expect(async () => { await a.reload(); await expect(a.getByText(`${title} editada`)).toBeVisible({ timeout: 1500 }); }).toPass({ timeout: 20000 });
 });

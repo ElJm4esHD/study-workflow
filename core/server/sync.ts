@@ -34,17 +34,18 @@ export function push(db: DatabaseSync, recs: Rec[]): void {
   }
 }
 
-export type Page = { records: Rec[]; cursor: string; more: boolean; reset?: true };
+/** `reset`: 'epoch' = otro server o base restaurada (el cliente vuelve a subir lo suyo); 'purged' = se quedó atrás de una limpieza (el cliente descarta lo que ya no existe). */
+export type Page = { records: Rec[]; cursor: string; more: boolean; reset?: 'epoch' | 'purged' };
 
 export function pull(db: DatabaseSync, cursor: string | null, limit: number): Page {
   let since = 0;
-  let reset = false;
+  let reset: 'epoch' | 'purged' | null = null;
   if (cursor) {
     const [e, s, p] = cursor.split(':');
     since = Number(s);
     const purged = Number(metaGet(db, 'purged') ?? 0);
-    if (e !== epoch(db) || !Number.isInteger(since) || since < 0) { since = 0; reset = true; }
-    else if (since < purged && Number(p) < purged) { since = 0; reset = true; }
+    if (e !== epoch(db) || !Number.isInteger(since) || since < 0) { since = 0; reset = 'epoch'; }
+    else if (since < purged && Number(p) < purged) { since = 0; reset = 'purged'; }
   }
   const rows = db.prepare('SELECT t, id, data, hlc, seq FROM sync_records WHERE seq > ? ORDER BY seq LIMIT ?').all(since, limit + 1) as (Omit<Rec, 'data'> & { data: string | null; seq: number })[];
   const page = rows.slice(0, limit);
@@ -53,7 +54,7 @@ export function pull(db: DatabaseSync, cursor: string | null, limit: number): Pa
     records: page.map(({ t, id, data, hlc }) => ({ t, id, data: data === null ? null : JSON.parse(data), hlc })),
     cursor: cursorOf(db, last),
     more: rows.length > limit,
-    ...(reset ? { reset: true as const } : {}),
+    ...(reset ? { reset } : {}),
   };
 }
 

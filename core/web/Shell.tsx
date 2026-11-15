@@ -2,20 +2,13 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { animate, m, useMotionValue } from 'motion/react';
 import { vibrate } from './haptics.ts';
-import type { Connection } from './api.ts';
 import { useCore } from './CoreContext.tsx';
 import { BookIcon, ChevronRightIcon, HomeIcon, MoreIcon, SearchIcon, SettingsIcon } from './icons.tsx';
 import { useMotion } from './motion.tsx';
 import { Sheet } from './ui.tsx';
 import { Search } from './Search.tsx';
 import { Onboarding } from './Onboarding.tsx';
-
-const stamp = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-function offlineText({ copyAt, pending }: Connection) {
-  const when = copyAt ? ` Datos del ${stamp.format(new Date(copyAt)).replace(',', '')}` : '';
-  const n = pending ? `, ${pending} ${pending === 1 ? 'cambio' : 'cambios'} por sincronizar` : '';
-  return `Sin conexión.${when}${n}.`;
-}
+import { SyncBar } from './SyncBar.tsx';
 
 type Item = { key: string; to: string; label: string; Icon: ComponentType; more: boolean };
 const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
@@ -26,7 +19,7 @@ const SUBTITLES: [RegExp, string][] = [
 ];
 
 export function Shell() {
-  const { enabledModules, connection } = useCore();
+  const { enabledModules } = useCore();
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { pathname } = useLocation();
@@ -145,7 +138,7 @@ export function Shell() {
 
   return (
     <div className="shell">
-      {connection.offline && <div className="offline-bar" role="status">{offlineText(connection)}</div>}
+      <SyncBar />
       <aside className="side" aria-label="Principal">
         <div className="brand"><i><BookIcon size={16} /></i>Study Workflow</div>
         <button type="button" className="side-item" onClick={() => setSearchOpen(true)}><SearchIcon /><span>Buscar</span><kbd className="kbd">/</kbd></button>

@@ -39,7 +39,3 @@ export function dashboardCards(mods: WebModule[]): { left: DashboardCard[]; righ
   return { all, left: all.filter((c) => c.column === 'left'), right: all.filter((c) => c.column === 'right') };
 }
 
-/** URLs a precargar: las de los módulos más las del núcleo, sin repetir. */
-export function prefetchUrls(mods: WebModule[]): string[] {
-  return [...new Set([...mods.flatMap((m) => m.prefetch?.() ?? []), '/api/materias', '/api/settings'])];
-}

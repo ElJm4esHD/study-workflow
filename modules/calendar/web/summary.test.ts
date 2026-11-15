@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { examWhat, whenLabel, cellLevel, countdownLabel, daysUntil, dayCell, dayDetail, examColor, levelOf, nextExams, weekSummary } from './summary.ts';
 import type { AgendaData } from './summary.ts';
-import type { Occurrence } from '../server/recurrence.ts';
-import type { TodoItem } from '../../todo/server/service.ts';
-import type { Materia } from '../../../core/server/registry.ts';
+import type { Occurrence } from '../app/recurrence.ts';
+import type { TodoItem } from '../../todo/app/service.ts';
+import type { Materia } from '../../../core/app/registry.ts';
 import { NEUTRAL, PALETTE } from '../../../core/shared/palette.ts';
 
 const mat = (id: string, i: number): Materia => ({ id, name: id, color: PALETTE[i].hex, colorStrong: PALETTE[i].strong, sigla: id.toUpperCase(), archived: false, createdAt: '', updatedAt: '' });

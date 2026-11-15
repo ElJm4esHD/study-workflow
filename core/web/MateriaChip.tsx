@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { Materia } from '../server/registry.ts';
+import type { Materia } from '../app/registry.ts';
 import { strongOf } from '../shared/palette.ts';
 
 /** Variables de color de una materia (`--m` pastel, `--ms` fuerte) para el `style` de cualquier elemento. */

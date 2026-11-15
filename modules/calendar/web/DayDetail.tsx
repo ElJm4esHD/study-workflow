@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { AnimatePresence, m } from 'motion/react';
 import { api, errMsg } from '../../../core/web/api.ts';
-import { useBlock, useCore } from '../../../core/web/CoreContext.tsx';
+import { useCore } from '../../../core/web/CoreContext.tsx';
 import { materiaVars } from '../../../core/web/MateriaChip.tsx';
 import { formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { fmtDuration } from '../../../core/shared/duration.ts';
@@ -11,8 +11,8 @@ import { vibrate } from '../../../core/web/haptics.ts';
 import { useMotion } from '../../../core/web/motion.tsx';
 import { EmptyState, TaskRow } from '../../../core/web/ui.tsx';
 import { TODO_CATEGORIES } from '../../todo/shared.ts';
-import type { TodoItem } from '../../todo/server/service.ts';
-import type { Occurrence } from '../server/recurrence.ts';
+import type { TodoItem } from '../../todo/app/service.ts';
+import type { Occurrence } from '../app/recurrence.ts';
 import { dayDetail, examColor, type AgendaData } from './summary.ts';
 import { KIND_LABELS } from './views.ts';
 import { useToday } from '../../../core/web/useToday.ts';
@@ -24,7 +24,6 @@ const time = (o: Occurrence) => (o.allDay ? 'Todo el día' : o.endTime && o.star
 
 export function DayDetail({ data, date, reload }: { data: AgendaData; date: string; reload(): void }) {
   const { materias, notify, enabledModules } = useCore();
-  const { off, block } = useBlock();
   const { pathname, search } = useLocation();
   const { spring } = useMotion();
   const today = useToday();
@@ -90,9 +89,9 @@ export function DayDetail({ data, date, reload }: { data: AgendaData; date: stri
       {!d.total && !d.exams.length && !d.events.length && <EmptyState icon={CalendarIcon} title="Nada en este día">Agregá una tarea o un evento.</EmptyState>}
       <div className="dd-add">
         {enabledModules.some((x) => x.id === 'todo') && (
-          <Link className="btn" to={`/todo/nueva?fecha=${date}&volver=${encodeURIComponent(pathname + search)}`} aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon size={18} />Tarea</Link>
+          <Link className="btn" to={`/todo/nueva?fecha=${date}&volver=${encodeURIComponent(pathname + search)}`}><PlusIcon size={18} />Tarea</Link>
         )}
-        <Link className="btn" to={`/calendario/evento/nuevo?fecha=${date}`} aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon size={18} />Evento</Link>
+        <Link className="btn" to={`/calendario/evento/nuevo?fecha=${date}`}><PlusIcon size={18} />Evento</Link>
       </div>
     </div>
   );

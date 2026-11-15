@@ -1,6 +1,6 @@
 import { addDays } from '../../../core/shared/dates.ts';
-import type { TodoItem } from '../../todo/server/service.ts';
-import type { Occurrence } from '../server/recurrence.ts';
+import type { TodoItem } from '../../todo/app/service.ts';
+import type { Occurrence } from '../app/recurrence.ts';
 import type { AgendaData } from './summary.ts';
 
 /** Lógica pura de la vista Semana: qué va en la fila "Todo el día", qué va en la grilla y en qué carril. */

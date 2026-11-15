@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { api, errMsg, reloadAll, useApi } from './api.ts';
-import { apiBase, isNative } from './server.ts';
-import { BLOCKED, useCore } from './CoreContext.tsx';
+import { isNative } from './server.ts';
+import { useCore } from './CoreContext.tsx';
+import { syncLabel, useSyncStatus } from './SyncBar.tsx';
+import { syncNowNow } from './sync/auto.ts';
 import { ChevronRightIcon, GaugeIcon, TypeIcon, VibrateIcon } from './icons.tsx';
-import { clearCopies } from './offline.ts';
 import { ACCENTS, HOMES, resolvedTheme, setPref, THEMES, usePrefs, type Accent, type Home } from './prefs.ts';
 import { vibrate } from './haptics.ts';
 import { ReminderField, reminderDefaults } from './ReminderField.tsx';
@@ -111,23 +112,32 @@ export function Recordatorios() {
 type Pending = { text: string; resumen: string } | null;
 
 export function Datos() {
-  const { connection, notify } = useCore();
-  const off = connection.offline;
+  const { notify } = useCore();
+  const sync = useSyncStatus();
   const file = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<Pending>(null);
   const [busy, setBusy] = useState(false);
-  const [clearing, setClearing] = useState(false);
 
+  async function exportBackup() {
+    try {
+      const data = await api('GET', '/api/backup');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+      a.download = `study-workflow-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) { notify(errMsg(e)); }
+  }
   async function pick(f: File | undefined) {
     if (!f) return;
     try {
       const text = await f.text();
-      const j = JSON.parse(text) as { format?: string; exportedAt?: string; tables?: Record<string, unknown[]> };
-      if (j.format !== 'study-workflow-backup' || !j.tables) throw new Error();
-      const n = (t: string) => j.tables![t]?.length ?? 0;
+      const j = JSON.parse(text) as { format?: string; version?: number; exportedAt?: string; records?: { t: string }[] };
+      if (j.format !== 'study-workflow-backup' || j.version !== 2 || !Array.isArray(j.records)) throw new Error();
+      const n = (t: string) => j.records!.filter((r) => r.t === t).length;
       setPending({ text, resumen: `${n('materias')} materias, ${n('todo_items')} tareas y ${n('calendar_events')} eventos, guardados el ${j.exportedAt ? new Date(j.exportedAt).toLocaleDateString('es-AR') : 'día desconocido'}.` });
     } catch {
-      notify('Ese archivo no es un backup de Study Workflow. Elegí el .json que bajaste de Exportar.');
+      notify('Ese archivo no es un backup de esta versión. Elegí el .json que bajaste de Exportar (los de la versión 1.x se convierten con la migración).');
     }
     if (file.current) file.current.value = '';
   }
@@ -139,7 +149,6 @@ export function Datos() {
       setPending(null);
       notify('Backup restaurado.');
       reloadAll();
-      setTimeout(() => location.reload(), 600); // materias y ajustes se leen una vez al arrancar
     } catch (e) { setPending(null); notify(errMsg(e)); } finally { setBusy(false); }
   }
   return (
@@ -147,28 +156,22 @@ export function Datos() {
       <h2>Datos</h2>
       <div className="card set-card">
         <div className="set-row">
-          <div className="set-label"><b>Exportar todo</b><span>Baja un archivo .json con tus materias, tareas, eventos, finales y ajustes del servidor.</span></div>
-          <a className="btn" href={`${apiBase()}/api/backup`} download target="_blank" rel="noreferrer" aria-disabled={off} onClick={(e) => { if (off) { e.preventDefault(); notify(BLOCKED); } }}>Exportar backup</a>
+          <div className="set-label"><b>Exportar todo</b><span>Baja un archivo .json con tus materias, tareas, eventos, finales y ajustes.</span></div>
+          <button type="button" className="btn" onClick={() => void exportBackup()}>Exportar backup</button>
         </div>
         <div className="set-row">
-          <div className="set-label"><b>Importar un backup</b><span>Reemplaza todo lo que hay en el servidor por el contenido del archivo. Antes se guarda una copia en el servidor.</span></div>
+          <div className="set-label"><b>Importar un backup</b><span>Reemplaza todo lo que hay por el contenido del archivo (y se sincroniza al servidor).</span></div>
           <input ref={file} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => void pick(e.target.files?.[0])} />
-          <button type="button" className="btn" aria-disabled={off} onClick={() => { if (off) notify(BLOCKED); else file.current?.click(); }}>Elegir archivo…</button>
+          <button type="button" className="btn" onClick={() => file.current?.click()}>Elegir archivo…</button>
         </div>
-        {isNative() && (
-          <div className="set-row">
-            <div className="set-label"><b>Vaciar la copia offline</b><span>Borra lo que el celu guardó para usar sin conexión. Se vuelve a bajar la próxima vez que haya red.</span></div>
-            <button type="button" className="btn danger" onClick={() => setClearing(true)}>Vaciar copia</button>
-          </div>
-        )}
+        <div className="set-row">
+          <div className="set-label"><b>Sincronización</b><span role="status">{syncLabel(sync)}</span></div>
+          <button type="button" className="btn" disabled={!sync.enabled || sync.syncing} onClick={() => void syncNowNow()}>Sincronizar ahora</button>
+        </div>
       </div>
       <ConfirmDialog open={!!pending} title="¿Reemplazar todo con este backup?" confirmLabel="Reemplazar todo" busy={busy} onCancel={() => setPending(null)} onConfirm={() => void restore()}>
         <p>El archivo tiene {pending?.resumen}</p>
-        <p>Lo que hay ahora en el servidor se reemplaza. No se puede deshacer desde la app (queda una copia de seguridad en el servidor).</p>
-      </ConfirmDialog>
-      <ConfirmDialog open={clearing} title="¿Vaciar la copia offline?" confirmLabel="Vaciar" onCancel={() => setClearing(false)}
-        onConfirm={() => { clearCopies(); setClearing(false); notify('Copia offline vaciada.'); }}>
-        <p>Sin conexión no vas a ver tus pantallas hasta que la app vuelva a bajar los datos.</p>
+        <p>Lo que hay ahora se reemplaza en este dispositivo y, al sincronizar, en el servidor. Exportá un backup antes si dudás.</p>
       </ConfirmDialog>
     </section>
   );
