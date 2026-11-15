@@ -19,7 +19,9 @@
 .cal-wrap [class~='cal-exam'] * { color: var(--on-strong) !important; }
 .cal-wrap [class~='cal-todo'] { background: transparent !important; border: 1px dashed var(--fc-event-color) !important; color: var(--text) !important; border-radius: 6px !important; }
 .cal-wrap [class~='cal-done'] { text-decoration: line-through; opacity: .7; }
-.fc-todo { display: inline-flex; align-items: center; gap: 4px; }
+.fc-todo { display: flex; align-items: center; gap: 4px; max-width: 100%; }
+.fc-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* una línea por tarea: en el celu las 7 columnas son angostas */
+.cal-wrap [class~='cal-todo'], .cal-wrap [class~='cal-soft'], .cal-wrap [class~='cal-exam'] { overflow: hidden; }
 .fc-box { width: 10px; height: 10px; border-radius: 3px; border: 1.5px solid currentColor; display: inline-block; flex: none; }
 
 /* Mes: grilla propia de 7 x 6. Celu: número + puntos de color; compu: chips por materia. Exámenes: día pintado. */

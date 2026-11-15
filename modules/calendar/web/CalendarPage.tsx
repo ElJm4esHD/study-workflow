@@ -147,7 +147,7 @@ export function CalendarPage() {
 
   function content(i: EventDisplayInfo) {
     const { occ, todo } = i.event.extendedProps as Extra;
-    if (todo) return <span className="fc-todo">{todo.completed ? <CheckIcon size={12} /> : <i className="fc-box" />}{i.timeText} {todo.title}</span>;
+    if (todo) return <span className="fc-todo">{todo.completed ? <CheckIcon size={12} /> : <i className="fc-box" />}<span className="fc-t">{i.timeText} {todo.title}</span></span>;
     if (occ && EXAM_KINDS.includes(occ.kind)) return <b>{KIND_LABELS[occ.kind].toUpperCase()} · {occ.title}</b>;
     return <span>{i.timeText} {occ?.title}</span>;
   }

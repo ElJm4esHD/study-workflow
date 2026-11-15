@@ -31,6 +31,8 @@ export default function WeekView({ api, view, date, wide, events, content, onDat
       initialDate={date}
       height={wide ? '100%' : 'auto'}
       scrollTime="07:00:00"
+      dayMaxEventRows={wide ? 4 : 3}
+      moreLinkText={(n) => `+${n} más`}
       noEventsText="No hay nada en estas fechas."
       events={events}
       eventContent={content}
