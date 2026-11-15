@@ -2,6 +2,10 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '1.1.1', fecha: '15/11/2026', titulo: 'Código abierto', items: [
+    'El proyecto está en GitHub con licencia AGPL-3.0, README nuevo y capturas con datos de ejemplo.',
+    'La dirección del servidor que trae el APK sale de tu .env.deploy al compilarlo.',
+  ] },
   { version: '1.1.0', fecha: '15/11/2026', titulo: 'Tema claro, Semana y Finales nuevos', items: [
     'Tema claro, oscuro o según el sistema (Ajustes › Apariencia). El widget y la pantalla de arranque del celu lo siguen.',
     'Vista Semana nueva: grilla horaria limpia con el color de cada materia, exámenes destacados, tareas sin hora arriba y la hora actual marcada. En el celu muestra 3 días y se desliza; tocá un hueco para crear un evento a esa hora.',

@@ -63,4 +63,5 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 - Validar entradas en el backend. Errores visibles en la UI (nunca pantalla en blanco).
 - Accesibilidad: contraste AA, tamaños táctiles, labels, foco visible, teclado. Antes de dar por terminado un cambio de UI: `npm run a11y` (axe + Playwright, 412 y 1440 px, tema oscuro y claro) tiene que dar 0 violaciones. `npm run capturas` actualiza `docs/capturas/`. Checklist para el S25: `docs/checklist-s25.md`.
 - Cuidado con el CSS: un `display` en un selector de `dialog` lo deja visible aunque esté cerrado (poner el `display` solo en `[open]`).
-- Actualizar `README.md` y `docs/` cuando cambie el uso.
+- Actualizar `README.md` y `docs/` cuando cambie el uso. Los cambios de uso de cada versión van en `docs/cambios.md`.
+- **Repo público** (GitHub, AGPL-3.0, remote `github`): nunca commitear datos reales (host, tailnet, usuario, IPs, rutas de mi máquina, datos de uso). Van en `.env.deploy` o `CLAUDE.local.md`; docs y ejemplos usan `tu-server.tu-tailnet.ts.net` y `tu-usuario`. Capturas y fixtures, solo con datos de ejemplo.

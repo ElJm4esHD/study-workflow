@@ -1,152 +1,139 @@
 # Study Workflow
 
-App personal para organizar la facultad y el día: to-do, calendario, materias y parciales. Un solo usuario, self-hosted (Docker en el server, acceso por Tailscale).
+**Tu facultad y tu día en una sola app, con el plan de estudio armado junto a Claude.**
 
-Stack: Node 24 (TypeScript con type stripping, `node:sqlite`), Fastify, React + Vite. Interfaz en español (Argentina).
+To-do, calendario, materias, parciales y finales, en la compu (navegador) y en el celu (APK de Android con widget). Self-hosted: corre en tu propio server con Docker y solo se accede por Tailscale. Sin cuentas, sin servicios de terceros, sin costos.
 
-## Correr en local
+<p align="center">
+  <img src="docs/capturas/412/inicio.png" alt="Inicio en el celu: próximo examen, tareas de hoy y próximos 7 días" width="240">
+  <img src="docs/capturas/412/calendario-semana.png" alt="Vista Semana en el celu con 3 días" width="240">
+  <img src="docs/capturas/412/finales.png" alt="Planificador de finales en el celu" width="240">
+</p>
 
+<p align="center">
+  <img src="docs/capturas/1440/calendario-mes.png" alt="Calendario mensual en la compu con el detalle del día" width="800">
+</p>
+
+> Las capturas usan datos de ejemplo. Hay más (vacío, cargando, error, tema claro) en [`docs/capturas/`](docs/capturas/).
+
+## La idea
+
+Los planes de estudio los armo charlando con Claude: qué ejercicios hago cada día, cuándo repaso, cuándo es el parcial. Pasarlo a mano a un calendario es tedioso, así que una **skill de Claude** convierte el plan acordado a un JSON, y la app lo importa con una vista previa antes de guardar.
+
+```mermaid
+flowchart LR
+    A["💬 Chat con Claude<br/>armás el plan de estudio"] -->|/cargar-app| B["📋 JSON del plan<br/>(formato v3)"]
+    B -->|copiar y pegar| C["📥 Importar<br/>vista previa"]
+    C -->|confirmar| D["✅ To-do + 📅 Calendario<br/>tareas, subtareas y parciales"]
+
+    E["📸 Captura de las<br/>fechas de finales"] -->|/cargar-finales| F["📋 JSON de finales<br/>(formato v1)"]
+    F -->|Finales › Importar fechas| G["🗓️ Combinaciones<br/>elegís la mejor"]
+    G --> D
 ```
+
+- **`/cargar-app`**: toma el plan aprobado en el chat y arma un ítem por bloque de trabajo, con categoría, duración estimada y subtareas (una por ejercicio). Incluye parciales, recuperatorios y finales con fecha confirmada. Formato: [`docs/formato-importacion.md`](docs/formato-importacion.md).
+- **`/cargar-finales`**: lee la captura con las fechas de finales que publica la facultad y arma las fechas posibles por materia. En la app elegís qué rendís y te muestra las combinaciones ordenadas. Formato: [`docs/formato-finales.md`](docs/formato-finales.md).
+
+En el celu, el JSON también se puede mandar con **Compartir → Study Workflow** desde la app de Claude.
+
+## Funciones
+
+- **To-do**: vistas Hoy, Próximas, Sin fecha, Por materia y Completadas. Cada tarea lleva fecha y hora, materia, categoría (tarea, entrega o estudio) y duración estimada. El tiempo pendiente se suma por día y por materia.
+- **Subtareas**: una tarea puede tener una lista de pasos (por ejemplo, un ejercicio por subtarea). Se ve el progreso (`2/4`) y tildarlas todas completa la principal.
+- **Calendario**: vista Mes con chips por materia y exámenes en color sólido, y vista Semana con grilla horaria (3 días en el celu, 7 en la compu). Eventos, parciales, recuperatorios y finales, con repetición semanal.
+- **Finales**: cargás las fechas posibles de cada materia (a mano o con `/cargar-finales`) y la app arma las combinaciones con filtros y orden. Elegir una crea los eventos en el calendario, y se puede deshacer.
+- **Recordatorios**: tareas y eventos suenan en el celu a la hora, 15 min, 1 h o 1 día antes, o cuando elijas. En modo "Insistente" suenan hasta que los atiendas. Se programan en nativo (AlarmManager), así que andan con la app cerrada.
+- **Widget** de To-do para la pantalla de inicio de Android: se puede scrollear y tildar sin abrir la app.
+- **Sin conexión**: el APK guarda la última copia y sin red se puede tildar. Los cambios quedan en cola y se suben solos al volver la conexión.
+- Y además: materias con color y sigla, búsqueda global (`/` o Ctrl+K), backup y restauración en un `.json`, tema oscuro, claro o según el sistema, guía de primera vez, y "Deshacer" en vez de pedir confirmación.
+
+## Las skills de Claude
+
+Están en [`skills/`](skills/), en versión genérica:
+
+| Skill | Qué hace |
+|---|---|
+| [`cargar-app`](skills/cargar-app/SKILL.md) | Plan de estudio del chat → JSON de importación (v3) |
+| [`cargar-finales`](skills/cargar-finales/SKILL.md) | Captura o lista de fechas de finales → JSON de Finales (v1) |
+
+**En claude.ai o la app de escritorio:**
+
+1. Comprimí la carpeta de la skill (por ejemplo `skills/cargar-app/`) en un `.zip` con el `SKILL.md` adentro.
+2. Andá a **Configuración → Capacidades → Skills**, tocá **Subir skill** y elegí el `.zip`.
+3. Activala, y en cualquier chat escribí `/cargar-app` o pedí "cargá el plan a la app".
+
+**En Claude Code:** copiá la carpeta a `~/.claude/skills/` (para todos tus proyectos) o a `.claude/skills/` dentro de un proyecto.
+
+Si cambiás el formato en la app, actualizá la skill también: los formatos son un contrato versionado (`version`), y la app sigue aceptando las versiones anteriores.
+
+## Montarlo en tu server
+
+Necesitás un server con Linux, Docker y Compose, [Tailscale](https://tailscale.com/) en el server y en tus dispositivos, y Node 24 en la compu desde la que deployás.
+
+```bash
+cp .env.deploy.example .env.deploy   # completá DEPLOY_HOST, DEPLOY_USER, PORT y HTTPS_PORT
 npm install
-npm run dev          # server (:3000) + Vite con proxy /api
-npm test
-npm run typecheck
-npm run a11y         # auditoría de accesibilidad (axe + Playwright) a 412 y 1440 px, con base temporal
-npm run capturas     # capturas de todas las pantallas y estados en docs/capturas/ (base temporal)
-node scripts/icons.mjs  # regenera el favicon y los íconos de la web (el dibujo es el mismo del ícono de Android)
+npm run server-setup                 # una vez: repo en el server, carpetas y datos en /srv/study-workflow
+ssh -t tu-usuario@tu-server.tu-tailnet.ts.net sudo tailscale serve --bg --https=8443 http://127.0.0.1:8110
+npm run deploy                       # push al server, build, backup de la base, health check y rollback si falla
 ```
 
-La base local queda en `./data/study.sqlite`.
+- **`.env.deploy`** es la única fuente del host, el usuario y los puertos, y no se commitea. El contenedor escucha solo en `127.0.0.1`, y `tailscale serve` lo publica con HTTPS **solo dentro de tu tailnet**, sin exposición a internet.
+- Antes de cada deploy se hace un backup de la base (`/srv/study-workflow/backups/`).
+- **Guía paso a paso** (clave SSH en Windows, permisos, verificación, restore y problemas comunes): [`DEPLOY.md`](DEPLOY.md).
 
-## Deploy
+## APK para Android
 
-Datos en el server: `/srv/study-workflow/` (`study.sqlite` y `backups/`). Backup = copiar esa carpeta.
+Necesitás Android Studio (trae el JDK y el SDK).
 
-### 1. Clave SSH (una vez, desde PowerShell)
-
-```
-ssh-keygen -t ed25519
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh tu-usuario@<host> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
-ssh tu-usuario@<host> echo ok
-```
-
-`<host>` es el hostname MagicDNS del server (el de `tailscale status`).
-
-### 2. Configuración y setup inicial
-
-Copiá `.env.deploy.example` a `.env.deploy` (no se commitea) y completá `DEPLOY_HOST`, `PORT` (puerto local del contenedor) y `HTTPS_PORT` (puerto de `tailscale serve`). Es la única configuración del puerto: compose, el health check del deploy y el setup la leen de ahí. Después:
-
-```
-npm run server-setup
-```
-
-Crea el repo bare `~/git/study-workflow.git`, `~/apps/study-workflow/` y `/srv/study-workflow/backups` (si faltan permisos, avisa el `sudo mkdir` + `chown 1000:1000` que hay que correr). Es idempotente.
-
-### 3. HTTPS con `tailscale serve`
-
-El setup imprime el comando con tus puertos; correlo una vez en el server (con sudo):
-
-```
-ssh -t tu-usuario@<host> sudo tailscale serve --bg --https=<HTTPS_PORT> http://127.0.0.1:<PORT>
-```
-
-Solo agrega ese puerto: lo que `tailscale serve` ya publica en otros puertos (por ejemplo otra app en 443) no se toca. Revisalo antes y después con `tailscale serve status`.
-
-Requiere MagicDNS y HTTPS certificates habilitados en el admin de Tailscale. Con `--bg` queda persistente y se retoma solo después de un reinicio. La app queda en `https://<host>:<HTTPS_PORT>`. El contenedor solo escucha en `127.0.0.1`: sin exposición a internet.
-
-### 4. Deployar
-
-```
-npm run deploy
-```
-
-Exige árbol limpio y rama `main`, hace push al repo del server y por SSH construye la imagen, hace backup de la base, levanta el contenedor nuevo y espera `/api/health`. Si falla el build no toca nada; si falla el health check, restaura el backup, vuelve a levantar la versión anterior y termina con `✖ Deploy FALLÓ`. Se conservan las 3 versiones más nuevas.
-
-### Backups y restore
-
-Antes de cada deploy se guarda `/srv/study-workflow/backups/pre-deploy-<fecha>.sqlite` (las últimas 10). Para restaurar a mano, en el server:
-
-```
-cd ~/apps/study-workflow
-V=$(cat .deployed)   # el .env de cada release ya trae PORT e IMAGE_TAG
-docker compose -p study-workflow -f releases/$V/compose.yaml stop app
-cp /srv/study-workflow/backups/<backup>.sqlite /srv/study-workflow/study.sqlite
-rm -f /srv/study-workflow/study.sqlite-wal /srv/study-workflow/study.sqlite-shm
-docker compose -p study-workflow -f releases/$V/compose.yaml up -d
-```
-
-## Qué cambió de uso (Hito C)
-
-- **Inicio**: pantalla de entrada con tarjetas de Hoy (tiempo pendiente de tiempo total), próximo examen y próximos 7 días.
-- **Sigla**: cada materia tiene una sigla de hasta 5 letras (se sugiere sola; editable en Ajustes) que se usa en los chips.
-- **Duración y categoría**: cada to-do puede llevar duración estimada y categoría (tarea, entrega, estudio); el tiempo se suma por día y por materia.
-- **Importar**: la vista previa muestra duración y categoría; el formato pasó a v2 (ver [docs/formato-importacion.md](docs/formato-importacion.md)).
-
-## Qué cambió de uso (observaciones 14/11)
-
-- **Finales** (pantalla nueva): cargás las fechas posibles de cada materia (a mano o pegando el JSON de la skill, ver [docs/formato-finales.md](docs/formato-finales.md)), filtrás y ordenás las combinaciones y elegís una. Elegir crea los eventos `final` en el calendario; "Deshacer" los borra.
-- **Subtareas**: una tarea puede tener subtareas. En las listas y en el widget se ve el progreso (`2/4`); tocando ese contador (en To-do y en Inicio › Hoy) se despliegan debajo de la tarea y se tildan ahí mismo (o abriendo la tarea), y tildarlas todas completa la principal. Sin conexión solo se tilda la principal.
-- **Recordatorios**: tareas (con fecha) y eventos pueden sonar en el celu a la hora, 15 min, 1 h o 1 día antes, o un tiempo a elección. Con "Insistente" sigue sonando hasta que la atiendas. Detalles en [docs/android.md](docs/android.md).
-- **Atrás en el celu**: vuelve dentro de la app; sin historial va a la pantalla padre y recién desde una pantalla principal minimiza.
-- **Compu**: To-do tiene siempre el panel de la derecha (editar o nueva tarea) y las pantallas usan el ancho.
-- **Agenda**: se sacaron el widget Agenda y la vista Agenda del calendario (quedan Mes y Semana).
-- **Importar**: el formato pasó a v3 (subtareas).
-
-## Qué cambió de uso (pulido UX/UI)
-
-- **Navegación del celu**: abajo quedan Inicio, To-do, Calendario y **Más** (Finales, Importar y Ajustes). En la compu, barra lateral con todas las secciones y Ajustes abajo.
-- **Gestos (celu)**: deslizar a los costados en cualquier parte (menos sobre la grilla del calendario, que cambia de mes) pasa entre Inicio, To-do y Calendario. Las tareas ya no se completan ni se borran deslizándolas: se tildan con el cuadradito y se borran desde su pantalla. Tirar hacia abajo en To-do o Calendario refresca. La hoja del día se cierra arrastrándola hacia abajo. Reordenar sigue siendo mantener apretado y arrastrar.
-- **Atajos (compu)**: `1`…`n` cambian de pantalla (el número aparece al pasar el mouse por la barra lateral), `N` nueva tarea, `Esc` cierra hojas.
-- **Agregar tarea**: en el celu, con el botón flotante; en la compu, con el campo de arriba de la lista (Enter) o el panel.
-- **Ajustes de este dispositivo** (no se sincronizan): velocidad de animaciones (o "Sin animaciones"), vibración (solo APK, con los efectos nativos del celu: suave, media o fuerte) y tamaño de letra.
-- **Widget To-do**: mismo estilo que la app (cuadradito y barra con el color de la materia, segunda línea con sigla, hora o "venció" y subtareas, botón + para nueva tarea; tocar "To-do" abre la lista).
-- **Finales**: los filtros y el orden van plegados en "Filtros y orden"; el resumen muestra lo aplicado.
-- **Ajustes › Materias**: tocar la fila edita; el ícono de la derecha archiva.
-
-## Qué cambió de uso (pulido final, etapa 2)
-
-- Fechas y horas se tipean (`5/11`, `hoy`, `mañana`, `930`) o se eligen en un calendario propio (botón del calendario, flechas, Enter).
-- Borrar una tarea o un evento ya no pregunta: avisa y deja "Deshacer" 6 s.
-- Si salís de una tarea o evento con cambios sin guardar, avisa.
-- "Reducir movimiento" del sistema arranca la app en "Sin animaciones" (se cambia en Ajustes).
-- Las fechas se leen "Hoy", "Mañana", "En 3 días", "Vencida hace 2 días".
-
-## Qué cambió de uso (pulido final, etapa 3)
-
-- **Ajustes** en secciones: General (pantalla de inicio, guía), Materias, Módulos, Tareas (duración, categoría y ocultar completadas), Calendario, Recordatorios (anticipación e insistente por defecto, probar sonido), Apariencia (letra, color de acento, animaciones, vibración), Datos, Servidor y Acerca de (versiones y Novedades).
-- **Búsqueda global** de tareas y eventos: `/` o Ctrl+K en la compu; "Buscar" en el menú Más del celu.
-- **Backup**: Ajustes › Datos › Exportar baja un .json con todo; Importar lo restaura (reemplaza todo; el servidor guarda antes una copia en `/data/backups/pre-import-*.sqlite`).
-- **Guía de primera vez** (3 pasos, salteable); se reabre desde Ajustes › General.
-
-## Qué cambió de uso (pulido final, etapa 4)
-
-- Ícono nuevo y splash del mismo color que la app. En Android 13+ el ícono acompaña el tema si activás "Íconos temáticos".
-- La web se puede instalar como app (Chrome › ⋮ › Instalar) y la pestaña muestra la pantalla en la que estás.
-- Con muchas tareas en un grupo, el To-do muestra 30 y un botón "Mostrar más".
-- El checklist para probar en el celu está en `docs/checklist-s25.md`; los números de rendimiento, en `docs/pedidos/2026-11-15-pulido-final-etapa4.md`.
-
-## Qué cambió de uso (1.1.0)
-
-- **Versiones**: la app usa versión semántica. La única fuente es `version` en `package.json`; la toman la web, el server (`/api/health`) y el APK (`versionName`; `versionCode` = X·1000000 + Y·1000 + Z). Cada pedido sube la versión y suma su entrada en `core/web/novedades.ts` (un test exige que coincidan). Ajustes › Acerca de muestra "Versión X.Y.Z · fecha" y la versión del servidor.
-- **Tema**: Ajustes › Apariencia › Tema: Oscuro (por defecto), Claro o Según el sistema. Es de cada dispositivo. El widget, el splash y las barras del celu lo siguen.
-- **Semana**: grilla propia (ya no usa FullCalendar). En el celu se ven 3 días con la tira de la semana arriba: deslizá para moverte de a 3 días o tocá un día de la tira. Tocá un hueco para ver "+ HH:MM" y tocalo de nuevo para crear un evento a esa hora. Las tareas sin hora van en "Todo el día"; tocá el día o "+N más" para ver el detalle.
-- **Finales**: tres pasos en una pantalla: "¿Qué rendís?" (chips de materias), "Fechas posibles" (una fila por materia; tocá una fecha para editarla o + para agregar) y "Combinaciones" (filtros como chips arriba, la mejor con su mes dibujado y el resto con solo lo que cambia resaltado). Tocá una combinación para verla arriba. Importar fechas se abre en una hoja.
-
-## Agregar un módulo
-
-Una carpeta en `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`. Contrato y ejemplo en [docs/modulos.md](docs/modulos.md).
-
-## Importar planes
-
-El formato JSON que genera Claude está en [docs/formato-importacion.md](docs/formato-importacion.md). El de las fechas de finales, en [docs/formato-finales.md](docs/formato-finales.md).
-
-## Compilar el APK
-
-Con Android Studio instalado:
-
-```
+```powershell
 npm run apk -- --check   # verifica JDK, SDK y llave de firma
-npm run apk              # arma dist/study-workflow.apk firmado (incluye los widgets: ver docs/android.md)
+npm run apk              # arma dist/study-workflow.apk firmado, con widget y recordatorios
 ```
 
-La llave de firma vive en `%USERPROFILE%\.study-workflow\` (hacele backup). Cómo pasarlo al celu, la primera apertura y problemas comunes: [docs/android.md](docs/android.md).
+- La primera vez crea la llave de firma en `%USERPROFILE%\.study-workflow\`, fuera del repo. **Hacele backup**: sin ella no podés actualizar la app instalada.
+- La dirección del server viene precargada desde tu `.env.deploy` (`https://DEPLOY_HOST:HTTPS_PORT`) y se puede cambiar en Ajustes › Servidor.
+- Cómo instalarlo en el celu (cable o adb), la primera apertura, el widget, los permisos de alarmas y problemas comunes: [`docs/android.md`](docs/android.md). Checklist de prueba: [`docs/checklist-s25.md`](docs/checklist-s25.md).
+
+## Desarrollo
+
+```bash
+npm install
+npm run dev          # server en :3000 + Vite con proxy /api (base local en ./data/study.sqlite)
+npm test             # API y lógica de dominio (Vitest)
+npm run typecheck
+npm run a11y         # axe + Playwright a 412 y 1440 px, tema oscuro y claro: tiene que dar 0 violaciones
+npm run capturas     # regenera docs/capturas/ con datos de ejemplo en una base temporal
+```
+
+## Stack
+
+| Parte | Tecnología |
+|---|---|
+| Frontend | React + Vite + TypeScript |
+| Backend | Node 24 (TypeScript con type stripping) + Fastify + `node:sqlite` |
+| Celu | Capacitor 8 (Android), widget y recordatorios nativos en Kotlin + Jetpack Glance |
+| Deploy | Docker Compose en tu server, publicado con `tailscale serve` |
+
+Un solo contenedor sirve la API y la web. No hay login: el acceso ya está limitado a tu tailnet.
+
+## Arquitectura modular
+
+Un núcleo chico (materias, ajustes, inicio, búsqueda y backup) y módulos independientes: `todo`, `calendar`, `finals` e `import`. Agregar una función es crear una carpeta `modules/<id>/` y registrarla en `modules/server.ts` y `modules/web.ts`, sin tocar los demás módulos. Un módulo no lee las tablas de otro: usa su API o su servicio. Cada módulo aporta su búsqueda, sus tarjetas de Inicio y su panel de Ajustes.
+
+Contrato completo y ejemplo: [`docs/modulos.md`](docs/modulos.md).
+
+## Documentación
+
+- [`DEPLOY.md`](DEPLOY.md): primer deploy y pruebas, paso a paso.
+- [`docs/android.md`](docs/android.md): APK, widget y recordatorios.
+- [`docs/formato-importacion.md`](docs/formato-importacion.md) y [`docs/formato-finales.md`](docs/formato-finales.md): los JSON que generan las skills.
+- [`docs/modulos.md`](docs/modulos.md): cómo agregar un módulo.
+- [`docs/cambios.md`](docs/cambios.md): qué cambió de uso en cada versión.
+- [`docs/superpowers/`](docs/superpowers/): diseños y planes de cada etapa.
+
+## Licencia
+
+Copyright © 2026 Federico Gaubeca Klix.
+
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). Podés usarlo, modificarlo y compartirlo. Si distribuís una versión modificada, o la ofrecés a otras personas por red, tenés que publicar su código con la misma licencia.
