@@ -19,12 +19,17 @@ export interface SettingsService {
   set(key: string, value: unknown): void;
 }
 
+/** Un resultado de la búsqueda global: `to` es la ruta de la app donde se abre. */
+export type SearchHit = { id: string; kind: string; title: string; detail?: string; to: string };
+
 export interface ServerModule {
   id: string;
   migrationsDir: URL;
   requires?: string[];
   routes(app: FastifyInstance, ctx: CoreContext): Promise<void>;
   service?(ctx: CoreContext): object;
+  /** Búsqueda global (`/api/search`): devuelve lo propio del módulo que coincide con `q` (ya sin espacios sobrantes). */
+  search?(ctx: CoreContext, q: string): SearchHit[];
 }
 
 export interface CoreContext {

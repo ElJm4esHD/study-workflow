@@ -7,6 +7,7 @@ import { HttpError } from './errors.ts';
 import { backfillSiglas, makeMaterias } from './materias.ts';
 import { runMigrations } from './migrate.ts';
 import { makeSettings } from './settings.ts';
+import { registerData } from './data.ts';
 import { orderModules, type CoreContext, type ServerModule } from './registry.ts';
 
 const body = (code: string, message: string) => ({ error: { code, message } });
@@ -76,6 +77,7 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
     return ctx.settings.getAll();
   });
 
+  registerData(app, ctx, mods, opts.dbPath);
   app.get('/api/health', async () => ({ ok: true, version: process.env.APP_VERSION ?? 'dev' }));
   for (const m of mods) await app.register((a) => m.routes(a, ctx), { prefix: `/api/${m.id}` });
 

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { contains } from '../../../core/shared/normalize.ts';
 import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
 import { isValidReminder } from '../../../core/shared/reminder.ts';
 import { httpError } from '../../../core/server/errors.ts';
@@ -23,6 +24,8 @@ export type TodoPatch = Partial<Omit<TodoInput, 'id'>> & { completed?: boolean }
 
 export interface TodoService {
   list(): TodoItem[];
+  /** Por título o notas, sin distinguir mayúsculas; las pendientes primero. */
+  search(q: string): TodoItem[];
   get(id: string): TodoItem | undefined;
   create(i: TodoInput): TodoItem;
   update(id: string, p: TodoPatch): TodoItem;
@@ -83,6 +86,8 @@ export function makeTodo(ctx: CoreContext): TodoService {
 
   const svc: TodoService = {
     list: () => all(`SELECT * FROM todo_items ${ORDER}`),
+    // shortcut: filtra en memoria para ignorar tildes (SQLite no lo hace); alcanza para un usuario, pasar a FTS si crece.
+    search: (q) => all('SELECT * FROM todo_items ORDER BY completed, due_date IS NULL, due_date').filter((t) => contains(q, t.title, t.notes)).slice(0, 20),
     get(id) {
       const r = db.prepare('SELECT * FROM todo_items WHERE id = ?').get(id) as Row | undefined;
       return r && toItem(r);

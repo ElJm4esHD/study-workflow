@@ -1,6 +1,6 @@
 import type { ServerModule } from '../../../core/server/registry.ts';
 import { httpError } from '../../../core/server/errors.ts';
-import { addDays, isValidDate } from '../../../core/shared/dates.ts';
+import { addDays, formatDate, isValidDate } from '../../../core/shared/dates.ts';
 import type { TodoService } from '../../todo/server/service.ts';
 import { makeCalendar } from './service.ts';
 import type { CalendarService, EventInput } from './service.ts';
@@ -19,6 +19,10 @@ export const calendar: ServerModule = {
   id: 'calendar',
   migrationsDir: new URL('./migrations/', import.meta.url),
   service: (ctx) => makeCalendar(ctx),
+  search: (ctx, q) => ctx.services.get<CalendarService>('calendar')!.search(q).map((e) => ({
+    id: e.id, kind: e.kind, title: e.title, to: `/calendario/evento/${e.id}`,
+    detail: [formatDate(e.startDate), e.allDay ? 'Todo el día' : e.startTime, e.repeatWeekdays ? 'Se repite' : null].filter(Boolean).join(' · '),
+  })),
   async routes(app, ctx) {
     const svc = ctx.services.get<CalendarService>('calendar')!;
     const params = (req: { params: unknown }) => req.params as { id: string; date: string };

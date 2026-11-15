@@ -1,5 +1,6 @@
 import type { ServerModule } from '../../../core/server/registry.ts';
 import { httpError } from '../../../core/server/errors.ts';
+import { formatDate } from '../../../core/shared/dates.ts';
 import { makeTodo } from './service.ts';
 import type { TodoInput, TodoPatch, TodoService } from './service.ts';
 
@@ -17,6 +18,10 @@ export const todo: ServerModule = {
   id: 'todo',
   migrationsDir: new URL('./migrations/', import.meta.url),
   service: (ctx) => makeTodo(ctx),
+  search: (ctx, q) => ctx.services.get<TodoService>('todo')!.search(q).map((t) => ({
+    id: t.id, kind: t.category, title: t.title, to: `/todo/${t.id}`,
+    detail: [t.completed ? 'Completada' : null, t.dueDate && formatDate(t.dueDate), t.dueTime].filter(Boolean).join(' · ') || undefined,
+  })),
   async routes(app, ctx) {
     const svc = ctx.services.get<TodoService>('todo')!;
     const idOf = (req: { params: unknown }) => (req.params as { id: string }).id;

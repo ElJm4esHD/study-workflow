@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { contains } from '../../../core/shared/normalize.ts';
 import { isValidDate, isValidTime } from '../../../core/shared/dates.ts';
 import { isValidReminder } from '../../../core/shared/reminder.ts';
 import { httpError } from '../../../core/server/errors.ts';
@@ -23,6 +24,8 @@ export type EventInput = {
 
 export interface CalendarService {
   create(i: EventInput): CalendarEvent;
+  /** Por título o notas, sin distinguir mayúsculas; los más cercanos a hoy primero. */
+  search(q: string): CalendarEvent[];
   createMany(i: EventInput[]): CalendarEvent[];
   getByIds(ids: string[]): CalendarEvent[];
   findByDates(dates: string[]): CalendarEvent[];
@@ -137,6 +140,8 @@ export function makeCalendar(ctx: CoreContext): CalendarService {
           new Date().toISOString(), m.reminderMin ?? null, m.reminderInsistent ? 1 : 0, id);
       return byId(id)!;
     },
+    // shortcut: en memoria para ignorar tildes; ver el de todo.
+    search: (q) => all("SELECT * FROM calendar_events ORDER BY ABS(julianday(start_date) - julianday('now'))").filter((e) => contains(q, e.title, e.notes)).slice(0, 20),
     remove(id) {
       if (!byId(id)) throw httpError(404, 'no_encontrado', 'El evento no existe.');
       db.prepare('DELETE FROM calendar_events WHERE id = ?').run(id); // el cascade borra separados y exdates
