@@ -10,7 +10,7 @@
   --on-strong: #fff; --scrim: rgb(5 7 10 / .6); /* texto sobre el tono fuerte de una materia; fondo detrás de hojas */
   --on-late: #2a0d0d; --nav-bg: rgb(22 27 36 / .88);
   /* Materias: --dark elige el pastel (1) o el tono fuerte (0) para --m (ver materiaVars); --tint es el fondo suave de los chips */
-  --dark: 1; --tint: 18%;
+  --dark: 1; --tint: 18%; --ink: 0%; /* --ink oscurece el texto de color de los chips en claro */
   /* Zonas seguras del APK (edge-to-edge): Capacitor inyecta --safe-area-inset-*; en la web valen 0. */
   --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   /* Espaciado (escala 4/8), radios y elevación */
@@ -40,7 +40,7 @@
   --scrim: rgb(20 24 34 / .35); --on-late: #fff; --nav-bg: rgb(255 255 255 / .9);
   --e1: 0 1px 2px rgb(20 28 45 / .06), 0 0 0 1px rgb(20 28 45 / .04);
   --e2: 0 8px 24px rgb(20 28 45 / .12); --e3: 0 24px 64px rgb(20 28 45 / .18);
-  --dark: 0; --tint: 9%;
+  --dark: 0; --tint: 9%; --ink: 22%;
   color-scheme: light;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -101,6 +101,7 @@ p { margin: 0 0 .75rem; }
 /* Hoja de abajo (celu) y fondo */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; }
 .sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 86dvh; z-index: 41; background: var(--surface); border-radius: var(--r-sheet) var(--r-sheet) 0 0; box-shadow: var(--e3); display: flex; flex-direction: column; }
+@media (min-width: 768px) { .sheet { left: max(16px, calc(50% - 300px)); right: max(16px, calc(50% - 300px)); bottom: 16px; border-radius: var(--r-sheet); } } /* compu: hoja centrada */
 .sheet .sheet-grab { flex: none; height: 28px; display: grid; place-items: center; touch-action: none; cursor: grab; }
 .sheet .sheet-grab::after { content: ''; width: 36px; height: 4px; border-radius: 2px; background: var(--line-strong); }
 .sheet-body { overflow-y: auto; padding: 0 var(--s4) calc(var(--s5) + var(--sab)); overscroll-behavior: contain; }
@@ -184,7 +185,7 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 
 /* --m = pastel de la materia, --ms = tono fuerte; se setean en el style del elemento o de un ancestro. */
 .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 20px; padding: 0 6px; border-radius: var(--r-chip);
-  font-size: var(--t-micro); font-weight: 700; letter-spacing: .02em; background: color-mix(in srgb, var(--m, var(--muted)) var(--tint), transparent); color: var(--m, var(--muted)); white-space: nowrap; }
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: .02em; background: color-mix(in srgb, var(--m, var(--muted)) var(--tint), transparent); color: color-mix(in srgb, var(--m, var(--muted)), black var(--ink)); white-space: nowrap; }
 .chip.solid { background: var(--ms); color: var(--on-strong); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m, var(--muted)); flex: none; display: inline-block; }
 .tag { font-size: var(--t-meta); color: var(--muted); }

@@ -78,6 +78,9 @@ async function seed(request: APIRequestContext) {
   await ev({ title: 'Parcial de Análisis Matemático 2', kind: 'parcial', materiaId: m.am2, allDay: true, startDate: plus(9), endDate: plus(9), startTime: null });
   await ev({ title: 'Clase de consulta', kind: 'evento', materiaId: m.alg, startDate: plus(2), endDate: plus(2), startTime: '18:00', endTime: '19:30' });
   await ev({ title: 'Clase de Física', kind: 'evento', materiaId: m.f1, startDate: plus(-3), endDate: plus(-3), startTime: '08:00', endTime: '10:00', repeatWeekdays: [1, 3], repeatUntil: plus(60) });
+  // Fechas posibles de finales (dentro de 2 a 5 semanas) para ver combinaciones.
+  const fin = (materiaId: string, n: number, time: string | null = null) => request.post('/api/finals/dates', { data: { materiaId, date: plus(n), time } });
+  for (const [id, ns] of [[m.alg, [17, 31]], [m.am2, [19, 26, 33]], [m.f1, [24, 36]], [m.md, [22, 29]]] as const) for (const n of ns) await fin(id, n);
   return m;
 }
 
@@ -102,6 +105,14 @@ test('3 · con datos: todas las pantallas', async ({ page, request }) => {
       await shot(page, size, 'hoja-mas');
     }
   }
+  // Tema claro: las pantallas principales
+  await page.addInitScript(() => localStorage.setItem('sw.prefs', JSON.stringify({ theme: 'claro' })));
+  for (const size of ['412', '1440'] as const) {
+    for (const [name, url] of SCREENS.filter(([n]) => ['inicio', 'todo-hoy', 'calendario-mes', 'calendario-semana', 'finales', 'ajustes'].includes(n))) {
+      await open(page, url, size); await shot(page, size, `claro-${name}`, { full: true });
+    }
+  }
+  await page.addInitScript(() => localStorage.setItem('sw.prefs', JSON.stringify({ theme: 'oscuro' })));
   // Para revisar el diseño en pantallas anchas
   for (const [w, h] of [[1024, 768], [2560, 1300]] as const) {
     await page.setViewportSize({ width: w, height: h });

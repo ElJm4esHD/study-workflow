@@ -15,6 +15,8 @@ async function seed(request: APIRequestContext) {
   await request.post('/api/todo', { data: { title: 'Guía 4: autovalores y autovectores', materiaId: m.id, dueDate: today, dueTime: '09:00', category: 'estudio', durationMin: 90, subtasks: [{ id: crypto.randomUUID(), title: 'Ejercicio 1', done: false }] } });
   await request.post('/api/todo', { data: { title: 'Entrega TP 2', materiaId: f.id, dueDate: today, category: 'entrega' } });
   await request.post('/api/todo', { data: { title: 'Sin fecha', materiaId: null } });
+  const plus = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+  for (const [id, n] of [[m.id, 20], [m.id, 30], [f.id, 24], [f.id, 34]] as const) await request.post('/api/finals/dates', { data: { materiaId: id, date: plus(n), time: null } });
   await request.post('/api/calendar/events', { data: { title: 'Parcial 1', kind: 'parcial', materiaId: m.id, allDay: false, startDate: today, startTime: '14:00', endDate: today, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false } });
 }
 
@@ -29,7 +31,7 @@ for (const theme of ['oscuro', 'claro'] as const) for (const [sizeName, viewport
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(500);
       const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
-      const lines = violations.map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.length}) ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
+      const lines = violations.map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.length}) ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')} → ${v.nodes[0]?.failureSummary?.replace(/\s+/g, ' ')}`);
       expect(lines, lines.join('\n')).toEqual([]);
     });
   }

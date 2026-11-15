@@ -1,49 +1,92 @@
-.fin-page, .fin-side, .fin-main { display: flex; flex-direction: column; gap: var(--s3); }
-.fin-count { margin: 12px 4px 0; }
+/* Finales en 3 pasos: qué rendís → fechas → combinaciones. Compu: 1 y 2 a la izquierda, 3 a la derecha. */
+.fin-page, .fin-side { display: flex; flex-direction: column; gap: var(--s3); }
 @media (min-width: 1024px) {
-  .fin-page { display: grid; grid-template-columns: minmax(340px, 2fr) 5fr; gap: 24px; align-items: start; }
-  .fin-count { margin-top: 0; }
+  .fin-page { display: grid; grid-template-columns: minmax(320px, 1fr) 2.6fr; gap: 20px; align-items: start; }
 }
+.fin-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.fin-h h2 { margin: 0; display: flex; align-items: center; }
+.fin-h small { color: var(--muted); font-size: var(--t-meta); }
+.fin-step { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-3); color: var(--muted); font-size: var(--t-micro); font-weight: 750; margin-right: 8px; }
+
+/* 1 · materias: chip con aro de la materia; prendido = relleno suave y punto lleno */
+.fin-mats { display: flex; flex-wrap: wrap; gap: 6px; }
+.fin-mt { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 10px; border-radius: 22px; border: 1px solid var(--line-strong); background: none;
+  color: var(--muted); font: inherit; font-weight: 650; font-size: var(--t-sec); cursor: pointer; transition: background var(--d-micro), color var(--d-micro); }
+.fin-mt::before { content: ''; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--m); box-sizing: border-box; }
+.fin-mt[aria-pressed='true'] { color: var(--text); background: color-mix(in srgb, var(--m) var(--tint), transparent); border-color: transparent; }
+.fin-mt[aria-pressed='true']::before { background: var(--m); box-shadow: inset 0 0 0 3px var(--surface); }
+.fin-mt em { font-style: normal; font-weight: 500; font-size: var(--t-micro); color: var(--muted); }
+
+/* 2 · fechas: una fila por materia */
+.fin-row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.fin-sig { font-weight: 750; font-size: var(--t-meta); text-align: center; padding: 4px 4px; border-radius: 6px; border-left: 3px solid var(--m);
+  background: color-mix(in srgb, var(--m) var(--tint), transparent); overflow: hidden; text-overflow: ellipsis; }
+.fin-dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fin-dp { min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: var(--t-sec); cursor: pointer; }
+.fin-dp.add { width: 44px; min-height: 36px; padding: 0; display: grid; place-items: center; background: none; border-style: dashed; border-color: var(--line-strong); color: var(--accent); }
+.fin-none { color: var(--muted); font-size: var(--t-sec); }
+
+/* 3 · filtros como chips que abren su ajuste */
+.fin-filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+.fin-fl { flex: none; min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: var(--t-sec); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.fin-fl[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+.fin-grid { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 1024px) {
+  .fin-main { min-width: 0; }
+  /* La mejor a lo ancho: datos a la izquierda, el mes a la derecha; la tabla abajo. */
+  .fin-best { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 0 20px; align-items: start; }
+  .fin-best > .fin-best-top, .fin-best > .fin-kpis, .fin-best > .fin-best-list { grid-column: 1; }
+  .fin-best > .fin-mes { grid-column: 2; grid-row: 1 / span 4; }
+}
+.fin-best { border: 1.5px solid var(--accent); border-radius: var(--r-card); padding: 12px; }
+.fin-best.chosen { background: var(--accent-soft); }
+.fin-best-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.fin-badge { font-size: var(--t-micro); font-weight: 750; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+.fin-kpis { display: flex; gap: 20px; margin: 8px 0 12px; font-size: var(--t-meta); color: var(--muted); }
+.fin-kpis b { display: block; font-size: var(--t-card); color: var(--text); }
+.fin-mes { margin: 0 0 10px; }
+.fin-mes figcaption { font-size: var(--t-micro); font-weight: 650; color: var(--muted); margin-bottom: 4px; text-transform: capitalize; }
+.fin-mes-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.fin-mes-grid .dh { font-size: var(--t-micro); color: var(--faint); text-align: center; }
+.fin-mes-grid .d { min-height: 34px; border-radius: 7px; padding: 2px 4px; font-size: var(--t-micro); color: var(--faint); background: var(--surface-2); display: flex; flex-direction: column; justify-content: space-between; }
+.fin-mes-grid .d.f { background: var(--ms); color: var(--on-strong); font-weight: 700; }
+.fin-mes-grid .d.f b { font-size: calc(10.5px * var(--fs)); }
+.fin-mes-grid .d.x { background: repeating-linear-gradient(135deg, var(--surface-2) 0 4px, var(--surface-3) 4px 8px); }
+.fin-best-list { list-style: none; margin: 0; padding: 0; font-size: var(--t-sec); }
+.fin-best-list li { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+.fin-best-list li span:last-child { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fin-cal { display: inline-flex; align-items: center; gap: 6px; }
+.fin-chosen-tag { --m: var(--accent); height: 28px; padding: 0 10px; }
+
+/* Lista de combinaciones: en el celu filas compactas; en la compu una tabla con una columna por materia.
+   En color solo lo que cambia respecto de la que está arriba. */
+.fin-alts ol { list-style: none; margin: 0; padding: 0; }
+.fin-alt { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding: 4px 0; }
+.fin-alt.on { background: var(--accent-soft); border-radius: var(--r-sm); }
+.fin-alt.head { display: none; }
+.fin-alt-main { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 48px; padding: 6px 4px; border: 0; background: none; color: var(--muted);
+  font: inherit; font-size: var(--t-sec); text-align: left; cursor: pointer; border-radius: var(--r-sm); }
+.fin-alt-main .n { color: var(--text); font-weight: 700; }
+.fin-alt-main .pk { font-size: var(--t-meta); padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+.fin-alt-main .pk i { font-style: normal; }
+.fin-alt-main .pk.diff { background: color-mix(in srgb, var(--m) calc(var(--tint) + 8%), transparent); color: var(--text); font-weight: 700; }
+.fin-alts > .btn { margin-top: 8px; width: 100%; }
+@media (min-width: 1024px) {
+  .fin-alt, .fin-alt-main { display: grid; grid-template-columns: 28px 64px 110px repeat(var(--cols), minmax(56px, 1fr)) 132px; align-items: center; gap: 6px; }
+  .fin-alt { grid-template-columns: 1fr 132px; }
+  .fin-alt-main { grid-template-columns: 28px 64px 110px repeat(var(--cols), minmax(56px, 1fr)); }
+  .fin-alt.head { display: grid; grid-template-columns: 28px 64px 110px repeat(var(--cols), minmax(56px, 1fr)) 132px; padding: 0 4px 6px; border-top: 0;
+    font-size: var(--t-micro); font-weight: 650; color: var(--faint); }
+  .fin-alt-main .pk { justify-self: start; }
+  .fin-alt-main .pk i { display: none; }
+}
+
+/* Importar (en la hoja) */
 .fin-text { width: 100%; }
 .fin-prev { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); font-size: var(--t-sec); }
-.fin-mat { padding: 8px 0; border-top: 1px solid var(--line); }
-.fin-mat:first-of-type { border-top: 0; }
-.fin-mat-head { display: flex; align-items: center; gap: 8px; min-height: 48px; }
-.fin-mat-head strong { flex: 1; min-width: 0; font-weight: 600; }
-.fin-add, .pill .pill-x { gap: 4px; }
 .pill .pill-x { margin-left: 6px; color: var(--faint); }
-.fin-add svg { margin-right: 2px; }
 .fin-form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .fin-form input { flex: 1; min-width: 130px; }
-
-/* Filtros plegables: el resumen dice lo que está aplicado. */
-.fin-filters { padding: 0; }
-.fin-filters summary { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px; cursor: pointer; list-style: none; }
-.fin-filters summary::-webkit-details-marker { display: none; }
-.fin-filters summary > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.fin-filters summary small { color: var(--muted); font-size: var(--t-meta); font-weight: 500; }
-.fin-filters summary svg { color: var(--faint); transition: transform var(--d-small) var(--ease-out); }
-.fin-filters[open] summary svg { transform: rotate(180deg); }
-.fin-filters > .form { padding: 4px 16px 16px; }
-
-/* Línea de tiempo: misma escala en todas las filas; la posición sale de `left` en %. */
-.fin-axis { padding: 0 34px; font-size: calc(10.5px * var(--fs)); color: var(--faint); }
-.fin-axis .fin-line { height: 14px; margin: 0; background: none; }
-.fin-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
-.fin-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.fin-combo { padding: 10px 14px; }
-.fin-combo.chosen { box-shadow: inset 0 0 0 2px var(--accent), var(--e1); }
-.fin-top { display: flex; align-items: center; gap: 10px; min-height: 48px; }
-.fin-n { color: var(--faint); font-size: var(--t-meta); min-width: 20px; font-weight: 600; }
-.fin-sum { flex: 1; font-size: var(--t-sec); color: var(--muted); }
-.fin-sum strong { color: var(--text); margin-right: 6px; }
-.fin-chosen-tag { --m: var(--accent); height: 28px; padding: 0 10px; }
-.fin-line { position: relative; height: 4px; margin: 16px 20px 34px; border-radius: 2px; background: var(--surface-2); }
-.fin-line i { position: absolute; top: -6px; width: 1px; height: 16px; background: var(--line-strong); }
-.fin-line b { position: absolute; top: -8px; transform: translateX(-50%); }
-.fin-line b.low { top: 12px; }
-.fin-detail { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: var(--t-meta); color: var(--muted); }
-.fin-detail > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.fin-detail em { font-style: normal; color: var(--faint); margin-right: 4px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); font-size: var(--t-micro); }
-.fin-chosen { display: flex; align-items: center; gap: 10px; box-shadow: inset 0 0 0 2px var(--accent), var(--e1); }
-.fin-chosen > div { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: var(--t-sec); }
+.fin-best > .fin-mes + .fin-mes { grid-row: auto; }

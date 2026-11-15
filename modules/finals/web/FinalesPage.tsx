@@ -8,20 +8,20 @@ import { addDays, formatDate, weekdayOf } from '../../../core/shared/dates.ts';
 import { nameKey } from '../../../core/shared/normalize.ts';
 import { combos, daysBetween, matchMateria, ORDENES, parseFinales, type Combo, type FinalDate, type Filters, type FinalsData, type ParsedMateria } from '../shared.ts';
 import { AnimatePresence, m } from 'motion/react';
-import { CheckIcon, ChevronIcon, CloseIcon, FinalIcon, ImportIcon, InboxIcon, PlusIcon } from '../../../core/web/icons.tsx';
-import { useMotion } from '../../../core/web/motion.tsx';
+import { CheckIcon, CloseIcon, FinalIcon, ImportIcon, InboxIcon, PlusIcon } from '../../../core/web/icons.tsx';
+import { NEUTRAL } from '../../../core/shared/palette.ts';
 import { vibrate } from '../../../core/web/haptics.ts';
-import { EmptyState, PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
+import { EmptyState, PageHeader, Skeleton, ErrorState, Sheet, radioKeys } from '../../../core/web/ui.tsx';
 import './finals.css';
 
 type Plan = Filters & { noRinde: string[] };
 const PLAN0: Plan = { minDias: 1, antes: null, excluir: [], orden: 'separacion', noRinde: [] };
-const SHOWN = 50;
+const SHOWN = 10;
 const dm = (d: string) => formatDate(d).slice(0, 5);
 const when = (d: { date: string; time: string | null }) => `${dm(d.date)}${d.time ? ` ${d.time}` : ''}`;
 const dias = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
 
-/** Pegar el JSON de la skill → vista previa → confirmar. */
+/** Pegar el JSON de la skill → vista previa → confirmar (en una hoja). */
 function Importar({ onDone }: { onDone(): void }) {
   const { materias, notify } = useCore();
   const { off, block } = useBlock();
@@ -45,8 +45,8 @@ function Importar({ onDone }: { onDone(): void }) {
   }
 
   return (
-    <div className="card form">
-      <div className="card-head"><h2>Importar fechas</h2></div>
+    <div className="form">
+      <h2 className="sheet-title">Importar fechas</h2>
       <button type="button" className="btn" onClick={paste}>Pegar del portapapeles</button>
       <label>O pegá acá el mensaje de Claude
         <textarea className="fin-text" value={text} onChange={(e) => setText(e.target.value)} rows={4} />
@@ -97,34 +97,65 @@ function FechaForm({ materiaId, item, onDone }: { materiaId: string; item?: Fina
   );
 }
 
+type Sheets = { kind: 'importar' } | { kind: 'fecha'; materiaId: string; id?: string } | { kind: 'filtro'; f: 'minDias' | 'antes' | 'excluir' | 'orden' } | null;
+const FILTRO_TITULO = { minDias: 'Días mínimos entre finales', antes: 'Terminar antes de', excluir: 'Excluir días', orden: 'Ordenar combinaciones' } as const;
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/** Mes dibujado con los finales de una combinación (en el color de la materia) y los días excluidos rayados. */
+function MiniMes({ first, picks, excluir, sigla, color }: {
+  first: string; picks: FinalDate[]; excluir: Filters['excluir']; sigla(id: string): string; color(id: string): string;
+}) {
+  const start = addDays(first, 1 - weekdayOf(first));
+  const month = first.slice(0, 7);
+  const last = addDays(new Date(Date.UTC(+month.slice(0, 4), +month.slice(5, 7), 1)).toISOString().slice(0, 10), -1); // día antes del 1 del mes siguiente
+  const weeks = Math.ceil((daysBetween(start, last) + 1) / 7);
+  return (
+    <figure className="fin-mes">
+      <figcaption>{MESES[+month.slice(5) - 1]} {month.slice(0, 4)}</figcaption>
+      <div className="fin-mes-grid">
+        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d) => <span key={d} className="dh" aria-hidden="true">{d}</span>)}
+        {Array.from({ length: weeks * 7 }, (_, i) => {
+          const d = addDays(start, i);
+          if (d.slice(0, 7) !== month) return <span key={d} />;
+          const p = picks.find((x) => x.date === d);
+          const off = excluir.some((r) => r.from <= d && d <= r.to);
+          return p
+            ? <span key={d} className="d f" style={materiaVars(color(p.materiaId))}>{+d.slice(8)}<b>{sigla(p.materiaId)}</b></span>
+            : <span key={d} className={off ? 'd x' : 'd'}>{+d.slice(8)}</span>;
+        })}
+      </div>
+    </figure>
+  );
+}
+
 export function FinalesPage() {
   const { materias, settings, patchSettings, notify } = useCore();
   const { off, block } = useBlock();
   const { data, error, reload } = useApi<FinalsData>('/api/finals');
   const plan: Plan = { ...PLAN0, ...(settings['finals.plan'] as Partial<Plan> | undefined) };
-  const [importing, setImporting] = useState(false);
-  const [editing, setEditing] = useState<{ materiaId: string; id?: string } | null>(null);
+  const [sheet, setSheet] = useState<Sheets>(null);
+  const [focus, setFocus] = useState(0); // combinación que se ve arriba con su mes
   const [range, setRange] = useState({ from: '', to: '' });
   const [shown, setShown] = useState(SHOWN);
-  const { spring } = useMotion();
 
   const dates = data?.dates ?? [];
   const active = materias.filter((m) => !m.archived || dates.some((d) => d.materiaId === m.id));
   const mat = (id: string) => materias.find((m) => m.id === id);
-  const rinde = active.filter((m) => !plan.noRinde.includes(m.id) && dates.some((d) => d.materiaId === m.id));
+  const sigla = (id: string) => mat(id)?.sigla ?? '?';
+  const color = (id: string) => mat(id)?.color ?? NEUTRAL.hex;
+  const on = active.filter((m) => !plan.noRinde.includes(m.id));
+  const rinde = on.filter((m) => dates.some((d) => d.materiaId === m.id));
   const groups = rinde.map((m) => dates.filter((d) => d.materiaId === m.id));
   const result = useMemo(() => combos(groups, plan), [JSON.stringify(groups), JSON.stringify(plan)]); // eslint-disable-line
-  // Escala común a todas las filas: de la primera a la última fecha posible.
-  const all = groups.flat().map((d) => d.date).sort();
-  const min = all[0] ?? '', span = Math.max(1, all.length ? daysBetween(min, all.at(-1)!) : 1);
-  const pos = (d: string) => `${(daysBetween(min, d) / span) * 100}%`;
-  const mondays = all.length ? Array.from({ length: span + 1 }, (_, i) => addDays(min, i)).filter((d) => weekdayOf(d) === 1) : [];
+  const best = result.list[Math.min(focus, result.list.length - 1)];
   const isChosen = (c: Combo) => !!data && data.chosen.length === c.picks.length
     && c.picks.every((p) => data.chosen.some((x) => x.materiaId === p.materiaId && x.date === p.date && x.time === p.time));
+  const pickOf = (c: Combo, id: string) => c.picks.find((p) => p.materiaId === id);
+  const months = best ? [...new Set(best.picks.map((p) => p.date.slice(0, 7)))].sort() : [];
 
   async function setPlan(p: Partial<Plan>) {
     if (block()) return;
-    setShown(SHOWN);
+    setShown(SHOWN); setFocus(0);
     try { await patchSettings({ 'finals.plan': { ...plan, ...p } }); } catch (e) { notify(errMsg(e)); }
   }
   async function choose(c: Combo | null) {
@@ -136,60 +167,135 @@ export function FinalesPage() {
       reload();
     } catch (e) { notify(errMsg(e)); }
   }
-  const done = () => { setEditing(null); setImporting(false); reload(); };
+  const done = () => { setSheet(null); reload(); };
+  const chooseBtn = (c: Combo) => isChosen(c)
+    ? <span className="fin-cal"><span className="chip fin-chosen-tag"><CheckIcon size={14} />En el calendario</span><button type="button" className="btn" aria-disabled={off} onClick={() => void choose(null)}>Deshacer</button></span>
+    : <button type="button" className="btn primary" aria-disabled={off} onClick={() => void choose(c)}>Elegir</button>;
+  const rangeTxt = (c: Combo) => (c.first === c.last ? dm(c.first) : `${dm(c.first).slice(0, 2)}/${dm(c.first).slice(3)} → ${dm(c.last)}`);
+  const editing = sheet?.kind === 'fecha' ? sheet : null;
 
   return (
     <>
       <PageHeader title="Finales" sub={data && rinde.length ? `${rinde.length} ${rinde.length === 1 ? 'materia' : 'materias'} para rendir` : undefined}
-        actions={!importing && <button className="btn" aria-disabled={off} onClick={() => { if (!block()) setImporting(true); }}><ImportIcon size={18} />Importar fechas</button>} />
+        actions={<button className="btn" aria-disabled={off} onClick={() => { if (!block()) setSheet({ kind: 'importar' }); }}><ImportIcon size={18} />Importar fechas</button>} />
       {error && !data && <ErrorState error={error} onRetry={reload} />}
       {!data && !error && <div className="card skel-card" role="status" aria-label="Cargando"><Skeleton w="40%" h={18} /><Skeleton /><Skeleton w="70%" /><Skeleton w="85%" /></div>}
       {data && <div className="fin-page">
         <div className="fin-side">
-          {importing && <Importar onDone={done} />}
-          <section className="card">
-            <div className="card-head"><h2>Fechas posibles</h2></div>
+          <section className="card" aria-labelledby="fin-1">
+            <div className="fin-h"><h2 id="fin-1"><span className="fin-step">1</span>¿Qué rendís?</h2><small>{on.length} de {active.length}</small></div>
             {!active.length && <EmptyState icon={InboxIcon} title="Sin materias">Creá tus materias en Ajustes.</EmptyState>}
-            {active.map((m) => {
-              const own = dates.filter((d) => d.materiaId === m.id);
-              const on = !plan.noRinde.includes(m.id);
-              return (
-                <div key={m.id} className="fin-mat" style={materiaVars(m.color)}>
-                  <div className="fin-mat-head">
-                    <span className="dot" aria-hidden="true" /><strong>{m.name}</strong>
-                    {own.length > 0 && (
-                      <label className="switch" title="Rindo">
-                        <input type="checkbox" role="switch" checked={on} aria-label={`Rindo ${m.name}`}
-                          onChange={() => void setPlan({ noRinde: on ? [...plan.noRinde, m.id] : plan.noRinde.filter((x) => x !== m.id) })} />
-                        <span className="track" aria-hidden="true" />
-                      </label>
-                    )}
-                  </div>
-                  <div className="pills">
-                    {own.map((d) => (
-                      <button key={d.id} type="button" className="pill" aria-pressed={editing?.id === d.id} aria-label={`Editar ${when(d)}`}
-                        onClick={() => setEditing({ materiaId: m.id, id: d.id })}>{when(d)}</button>
-                    ))}
-                    <button type="button" className="pill fin-add" aria-label={`Agregar fecha a ${m.name}`} onClick={() => setEditing({ materiaId: m.id })}><PlusIcon size={16} />Fecha</button>
-                  </div>
-                  {editing?.materiaId === m.id && <FechaForm key={editing.id ?? 'new'} materiaId={m.id} item={own.find((d) => d.id === editing.id)} onDone={done} />}
-                </div>
-              );
-            })}
+            <div className="fin-mats">
+              {active.map((m) => {
+                const isOn = !plan.noRinde.includes(m.id);
+                const n = dates.filter((d) => d.materiaId === m.id).length;
+                return (
+                  <button key={m.id} type="button" className="fin-mt" aria-pressed={isOn} style={materiaVars(m.color)} title={m.name}
+                    aria-label={`${m.name}: ${n ? `${n} ${n === 1 ? 'fecha' : 'fechas'}` : 'sin fechas'}`}
+                    onClick={() => void setPlan({ noRinde: isOn ? [...plan.noRinde, m.id] : plan.noRinde.filter((x) => x !== m.id) })}>
+                    {m.sigla}<em>{n || '—'}</em>
+                  </button>
+                );
+              })}
+            </div>
           </section>
-          <details className="card fin-filters">
-            <summary>
-              <span><strong>Filtros y orden</strong><small>mín. {dias(plan.minDias)}{plan.antes ? ` · hasta ${dm(plan.antes)}` : ''}{plan.excluir.length ? ` · ${plan.excluir.length} excluidas` : ''} · {ORDENES.find((o) => o.id === plan.orden)?.label}</small></span>
-              <ChevronIcon size={20} />
-            </summary>
-            <div className="form">
-            <label>Mínimo de días entre finales
-              <input type="number" inputMode="numeric" min={0} max={60} value={plan.minDias}
-                onChange={(e) => void setPlan({ minDias: Math.max(0, Math.min(60, Math.round(Number(e.target.value)) || 0)) })} />
-            </label>
+          {on.length > 0 && (
+            <section className="card" aria-labelledby="fin-2">
+              <div className="fin-h"><h2 id="fin-2"><span className="fin-step">2</span>Fechas posibles</h2><small>{dates.filter((d) => on.some((m) => m.id === d.materiaId)).length} fechas</small></div>
+              {on.map((m) => {
+                const own = dates.filter((d) => d.materiaId === m.id);
+                return (
+                  <div key={m.id} className="fin-row" style={materiaVars(m.color)}>
+                    <span className="fin-sig" title={m.name}>{m.sigla}</span>
+                    <div className="fin-dates">
+                      {own.map((d) => (
+                        <button key={d.id} type="button" className="fin-dp" aria-label={`Editar ${m.sigla} ${when(d)}`} onClick={() => setSheet({ kind: 'fecha', materiaId: m.id, id: d.id })}>{when(d)}</button>
+                      ))}
+                      {!own.length && <span className="fin-none">Sin fechas</span>}
+                      <button type="button" className="fin-dp add" aria-label={`Agregar fecha a ${m.name}`} onClick={() => setSheet({ kind: 'fecha', materiaId: m.id })}><PlusIcon size={16} /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+          )}
+        </div>
+
+        <section className="card fin-main" aria-labelledby="fin-3">
+          <div className="fin-h"><h2 id="fin-3"><span className="fin-step">3</span>Combinaciones</h2>
+            <small>{rinde.length ? `${result.list.length}${result.truncated ? '+' : ''}` : ''}</small></div>
+          <div className="fin-filters" role="group" aria-label="Filtros">
+            <button type="button" className="fin-fl" aria-pressed={plan.minDias > 0} onClick={() => setSheet({ kind: 'filtro', f: 'minDias' })}>Mín. {dias(plan.minDias)}</button>
+            <button type="button" className="fin-fl" aria-pressed={!!plan.antes} onClick={() => setSheet({ kind: 'filtro', f: 'antes' })}>{plan.antes ? `Hasta ${dm(plan.antes)}` : 'Hasta…'}</button>
+            <button type="button" className="fin-fl" aria-pressed={plan.excluir.length > 0} onClick={() => setSheet({ kind: 'filtro', f: 'excluir' })}>{plan.excluir.length ? `${plan.excluir.length} excluidos` : 'Excluir días'}</button>
+            <button type="button" className="fin-fl" aria-pressed="false" onClick={() => setSheet({ kind: 'filtro', f: 'orden' })}>Orden: {ORDENES.find((o) => o.id === plan.orden)?.label.toLowerCase()}</button>
+          </div>
+          {!rinde.length && <EmptyState icon={FinalIcon} title="Sin fechas cargadas">Elegí qué rendís y cargá las fechas posibles, a mano o con "Importar fechas".</EmptyState>}
+          {rinde.length > 0 && !result.list.length && <EmptyState icon={InboxIcon} title="Ninguna combinación">Ninguna cumple los filtros. Probá con menos días entre finales o sacá exclusiones.</EmptyState>}
+          {result.truncated && <p className="muted">Hay demasiadas combinaciones: usá los filtros para achicar.</p>}
+          {best && (
+            <div className="fin-grid">
+              <div className={isChosen(best) ? 'fin-best chosen' : 'fin-best'}>
+                <div className="fin-best-top"><span className="fin-badge">{focus === 0 ? 'La mejor' : `Opción ${focus + 1}`}</span>{chooseBtn(best)}</div>
+                <div className="fin-kpis">
+                  <span><b>{best.minGap === null ? '—' : dias(best.minGap)}</b>mín. entre finales</span>
+                  <span><b>{rangeTxt(best)}</b>{dias(daysBetween(best.first, best.last) + 1)} en total</span>
+                </div>
+                {months.map((mo) => <MiniMes key={mo} first={`${mo}-01`} picks={best.picks} excluir={plan.excluir} sigla={sigla} color={color} />)}
+                <ul className="fin-best-list">
+                  {best.picks.map((p) => <li key={p.id} style={materiaVars(color(p.materiaId))}><span className="dot" aria-hidden="true" />{mat(p.materiaId)?.name ?? '?'}<span>{when(p)}</span></li>)}
+                </ul>
+              </div>
+              <div className="fin-alts" style={{ ['--cols' as string]: rinde.length }}>
+                <div className="fin-alt head" aria-hidden="true"><span>#</span><span>Mín.</span><span>Fechas</span>{rinde.map((m) => <span key={m.id}>{m.sigla}</span>)}<span /></div>
+                <ol>
+                  <AnimatePresence initial={false}>
+                    {result.list.slice(0, shown).map((c, i) => (
+                      <m.li key={c.picks.map((p) => p.id).join()} layout="position" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className={[ 'fin-alt', i === focus && 'on', isChosen(c) && 'chosen'].filter(Boolean).join(' ')}>
+                        <button type="button" className="fin-alt-main" aria-pressed={i === focus} aria-label={`Ver la opción ${i + 1}: mínimo ${c.minGap === null ? '—' : dias(c.minGap)}, ${rangeTxt(c)}`} onClick={() => setFocus(i)}>
+                          <span className="n">{i + 1}</span><span>{c.minGap === null ? '—' : dias(c.minGap)}</span><span>{rangeTxt(c)}</span>
+                          {rinde.map((mt) => {
+                            const p = pickOf(c, mt.id)!;
+                            const diff = i !== focus && best && pickOf(best, mt.id)?.id !== p.id;
+                            return <span key={mt.id} className={diff ? 'pk diff' : 'pk'} style={materiaVars(mt.color)}><i>{mt.sigla} </i>{dm(p.date)}</span>;
+                          })}
+                        </button>
+                        {chooseBtn(c)}
+                      </m.li>
+                    ))}
+                  </AnimatePresence>
+                </ol>
+                {result.list.length > shown && <button className="btn" onClick={() => setShown(shown + SHOWN)}>Ver más</button>}
+              </div>
+            </div>
+          )}
+        </section>
+      </div>}
+
+      <Sheet open={!!sheet} onClose={() => setSheet(null)}
+        label={sheet?.kind === 'importar' ? 'Importar fechas' : sheet?.kind === 'fecha' ? 'Fecha posible' : sheet?.kind === 'filtro' ? FILTRO_TITULO[sheet.f] : ''}>
+        {sheet?.kind === 'importar' && <Importar onDone={done} />}
+        {editing && (
+          <div className="form">
+            <h2 className="sheet-title">{editing.id ? 'Editar fecha' : 'Nueva fecha'} · {mat(editing.materiaId)?.name}</h2>
+            <FechaForm key={editing.id ?? 'new'} materiaId={editing.materiaId} item={dates.find((d) => d.id === editing.id)} onDone={done} />
+          </div>
+        )}
+        {sheet?.kind === 'filtro' && (
+          <div className="form">
+            <h2 className="sheet-title">{FILTRO_TITULO[sheet.f]}</h2>
+            {sheet.f === 'minDias' && (
+              <label>Mínimo de días entre un final y el siguiente
+                <input type="number" inputMode="numeric" min={0} max={60} value={plan.minDias}
+                  onChange={(e) => void setPlan({ minDias: Math.max(0, Math.min(60, Math.round(Number(e.target.value)) || 0)) })} />
+              </label>
+            )}
+            {sheet.f === 'antes' && <>
               <DateField label="Terminar el día (o antes)" value={plan.antes ?? ''} onChange={(v) => void setPlan({ antes: v || null })} />
-            <div className="field" role="group" aria-label="Excluir fechas">
-              <span>Excluir fechas (un día o un rango)</span>
+              {plan.antes && <button type="button" className="btn" onClick={() => void setPlan({ antes: null })}>Sin límite</button>}
+            </>}
+            {sheet.f === 'excluir' && <>
               {plan.excluir.length > 0 && (
                 <div className="pills">
                   {plan.excluir.map((r, i) => (
@@ -198,69 +304,20 @@ export function FinalesPage() {
                   ))}
                 </div>
               )}
-              <div className="fin-form">
-                <DateField label="Excluir desde" value={range.from} onChange={(v) => setRange({ ...range, from: v })} />
-                <DateField label="Excluir hasta (opcional)" value={range.to} min={range.from} onChange={(v) => setRange({ ...range, to: v })} />
-                <button type="button" className="btn" disabled={!range.from || (!!range.to && range.to < range.from)}
-                  onClick={() => { void setPlan({ excluir: [...plan.excluir, { from: range.from, to: range.to || range.from }] }); setRange({ from: '', to: '' }); }}>Excluir</button>
+              <DateField label="Excluir desde" value={range.from} onChange={(v) => setRange({ ...range, from: v })} />
+              <DateField label="Hasta (opcional)" value={range.to} min={range.from} onChange={(v) => setRange({ ...range, to: v })} />
+              <button type="button" className="btn primary" disabled={!range.from || (!!range.to && range.to < range.from)}
+                onClick={() => { void setPlan({ excluir: [...plan.excluir, { from: range.from, to: range.to || range.from }] }); setRange({ from: '', to: '' }); }}>Excluir</button>
+            </>}
+            {sheet.f === 'orden' && (
+              <div className="radios" role="radiogroup" aria-label="Orden" onKeyDown={radioKeys}>
+                {ORDENES.map((o) => <button key={o.id} type="button" role="radio" aria-checked={plan.orden === o.id} tabIndex={plan.orden === o.id ? 0 : -1} onClick={() => void setPlan({ orden: o.id })}><span className="r" /><span>{o.label}</span></button>)}
               </div>
-            </div>
-            <div className="field">
-              <span>Orden</span>
-              <div className="radios" role="radiogroup" aria-label="Orden">
-                {ORDENES.map((o) => <button key={o.id} type="button" role="radio" aria-checked={plan.orden === o.id} onClick={() => void setPlan({ orden: o.id })}><span className="r" /><span>{o.label}</span></button>)}
-              </div>
-            </div>
-            </div>
-          </details>
-        </div>
-
-        <div className="fin-main">
-          {data && data.chosen.length > 0 && (
-            <section className="card fin-chosen">
-              <div><strong>Elegida, ya está en el calendario</strong>
-                <span className="muted">{[...data.chosen].sort((a, b) => a.date.localeCompare(b.date)).map((c) => `${mat(c.materiaId)?.sigla ?? '?'} ${when(c)}`).join(' · ')}</span></div>
-              <button className="btn" aria-disabled={off} onClick={() => void choose(null)}>Deshacer</button>
-            </section>
-          )}
-          <div className="eyebrow fin-count">{rinde.length < 1 ? 'Combinaciones' : `${result.list.length}${result.truncated ? '+' : ''} ${result.list.length === 1 ? 'combinación' : 'combinaciones'}`}</div>
-          {data && !rinde.length && <EmptyState icon={FinalIcon} title="Sin fechas cargadas">Cargá las fechas posibles de las materias que vas a rendir, a mano o con "Importar fechas".</EmptyState>}
-          {rinde.length > 0 && !result.list.length && <EmptyState icon={InboxIcon} title="Ninguna combinación">Ninguna cumple los filtros. Probá con menos días entre finales o sacá exclusiones.</EmptyState>}
-          {result.truncated && <p className="muted">Hay demasiadas combinaciones: usá los filtros para achicar.</p>}
-          {result.list.length > 0 && (
-            <div className="fin-axis" aria-hidden="true"><div className="fin-line">{mondays.map((d) => <span key={d} style={{ left: pos(d) }}>{dm(d)}</span>)}</div></div>
-          )}
-          <ol className="fin-list">
-            <AnimatePresence initial={false}>
-            {result.list.slice(0, shown).map((c, i) => {
-              const chosen = isChosen(c);
-              return (
-                <m.li key={c.picks.map((p) => p.id).join()} className={chosen ? 'card fin-combo chosen' : 'card fin-combo'}
-                  layout="position" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={spring('gentle')}>
-                  <div className="fin-top">
-                    <span className="fin-n">{i + 1}</span>
-                    <span className="fin-sum">{c.minGap !== null && <strong>mín. {dias(c.minGap)}</strong>} {c.first === c.last ? dm(c.first) : `del ${dm(c.first)} al ${dm(c.last)}`}</span>
-                    {chosen ? <span className="chip fin-chosen-tag"><CheckIcon size={14} />Elegida</span> : <button className="btn" aria-disabled={off} onClick={() => void choose(c)}>Elegir</button>}
-                  </div>
-                  <div className="fin-line" aria-hidden="true">
-                    {mondays.map((d) => <i key={d} style={{ left: pos(d) }} />)}
-                    {c.picks.map((p, k) => <b key={p.id} className={k % 2 ? 'chip solid low' : 'chip solid'} style={{ ...materiaVars(mat(p.materiaId)?.color ?? ''), left: pos(p.date) }}>{mat(p.materiaId)?.sigla}</b>)}
-                  </div>
-                  <div className="fin-detail">
-                    {c.picks.map((p, k) => (
-                      <span key={p.id} style={materiaVars(mat(p.materiaId)?.color ?? '')}>
-                        {k > 0 && <em>{dias(c.gaps[k - 1]!)}</em>}<span className="dot" aria-hidden="true" /> {mat(p.materiaId)?.sigla} {when(p)}
-                      </span>
-                    ))}
-                  </div>
-                </m.li>
-              );
-            })}
-            </AnimatePresence>
-          </ol>
-          {result.list.length > shown && <button className="btn" onClick={() => setShown(shown + SHOWN)}>Ver más</button>}
-        </div>
-      </div>}
+            )}
+            <button type="button" className="btn" onClick={() => setSheet(null)}>Listo</button>
+          </div>
+        )}
+      </Sheet>
     </>
   );
 }
