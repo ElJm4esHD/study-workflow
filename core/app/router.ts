@@ -29,7 +29,7 @@ function validate(body: unknown, spec: BodySpec): void {
     const type = raw.replace(/[?!]/g, '');
     const v = b[k];
     if (v === undefined) { if (required) throw bad(k); continue; }
-    if (v === null) { if (!nullable) throw bad(k); continue; }
+    if (v === null) { if (!nullable && type !== 'any') throw bad(k); continue; }
     const ok = type === 'any' || (type === 'array' ? Array.isArray(v) : type === 'object' ? typeof v === 'object' && !Array.isArray(v) : typeof v === type);
     if (!ok) throw bad(k);
   }
