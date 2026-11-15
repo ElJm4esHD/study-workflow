@@ -48,10 +48,10 @@ if (!existsSync(keystore) || !existsSync(keyProps)) {
   console.log(`\n⚠ Creé la llave de firma en ${keyDir}.\n  Hacele backup a esa carpeta (pendrive, nube personal): sin ella no vas a poder actualizar\n  la app encima, y vas a tener que desinstalarla e instalarla de nuevo.\n`);
 }
 
-// versionName = la de package.json; versionCode = X·10000 + Y·100 + Z (sube con cada versión).
+// versionName = la de package.json; versionCode = X·1000000 + Y·1000 + Z (sube con cada versión y queda arriba del esquema viejo por fecha).
 const versionName = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
 const [vx, vy, vz] = versionName.split('.').map(Number);
-const versionCode = vx * 10000 + vy * 100 + vz;
+const versionCode = vx * 1_000_000 + vy * 1000 + vz;
 
 sh('npx vite build');
 sh('npx cap sync android');

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Fondo de la app y del splash: tema claro (values-night tiene el oscuro). Mismos tokens que --bg en styles.css. -->
+    <!-- Fondo de la app y del splash: tema claro (values-night tiene el oscuro). Mismos tokens que el fondo (bg) de styles.css. -->
     <color name="app_bg">#F4F5F8</color>
 </resources>

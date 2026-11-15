@@ -127,7 +127,7 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 
 ## Qué cambió de uso (1.1.0)
 
-- **Versiones**: la app usa versión semántica. La única fuente es `version` en `package.json`; la toman la web, el server (`/api/health`) y el APK (`versionName`; `versionCode` = X·10000 + Y·100 + Z). Cada pedido sube la versión y suma su entrada en `core/web/novedades.ts` (un test exige que coincidan). Ajustes › Acerca de muestra "Versión X.Y.Z · fecha" y la versión del servidor.
+- **Versiones**: la app usa versión semántica. La única fuente es `version` en `package.json`; la toman la web, el server (`/api/health`) y el APK (`versionName`; `versionCode` = X·1000000 + Y·1000 + Z). Cada pedido sube la versión y suma su entrada en `core/web/novedades.ts` (un test exige que coincidan). Ajustes › Acerca de muestra "Versión X.Y.Z · fecha" y la versión del servidor.
 - **Tema**: Ajustes › Apariencia › Tema: Oscuro (por defecto), Claro o Según el sistema. Es de cada dispositivo. El widget, el splash y las barras del celu lo siguen.
 - **Semana**: grilla propia (ya no usa FullCalendar). En el celu se ven 3 días con la tira de la semana arriba: deslizá para moverte de a 3 días o tocá un día de la tira. Tocá un hueco para ver "+ HH:MM" y tocalo de nuevo para crear un evento a esa hora. Las tareas sin hora van en "Todo el día"; tocá el día o "+N más" para ver el detalle.
 - **Finales**: tres pasos en una pantalla: "¿Qué rendís?" (chips de materias), "Fechas posibles" (una fila por materia; tocá una fecha para editarla o + para agregar) y "Combinaciones" (filtros como chips arriba, la mejor con su mes dibujado y el resto con solo lo que cambia resaltado). Tocá una combinación para verla arriba. Importar fechas se abre en una hoja.
