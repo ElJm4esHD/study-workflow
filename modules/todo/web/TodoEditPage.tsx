@@ -10,18 +10,21 @@ import { TODO_CATEGORIES, type TodoCategory } from '../shared.ts';
 import type { Subtask, TodoItem } from '../server/service.ts';
 import { BookIcon, CheckIcon, CloseIcon, PlusIcon, UploadIcon } from '../../../core/web/icons.tsx';
 import { Skeleton, ErrorState } from '../../../core/web/ui.tsx';
-import { ReminderField } from '../../../core/web/ReminderField.tsx';
+import { ReminderField, reminderDefaults } from '../../../core/web/ReminderField.tsx';
 import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
 import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
 import { useUnsaved } from '../../../core/web/useUnsaved.tsx';
 import { keepSearch } from './views.ts';
+import { todoDefaults } from './TodoSettings.tsx';
 import './todo.css';
 
 const PRESETS = [15, 30, 45, 60, 90];
 const CAT_ICON: Record<TodoCategory, React.ReactNode> = { tarea: <CheckIcon />, entrega: <UploadIcon />, estudio: <BookIcon /> };
 
 function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
-  const { materias, notify } = useCore();
+  const { materias, notify, settings } = useCore();
+  const dflt = todoDefaults(settings);
+  const rdef = reminderDefaults(settings);
   const { off, block } = useBlock();
   const nav = useNavigate();
   const [params] = useSearchParams();
@@ -32,10 +35,10 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
   const [dueDate, setDueDate] = useState(item?.dueDate ?? (!item && isValidDate(fecha) ? fecha : ''));
   const [dueTime, setDueTime] = useState(item?.dueTime ?? '');
   const [materiaId, setMateriaId] = useState(item?.materiaId ?? '');
-  const [category, setCategory] = useState<TodoCategory>(item?.category ?? 'tarea');
-  const [durationMin, setDuration] = useState<number | null>(item?.durationMin ?? null);
+  const [category, setCategory] = useState<TodoCategory>(item?.category ?? dflt.category);
+  const [durationMin, setDuration] = useState<number | null>(item ? item.durationMin : dflt.durationMin);
   const [other, setOther] = useState(item?.durationMin != null && !PRESETS.includes(item.durationMin));
-  const [reminder, setReminder] = useState({ min: item?.reminderMin ?? null, insistent: item?.reminderInsistent ?? false });
+  const [reminder, setReminder] = useState(item ? { min: item.reminderMin, insistent: item.reminderInsistent } : rdef);
   const [subs, setSubs] = useState<Subtask[]>(item?.subtasks ?? []);
   const [newSub, setNewSub] = useState('');
   const [focusOther, setFocusOther] = useState(false); // foco en Minutos solo si recién se tocó "Otra…"

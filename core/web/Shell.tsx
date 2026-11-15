@@ -4,9 +4,11 @@ import { animate, m, useMotionValue } from 'motion/react';
 import { vibrate } from './haptics.ts';
 import type { Connection } from './api.ts';
 import { useCore } from './CoreContext.tsx';
-import { BookIcon, ChevronRightIcon, HomeIcon, MoreIcon, SettingsIcon } from './icons.tsx';
+import { BookIcon, ChevronRightIcon, HomeIcon, MoreIcon, SearchIcon, SettingsIcon } from './icons.tsx';
 import { useMotion } from './motion.tsx';
 import { Sheet } from './ui.tsx';
+import { Search } from './Search.tsx';
+import { Onboarding } from './Onboarding.tsx';
 
 const stamp = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
 function offlineText({ copyAt, pending }: Connection) {
@@ -21,6 +23,7 @@ const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isConte
 export function Shell() {
   const { enabledModules, connection } = useCore();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { spring } = useMotion();
@@ -102,14 +105,16 @@ export function Shell() {
   // Atajos de teclado (compu): 1…n pantallas, N tarea nueva.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target) || moreOpen) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(true); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target) || moreOpen || searchOpen) return;
+      if (e.key === '/') { e.preventDefault(); setSearchOpen(true); return; }
       const n = Number(e.key);
       if (n >= 1 && n <= items.length) navigate(items[n - 1]!.to);
       else if (e.key.toLowerCase() === 'n' && hasTodo) { e.preventDefault(); navigate('/todo/nueva'); }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [items.map((i) => i.to).join(), hasTodo, moreOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items.map((i) => i.to).join(), hasTodo, moreOpen, searchOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Celu: al abrir el teclado, el campo enfocado queda a la vista.
   useEffect(() => {
@@ -133,6 +138,7 @@ export function Shell() {
       {connection.offline && <div className="offline-bar" role="status">{offlineText(connection)}</div>}
       <aside className="side" aria-label="Principal">
         <div className="brand"><i><BookIcon size={16} /></i>Study Workflow</div>
+        <button type="button" className="side-item" onClick={() => setSearchOpen(true)}><SearchIcon /><span>Buscar</span><kbd className="kbd">/</kbd></button>
         {items.slice(0, -1).map(side)}
         <div className="bottom">{side(settings)}</div>
       </aside>
@@ -149,6 +155,7 @@ export function Shell() {
       <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} label="Más">
         <div className="eyebrow sheet-title">Más</div>
         <ul className="more-list">
+          <li><button type="button" onClick={() => { setMoreOpen(false); setSearchOpen(true); }}><span className="mi"><SearchIcon /></span><span>Buscar</span></button></li>
           {moreItems.map(({ key, to, label, Icon }) => (
             <li key={key}>
               <NavLink to={to} onClick={() => setMoreOpen(false)}><span className="mi"><Icon /></span><span>{label}</span><ChevronRightIcon size={18} /></NavLink>
@@ -156,6 +163,8 @@ export function Shell() {
           ))}
         </ul>
       </Sheet>
+      <Search open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <Onboarding />
       <main className="main" ref={mainRef}>
         <m.div style={{ x }}>
           <m.div key={section} initial={from ? { x: from } : { opacity: 0, y: 10 }} animate={{ opacity: 1, x: 0, y: 0 }} transition={spring(from ? 'snappy' : 'gentle')}>

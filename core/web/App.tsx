@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 'react-router';
 import { CoreProvider, useCore } from './CoreContext.tsx';
 import { ErrorBoundary, ErrorScreen } from './ErrorBoundary.tsx';
 import { Shell } from './Shell.tsx';
 import { InicioPage } from './InicioPage.tsx';
 import { AjustesPage } from './AjustesPage.tsx';
+import { NovedadesPage } from './NovedadesPage.tsx';
+import { getPrefs } from './prefs.ts';
 import { ConnectScreen } from './ConnectScreen.tsx';
 import { getServerUrl, isNative } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
@@ -24,11 +26,20 @@ function Routes() {
         { path: '/', element: <InicioPage /> },
         ...enabledModules.flatMap((m) => m.routes),
         { path: '/ajustes', element: <AjustesPage /> },
+        { path: '/ajustes/novedades', element: <NovedadesPage /> },
         { path: '*', element: <Navigate to="/" replace /> },
       ],
     }];
     return createBrowserRouter(routes);
   }, [key]); // eslint-disable-line
+  // Pantalla de inicio elegida en Ajustes: solo al abrir la app (una vez), y un widget o un link que pidan otra ruta ganan.
+  const homed = useRef(false);
+  useEffect(() => {
+    if (homed.current) return;
+    homed.current = true;
+    const h = getPrefs().home;
+    if (h !== 'inicio' && router.state.location.pathname === '/' && enabledModules.some((m) => m.nav?.path === `/${h}`)) void router.navigate(`/${h}`, { replace: true });
+  }, [router]); // eslint-disable-line
   // Texto recibido por Compartir: se guarda en memoria y se navega al primer módulo activo que lo acepta.
   useEffect(() => {
     const target = enabledModules.find((m) => m.shareTarget)?.shareTarget;

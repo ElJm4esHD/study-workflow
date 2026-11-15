@@ -237,3 +237,26 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+/** Confirmación para lo irreversible: un `<dialog>` nativo (foco atrapado, Esc cancela, el foco vuelve al botón). */
+export function ConfirmDialog({ open, title, confirmLabel, onConfirm, onCancel, busy, children }: {
+  open: boolean; title: string; confirmLabel: string; onConfirm(): void; onCancel(): void; busy?: boolean; children?: ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
+  return (
+    <dialog ref={ref} aria-labelledby="confirm-t" onCancel={(e) => { e.preventDefault(); onCancel(); }}>
+      <h2 id="confirm-t">{title}</h2>
+      {children}
+      <div className="row">
+        <button type="button" className="btn" onClick={onCancel} disabled={busy}>Cancelar</button>
+        <button type="button" className="btn danger" onClick={onConfirm} disabled={busy}>{busy ? 'Un momento…' : confirmLabel}</button>
+      </div>
+    </dialog>
+  );
+}

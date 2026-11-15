@@ -4,7 +4,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 const SCREENS = [
   ['inicio', '/'], ['todo-hoy', '/todo'], ['todo-proximas', '/todo?vista=proximas'], ['todo-materia', '/todo?vista=materia'], ['todo-completadas', '/todo?vista=completadas'],
   ['todo-nueva', '/todo/nueva'], ['calendario-mes', '/calendario?vista=mes'], ['calendario-semana', '/calendario?vista=semana'], ['evento-nuevo', '/calendario/evento/nuevo'],
-  ['finales', '/finales'], ['importar', '/importar'], ['planes', '/importar/planes'], ['ajustes', '/ajustes'],
+  ['finales', '/finales'], ['importar', '/importar'], ['planes', '/importar/planes'], ['ajustes', '/ajustes'], ['novedades', '/ajustes/novedades'],
 ] as const;
 const SIZES = [['412', { width: 412, height: 915 }], ['1440', { width: 1440, height: 900 }]] as const;
 
@@ -65,4 +65,47 @@ test('hoja "Más": abre, atrapa el foco y Esc devuelve el foco', async ({ page }
   expect(await page.evaluate(() => !!document.activeElement?.closest('.sheet'))).toBe(true);
   await page.keyboard.press('Escape');
   await expect(more).toBeFocused();
+});
+
+test('búsqueda global: Ctrl+K, resultados accesibles y Enter abre el primero', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.keyboard.press('Control+k');
+  const dialog = page.getByRole('dialog', { name: 'Buscar' });
+  await expect(dialog).toBeVisible();
+  await page.getByLabel('Buscar tareas y eventos').fill('guia');
+  await expect(dialog.getByRole('link', { name: /Guía 4/ }).first()).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).include('dialog.search').analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/[/]todo[/][^/]+$/);
+});
+
+test('guía de inicio: se abre desde Ajustes, es accesible y se saltea', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto('/ajustes');
+  await page.getByRole('button', { name: 'Ver la guía' }).click();
+  const dialog = page.locator('dialog.onboarding');
+  await expect(dialog).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).include('dialog.onboarding').analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+  await dialog.getByRole('button', { name: 'Siguiente' }).click();
+  await expect(dialog.getByRole('heading', { name: 'Tus materias' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Saltear' }).click();
+  await expect(dialog).toBeHidden();
+});
+
+test('backup: exportar baja un .json y restaurarlo deja los datos igual', async ({ page, request }) => {
+  const before = await (await request.get('/api/todo')).json();
+  const res = await request.get('/api/backup');
+  expect(res.headers()['content-disposition']).toContain('attachment');
+  const backup = await res.json();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/ajustes');
+  await page.locator('input[type=file]').setInputFiles({ name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
+  await expect(page.getByRole('dialog', { name: /Reemplazar todo/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Reemplazar todo' }).click();
+  await expect(page.getByText('Backup restaurado.')).toBeVisible();
+  const after = await (await request.get('/api/todo')).json();
+  expect(after).toEqual(before);
 });

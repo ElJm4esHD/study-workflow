@@ -23,7 +23,7 @@ test('exportar y restaurar en otra base devuelve lo mismo', async () => {
   expect(exportBackup(other.ctx).tables).toEqual(b.tables);
   // GET /api/backup baja como archivo
   const r = await app.inject('/api/backup');
-  expect(r.headers['content-disposition']).toMatch(/attachment; filename="study-workflow-d{4}-d{2}-d{2}.json"/);
+  expect(r.headers['content-disposition']).toMatch(/attachment; filename="study-workflow-[0-9]{4}-[0-9]{2}-[0-9]{2}[.]json"/);
 });
 
 test('restaurar reemplaza lo que había y rechaza archivos que no son del backup sin cambiar nada', async () => {

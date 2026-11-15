@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 RUN npm run build
 
 FROM node:24-bookworm-slim

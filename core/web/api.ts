@@ -96,7 +96,7 @@ export async function api<T>(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
     if (method === 'GET' && j !== undefined) {
       const wasOffline = offline;
       applyPending(j);
-      saveCopy(path, j, new Date().toISOString());
+      if (!path.startsWith('/api/search')) saveCopy(path, j, new Date().toISOString()); // las búsquedas no son pantallas: no ocupan lugar en la copia
       if (offline) setOffline(false);
       if (wasOffline && pending().length > 0) void resync(); // solo al volver; si no, un 5xx persistente haría un bucle
     } else if (method !== 'GET' && j && typeof j === 'object' && typeof j.id === 'string' && typeof j.updatedAt === 'string') {

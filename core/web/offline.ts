@@ -34,6 +34,12 @@ export function readCopy<T>(url: string, s: Store = ls()): { data: T; at: string
   return raw ? JSON.parse(raw) : undefined;
 }
 
+/** Borra las copias de pantallas del celu (no toca la cola de tildes pendientes). */
+export function clearCopies(s: Store = ls()): void {
+  for (const u of urls(s)) s.set(copyKey(u), '');
+  s.set(INDEX, '[]');
+}
+
 export function lastCopyAt(s: Store = ls()): string | null {
   let max: string | null = null;
   for (const u of urls(s)) {

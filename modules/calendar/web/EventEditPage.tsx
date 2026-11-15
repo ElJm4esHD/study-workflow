@@ -8,7 +8,7 @@ import type { CalendarEvent, EventInput } from '../server/service.ts';
 import { KIND_LABELS } from './views.ts';
 import { KIND_ICON } from './DayDetail.tsx';
 import { PageHeader, Skeleton, ErrorState } from '../../../core/web/ui.tsx';
-import { ReminderField } from '../../../core/web/ReminderField.tsx';
+import { ReminderField, reminderDefaults } from '../../../core/web/ReminderField.tsx';
 import { DateField, TimeField } from '../../../core/web/DateTime.tsx';
 import { firstInvalid, useSubmit } from '../../../core/web/useSubmit.ts';
 import { useUnsaved } from '../../../core/web/useUnsaved.tsx';
@@ -28,7 +28,7 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string | null }) {
-  const { materias, notify } = useCore();
+  const { materias, notify, settings } = useCore();
   const { off, block } = useBlock();
   const nav = useNavigate();
   const [q] = useSearchParams();
@@ -44,7 +44,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
   const [endDate, setEndDate] = useState(isSeries ? date0 : (item?.endDate ?? date0));
   const [endTime, setEndTime] = useState(item?.endTime ?? '');
   const [notes, setNotes] = useState(item?.notes ?? '');
-  const [reminder, setReminder] = useState({ min: item?.reminderMin ?? null, insistent: item?.reminderInsistent ?? false });
+  const [reminder, setReminder] = useState(item ? { min: item.reminderMin, insistent: item.reminderInsistent } : reminderDefaults(settings));
   const [repeat, setRepeat] = useState(isSeries);
   const [weekdays, setWeekdays] = useState<number[]>(item?.repeatWeekdays ?? []);
   const [until, setUntil] = useState(item?.repeatUntil ?? '');

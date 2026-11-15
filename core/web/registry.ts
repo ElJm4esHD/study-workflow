@@ -9,6 +9,8 @@ export interface WebModule {
   /** `more`: en el celu va dentro de "Más" en vez de la barra de abajo. */
   nav?: { path: string; order: number; more?: boolean };
   settings?: ComponentType;
+  /** Título de la sección en Ajustes (por defecto, `name`). */
+  settingsTitle?: string;
   dashboard?: { id: string; order: number; column: 'left' | 'right'; Card: ComponentType }[];
   requires?: string[];
   /** Ruta que recibe el texto compartido desde Android (Compartir). */

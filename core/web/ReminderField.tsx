@@ -5,6 +5,12 @@ import { askNotifications } from './widgets.ts';
 const PRESETS: [number, string][] = [[0, 'A la hora'], [15, '15 min antes'], [60, '1 h antes'], [1440, '1 día antes']];
 const UNITS: [number, string][] = [[1, 'minutos'], [60, 'horas'], [1440, 'días']];
 
+/** Recordatorio con el que arrancan las tareas y eventos nuevos (Ajustes › Recordatorios). */
+export const reminderDefaults = (s: Record<string, unknown>) => ({
+  min: typeof s['reminder.defaultMin'] === 'number' ? (s['reminder.defaultMin'] as number) : null,
+  insistent: s['reminder.defaultInsistent'] === true,
+});
+
 type Props = { value: number | null; insistent: boolean; disabled?: boolean; onChange(value: number | null, insistent: boolean): void };
 
 /** Selector de recordatorio compartido por tareas y eventos. `value` = minutos antes (null = sin recordatorio). */

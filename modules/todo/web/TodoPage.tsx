@@ -17,6 +17,7 @@ import { TODO_CATEGORIES } from '../shared.ts';
 import type { TodoItem } from '../server/service.ts';
 import { groupMinutes, groupTodos, keepSearch, orderBetween, type TodoView } from './views.ts';
 import { TodoEditPage } from './TodoEditPage.tsx';
+import { todoDefaults } from './TodoSettings.tsx';
 import './todo.css';
 import { useToday } from '../../../core/web/useToday.ts';
 
@@ -61,7 +62,8 @@ function ListSkeleton() {
 }
 
 export function TodoPage() {
-  const { materias, notify } = useCore();
+  const { materias, notify, settings } = useCore();
+  const dflt = todoDefaults(settings);
   const { off, block } = useBlock();
   const [params, setParams] = useSearchParams();
   const view: TodoView = VIEWS.find(([v]) => v === params.get('vista'))?.[0] ?? 'hoy';
@@ -90,7 +92,9 @@ export function TodoPage() {
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   const materiaOf = (id: string | null) => materias.find((m) => m.id === id);
-  const shown = items.map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i));
+  const old = (i: TodoItem) => view === 'completadas' && dflt.hideCompletedDays !== null && i.completed && !linger.has(i.id) && !!i.completedAt
+    && Date.now() - Date.parse(i.completedAt) > dflt.hideCompletedDays * 86_400_000; // se oculta de la vista, no se borra
+  const shown = items.map((i) => (linger.has(i.id) ? { ...i, completed: !i.completed } : i)).filter((i) => !old(i));
   const real = new Map(items.map((i) => [i.id, i]));
   const groups = groupTodos(shown, view, today, materiaId);
 
@@ -135,7 +139,7 @@ export function TodoPage() {
     if (!t || adding.current || block()) return;
     adding.current = true;
     const body = {
-      title: t,
+      title: t, durationMin: dflt.durationMin, category: dflt.category,
       dueDate: view === 'hoy' ? today : null,
       materiaId: view === 'materia' && materiaId && materiaId !== 'none' ? materiaId : null,
     };

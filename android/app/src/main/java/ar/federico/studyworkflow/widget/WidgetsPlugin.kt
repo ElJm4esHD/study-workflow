@@ -59,6 +59,13 @@ class WidgetsPlugin : Plugin() {
         call.resolve()
     }
 
+    /** "Probar sonido" de Ajustes: un recordatorio de verdad, ahora, para oír el canal. */
+    @PluginMethod
+    fun testReminder(call: PluginCall) {
+        ReminderScheduler.show(context, "prueba", "Probando el recordatorio", "Así suena. Si no lo oís, revisá el volumen de alarmas.", null, call.getBoolean("insistent", false) == true)
+        call.resolve()
+    }
+
     @PluginMethod
     fun setDone(call: PluginCall) {
         val id = call.getString("id")

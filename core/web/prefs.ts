@@ -4,7 +4,16 @@ import { useSyncExternalStore } from 'react';
 export type Speed = 'lenta' | 'normal' | 'rapida' | 'off';
 export type Vibration = 'off' | 'suave' | 'media' | 'fuerte';
 export type FontSize = 'chica' | 'normal' | 'grande';
-export interface Prefs { speed: Speed; vibration: Vibration; font: FontSize }
+export type Home = 'inicio' | 'todo' | 'calendario';
+export type Accent = 'indigo' | 'celeste' | 'verde' | 'ambar' | 'rosa' | 'violeta';
+export interface Prefs { speed: Speed; vibration: Vibration; font: FontSize; home: Home; accent: Accent }
+
+/** Colores de acento a elegir: pasteles de la paleta, todos legibles sobre el fondo y con texto oscuro encima. */
+export const ACCENTS: Record<Accent, { label: string; hex: string }> = {
+  indigo: { label: 'Índigo', hex: '#b7c4ff' }, celeste: { label: 'Celeste', hex: '#8fd3f0' }, verde: { label: 'Verde', hex: '#93dcbf' },
+  ambar: { label: 'Ámbar', hex: '#f0d27a' }, rosa: { label: 'Rosa', hex: '#f2a7ba' }, violeta: { label: 'Violeta', hex: '#c7b6f5' },
+};
+export const HOMES: Record<Home, string> = { inicio: 'Inicio', todo: 'To-do', calendario: 'Calendario' };
 
 export const SPEED_K: Record<Speed, number> = { lenta: 1.6, normal: 1, rapida: 0.6, off: 0 };
 export const VIBRATION_K: Record<Vibration, number> = { off: 0, suave: 0.5, media: 1, fuerte: 1.8 };
@@ -21,6 +30,8 @@ function load(): Prefs {
     speed: saved.speed && saved.speed in SPEED_K ? saved.speed : reduced ? 'off' : 'normal',
     vibration: saved.vibration && saved.vibration in VIBRATION_K ? saved.vibration : 'media',
     font: saved.font && saved.font in FONT_K ? saved.font : 'normal',
+    home: saved.home && saved.home in HOMES ? saved.home : 'inicio',
+    accent: saved.accent && saved.accent in ACCENTS ? saved.accent : 'indigo',
   };
 }
 
@@ -31,6 +42,10 @@ function apply() {
   const s = document.documentElement.style;
   s.setProperty('--k', String(SPEED_K[prefs.speed]));
   s.setProperty('--fs', String(FONT_K[prefs.font]));
+  const hex = ACCENTS[prefs.accent].hex;
+  s.setProperty('--accent', hex);
+  s.setProperty('--accent-hover', `color-mix(in srgb, ${hex}, white 25%)`);
+  s.setProperty('--accent-soft', `color-mix(in srgb, ${hex} 14%, transparent)`);
   document.documentElement.dataset.motion = prefs.speed === 'off' ? 'off' : 'on';
 }
 apply();
