@@ -5,24 +5,67 @@
 .cal-bar .seg { order: 9; flex-basis: 100%; display: flex; margin-top: 6px; }
 .cal-bar .seg button { flex: 1; }
 .cal-today { min-height: 44px; padding: 0 14px; }
-.cal-wrap {
-  touch-action: pan-y; padding-bottom: 8px; font-size: var(--t-meta);
-  /* La paleta de FullCalendar sigue los colores de la app. */
-  --fc-classic-background: var(--surface); --fc-classic-foreground: var(--text);
-  --fc-classic-muted-foreground: var(--muted); --fc-classic-faint-foreground: var(--faint);
-  --fc-classic-border: var(--line); --fc-classic-strong-border: var(--line-strong);
-  --fc-classic-today: var(--surface-2); --fc-classic-primary: var(--accent);
-}
-.cal-wrap [class~='cal-soft'] { background: color-mix(in srgb, var(--fc-event-color) 18%, var(--surface)) !important; border: 0 !important;
-  border-left: 3px solid var(--fc-event-color) !important; color: var(--text) !important; border-radius: 6px !important; }
-.cal-wrap [class~='cal-exam'] { background: var(--fc-event-color) !important; border-color: var(--fc-event-color) !important; color: var(--on-strong) !important; font-weight: 700; border-radius: 6px !important; }
-.cal-wrap [class~='cal-exam'] * { color: var(--on-strong) !important; }
-.cal-wrap [class~='cal-todo'] { background: transparent !important; border: 1px dashed var(--fc-event-color) !important; color: var(--text) !important; border-radius: 6px !important; }
-.cal-wrap [class~='cal-done'] { text-decoration: line-through; opacity: .7; }
-.fc-todo { display: flex; align-items: center; gap: 4px; max-width: 100%; }
-.fc-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* una línea por tarea: en el celu las 7 columnas son angostas */
-.cal-wrap [class~='cal-todo'], .cal-wrap [class~='cal-soft'], .cal-wrap [class~='cal-exam'] { overflow: hidden; }
-.fc-box { width: 10px; height: 10px; border-radius: 3px; border: 1.5px solid currentColor; display: inline-block; flex: none; }
+.cal-wrap { touch-action: pan-y; padding-bottom: 8px; font-size: var(--t-meta); }
+
+/* Semana: grilla propia. Celu: tira de la semana + 3 días; compu: 7 días con scroll interno. */
+.wk-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 8px; }
+.wk-strip button { display: grid; justify-items: center; gap: 2px; min-height: 56px; padding: 6px 0; border: 0; border-radius: var(--r-ctl); background: none; color: var(--muted);
+  font-size: var(--t-micro); font-weight: 600; cursor: pointer; }
+.wk-strip b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: var(--t-body); color: var(--text); font-weight: 600; }
+.wk-strip .win { background: var(--surface); }
+.wk-strip .today b { background: var(--accent); color: var(--on-accent); }
+.wk-strip i { display: flex; gap: 3px; height: 5px; }
+.wk-strip s { width: 5px; height: 5px; border-radius: 50%; background: var(--m); }
+
+.wk { --hh: calc(48px * var(--fs)); --gut: 40px; background: var(--surface); border-radius: var(--r-card); box-shadow: var(--e1); }
+.wk-top { position: sticky; top: var(--sat); z-index: 3; background: var(--surface); border-radius: var(--r-card) var(--r-card) 0 0; border-bottom: 1px solid var(--line-strong); }
+.wk-head, .wk-allday, .wk-body { display: grid; grid-template-columns: var(--gut) repeat(var(--n), minmax(0, 1fr)); }
+.wk-head button { display: grid; justify-items: center; padding: 8px 2px 6px; border: 0; background: none; color: var(--muted); font-size: var(--t-meta); cursor: pointer; border-radius: var(--r-sm); min-height: 44px; }
+.wk-head b { font-size: var(--t-h2); color: var(--text); font-weight: 650; line-height: 1.15; }
+.wk-head .today { color: var(--accent); }
+.wk-head .today b { color: var(--accent); }
+@media (hover: hover) { .wk-head button:hover { background: var(--surface-2); } }
+.wk-allday { border-top: 1px solid var(--line); }
+.wk-allday > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 4px 2px; border-left: 1px solid var(--line); }
+.wk-lbl { font-size: calc(10px * var(--fs)); line-height: 1.15; color: var(--faint); display: grid; place-items: center; text-align: center; padding: 0 2px; }
+.wk-chip { display: flex; align-items: center; gap: 4px; min-width: 0; min-height: 24px; padding: 0 5px; border-radius: 6px; font-size: var(--t-micro); font-weight: 600;
+  background: color-mix(in srgb, var(--m) var(--tint), var(--surface)); color: var(--text); text-decoration: none; border-left: 3px solid var(--m); }
+.wk-chip > span, .wk-chip > a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit; text-decoration: none; flex: 1; }
+.wk-chip.exam { background: var(--ms); color: var(--on-strong); border-left: 0; }
+.wk-chip.task { background: var(--surface-2); border-left: 0; padding-left: 0; }
+.wk-chip.done a { text-decoration: line-through; color: var(--faint); }
+.wk-more { border: 0; background: none; color: var(--muted); font: inherit; font-size: var(--t-micro); font-weight: 650; text-align: left; padding: 2px 5px; min-height: 24px; cursor: pointer; }
+/* Casilla de tarea: 24 px visibles, zona táctil más grande con el ::before */
+.wk-box { position: relative; flex: none; width: 24px; height: 24px; display: grid; place-items: center; border: 0; background: none; padding: 0; cursor: pointer; color: var(--on-strong); }
+.wk-box::after { content: ''; position: absolute; inset: 6px; border-radius: 4px; border: 1.5px solid var(--m); }
+.wk-box[aria-pressed='true']::after { background: var(--m); }
+.wk-box svg { position: relative; z-index: 1; color: var(--surface); }
+
+.wk-body { position: relative; background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--hh)); background-position: 0 var(--hh); }
+.wk-hours { position: relative; }
+.wk-hours span { position: absolute; right: 6px; transform: translateY(-50%); font-size: var(--t-micro); color: var(--faint); background: var(--surface); padding: 0 2px; line-height: 1; }
+.wk-col { position: relative; border-left: 1px solid var(--line); cursor: copy; }
+.wk-col.today { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.wk-ev { position: absolute; z-index: 1; display: flex; flex-direction: column; overflow: hidden; padding: 3px 6px; border-radius: 7px; font-size: var(--t-micro); line-height: 1.25;
+  color: var(--text); text-decoration: none; background: color-mix(in srgb, var(--m) calc(var(--tint) + 6%), var(--surface)); border-left: 3px solid var(--m); cursor: pointer;
+  transition: transform var(--d-micro) var(--ease-out); }
+.wk-ev:active { transform: scale(.97); }
+.wk-ev b { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-ev small { color: var(--muted); font-size: inherit; white-space: nowrap; }
+.wk-ev.short { flex-direction: row; gap: 4px; align-items: center; padding-top: 0; padding-bottom: 0; }
+.wk-ev.exam { background: var(--ms); color: var(--on-strong); border-left: 0; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ms); }
+.wk-ev.exam small { color: inherit; opacity: .9; }
+.wk-ev .tag { font-size: calc(10px * var(--fs)); font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+.wk-ev.task { flex-direction: row; align-items: flex-start; gap: 2px; padding-left: 0; background: var(--surface-2); outline: 1px dashed var(--line-strong); outline-offset: -1px; }
+.wk-ev.task > a { display: flex; flex-direction: column; min-width: 0; flex: 1; color: inherit; text-decoration: none; padding-top: 3px; }
+.wk-ev.task.short > a { flex-direction: row; gap: 4px; padding-top: 0; align-self: center; }
+.wk-ev.task.done b { text-decoration: line-through; color: var(--faint); }
+.wk-now { position: absolute; left: -1px; right: 0; height: 2px; background: var(--late); z-index: 2; pointer-events: none; }
+.wk-now::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--late); }
+.wk-now span { position: absolute; right: 2px; top: -9px; font-size: calc(10px * var(--fs)); font-weight: 750; color: var(--late); background: var(--surface); padding: 0 3px; border-radius: 4px; }
+.wk-ghost { position: absolute; left: 2px; right: 3px; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 4px; border: 2px dashed var(--accent); border-radius: 7px;
+  background: var(--accent-soft); color: var(--accent); font: inherit; font-weight: 700; font-size: var(--t-meta); cursor: pointer; }
+.wk-anchor { position: absolute; left: 0; width: 1px; height: 1px; }
 
 /* Mes: grilla propia de 7 x 6. Celu: número + puntos de color; compu: chips por materia. Exámenes: día pintado. */
 .cal-month { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--e1); padding: 8px 6px; overflow: hidden; }
@@ -88,6 +131,8 @@
   .cal-bar { flex-wrap: nowrap; padding-top: 20px; }
   .cal-bar .seg { order: 0; flex-basis: auto; margin-top: 0; }
   .cal-wrap { flex: 1; min-height: 0; padding-bottom: 0; }
+  .wk { --hh: calc(44px * var(--fs)); --gut: 48px; height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+  .wk-top { top: 0; }
   .cal-month { height: 100%; display: flex; flex-direction: column; padding: 10px; }
   .cal-grid { flex: 1; min-height: 0; grid-template-rows: repeat(6, minmax(0, 1fr)); gap: 4px; }
   .cal-cell { min-height: 0; padding: 6px; gap: 3px; align-items: stretch; text-align: left; }
