@@ -11,6 +11,7 @@ npm install
 npm run dev          # server (:3000) + Vite con proxy /api
 npm test
 npm run typecheck
+npm run a11y         # auditoría de accesibilidad (axe + Playwright) a 412 y 1440 px, con base temporal
 ```
 
 La base local queda en `./data/study.sqlite`.
@@ -99,6 +100,14 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - **Widget To-do**: mismo estilo que la app (cuadradito y barra con el color de la materia, segunda línea con sigla, hora o "venció" y subtareas, botón + para nueva tarea; tocar "To-do" abre la lista).
 - **Finales**: los filtros y el orden van plegados en "Filtros y orden"; el resumen muestra lo aplicado.
 - **Ajustes › Materias**: tocar la fila edita; el ícono de la derecha archiva.
+
+## Qué cambió de uso (pulido final, etapa 2)
+
+- Fechas y horas se tipean (`5/11`, `hoy`, `mañana`, `930`) o se eligen en un calendario propio (botón del calendario, flechas, Enter).
+- Borrar una tarea o un evento ya no pregunta: avisa y deja "Deshacer" 6 s.
+- Si salís de una tarea o evento con cambios sin guardar, avisa.
+- "Reducir movimiento" del sistema arranca la app en "Sin animaciones" (se cambia en Ajustes).
+- Las fechas se leen "Hoy", "Mañana", "En 3 días", "Vencida hace 2 días".
 
 ## Agregar un módulo
 

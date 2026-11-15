@@ -340,3 +340,7 @@ dialog.picker { width: min(340px, 92vw); padding: 12px; }
 
 /* El botón de borrar queda aparte de los normales */
 .form .row .btn.danger { margin-right: auto; }
+
+/* Letra del sistema al máximo: los rótulos de la barra de abajo no se pisan y los íconos no se achican */
+.nav-item > span:last-child { max-width: 100%; padding: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: min(calc(12px * var(--fs)), 3.2vw); }
+.card-head :is(h1, h2) svg { flex: none; }
