@@ -6,7 +6,8 @@ import { existsSync, readFileSync } from 'node:fs';
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 // URL del server precargada en el APK: sale solo de .env.deploy (no se commitea). Sin el archivo queda vacía.
 const envFile = new URL('./.env.deploy', import.meta.url);
-const env = existsSync(envFile) ? Object.fromEntries([...readFileSync(envFile, 'utf8').matchAll(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/gm)].map((m) => [m[1], m[2]])) : {};
+// SW_PUBLIC=1 (npm run apk:public): build genérico para el Release, sin leer .env.deploy.
+const env = process.env.SW_PUBLIC !== '1' && existsSync(envFile) ? Object.fromEntries([...readFileSync(envFile, 'utf8').matchAll(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/gm)].map((m) => [m[1], m[2]])) : {};
 const defaultServer = env.DEPLOY_HOST && env.HTTPS_PORT ? `https://${env.DEPLOY_HOST}:${env.HTTPS_PORT}` : '';
 
 export default defineConfig({

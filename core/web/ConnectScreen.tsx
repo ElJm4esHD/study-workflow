@@ -18,7 +18,7 @@ export function ServerForm({ onDone }: { onDone(): void }) {
   return (
     <form className="card form" onSubmit={submit}>
       <label>URL del servidor
-        <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} required />
+        <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://tu-server.tu-tailnet.ts.net:PUERTO" required />
       </label>
       {error && <p className="error" role="alert">{error}</p>}
       <button className="btn primary" disabled={busy}>{busy ? 'Probando…' : 'Probar y guardar'}</button>

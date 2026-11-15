@@ -1,4 +1,5 @@
-// APK firmado de un comando. Uso: node scripts/apk.mjs [--check]. Guía: docs/android.md.
+// APK firmado de un comando. Uso: node scripts/apk.mjs [--check] [--public]. Guía: docs/android.md.
+// --public: APK genérico para GitHub Releases, sin la dirección de .env.deploy (pide la del usuario al abrir).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,7 +29,8 @@ console.log(existsSync(keystore) && existsSync(keyProps)
 if (!jdk || !sdk) { console.error(`Falta algo para compilar. ${GUIA}`); process.exit(1); }
 if (process.argv.includes('--check')) { console.log('Todo listo para npm run apk.'); process.exit(0); }
 
-const env = { ...process.env, JAVA_HOME: jdk, ANDROID_HOME: sdk };
+const pub = process.argv.includes('--public');
+const env = { ...process.env, JAVA_HOME: jdk, ANDROID_HOME: sdk, SW_PUBLIC: pub ? '1' : '' };
 const sh = (cmd, cwd = root) => {
   const r = spawnSync(cmd, { cwd, env, shell: true, stdio: 'inherit' });
   if (r.status !== 0) { console.error(`✖ Falló: ${cmd}. ${GUIA}`); process.exit(1); }
@@ -57,6 +59,6 @@ sh('npx vite build');
 sh('npx cap sync android');
 sh(`${win ? '.\\gradlew.bat' : './gradlew'} assembleRelease -PswVersionCode=${versionCode} -PswVersionName=${versionName}`, join(root, 'android'));
 
-const out = join(root, 'dist', 'study-workflow.apk');
+const out = join(root, 'dist', pub ? `study-workflow-${versionName}.apk` : 'study-workflow.apk');
 copyFileSync(join(root, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk'), out);
-console.log(`\n✔ APK listo (versión ${versionName}): ${out}`);
+console.log(`\n✔ APK ${pub ? 'público (sin server precargado) ' : ''}listo (versión ${versionName}): ${out}`);
