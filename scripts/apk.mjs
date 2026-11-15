@@ -30,7 +30,8 @@ if (!jdk || !sdk) { console.error(`Falta algo para compilar. ${GUIA}`); process.
 if (process.argv.includes('--check')) { console.log('Todo listo para npm run apk.'); process.exit(0); }
 
 const pub = process.argv.includes('--public');
-const env = { ...process.env, JAVA_HOME: jdk, ANDROID_HOME: sdk, SW_PUBLIC: pub ? '1' : '' };
+const next = process.argv.includes('--next'); // app aparte para probar al lado de la real
+const env = { ...process.env, JAVA_HOME: jdk, ANDROID_HOME: sdk, SW_PUBLIC: pub ? '1' : '', SW_NEXT: process.argv.includes('--next') ? '1' : '' };
 const sh = (cmd, cwd = root) => {
   const r = spawnSync(cmd, { cwd, env, shell: true, stdio: 'inherit' });
   if (r.status !== 0) { console.error(`✖ Falló: ${cmd}. ${GUIA}`); process.exit(1); }
@@ -58,8 +59,8 @@ const versionCode = vx * 1_000_000 + vy * 1000 + vz - (vb === undefined ? 0 : 10
 
 sh('npx vite build');
 sh('npx cap sync android');
-sh(`${win ? '.\\gradlew.bat' : './gradlew'} assembleRelease -PswVersionCode=${versionCode} -PswVersionName=${versionName}`, join(root, 'android'));
+sh(`${win ? '.\\gradlew.bat' : './gradlew'} assembleRelease -PswVersionCode=${versionCode} -PswVersionName=${versionName}${next ? ' -PswNext=1' : ''}`, join(root, 'android'));
 
-const out = join(root, 'dist', pub ? `study-workflow-${versionName}.apk` : 'study-workflow.apk');
+const out = join(root, 'dist', pub ? `study-workflow-${versionName}.apk` : next ? 'study-workflow-next.apk' : 'study-workflow.apk');
 copyFileSync(join(root, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk'), out);
 console.log(`\n✔ APK ${pub ? 'público (sin server precargado) ' : ''}listo (versión ${versionName}): ${out}`);

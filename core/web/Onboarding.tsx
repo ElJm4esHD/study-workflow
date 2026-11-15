@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { MateriaForm } from './AjustesPage.tsx';
 import { useCore } from './CoreContext.tsx';
 import { MateriaChip } from './MateriaChip.tsx';
-import { getServerUrl, isNative } from './server.ts';
+import { DEFAULT_SERVER, getServerUrl, isNative } from './server.ts';
 
 const KEY = 'sw.welcomed';
 export const wasWelcomed = (): boolean => { try { return localStorage.getItem(KEY) === '1'; } catch { return true; } };
@@ -34,7 +34,7 @@ export function Onboarding() {
 
   const close = (to?: string) => { markWelcomed(); setOpen(false); if (to) nav(to); };
   const active = materias.filter((m) => !m.archived);
-  const server = isNative() ? (getServerUrl() ?? '') : location.origin;
+  const server = isNative() ? (getServerUrl() ?? DEFAULT_SERVER) : location.origin;
   const last = step === steps - 1;
 
   return (
