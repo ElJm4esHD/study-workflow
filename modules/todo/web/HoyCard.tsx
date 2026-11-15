@@ -39,7 +39,7 @@ export function HoyCard() {
 
   const row = (i: TodoItem) => <HoyRow key={i.id} item={i} today={today} onToggle={() => void toggle(i)} onSaved={reload} />;
 
-  const head = <div className="card-head"><h3><ChecklistIcon size={18} />Hoy</h3><Link to="/todo?vista=hoy">To-do<ChevronRightIcon size={16} /></Link></div>;
+  const head = <div className="card-head"><h2><ChecklistIcon size={18} />Hoy</h2><Link to="/todo?vista=hoy">To-do<ChevronRightIcon size={16} /></Link></div>;
   if (error && !data) return <section className="card">{head}<ErrorState error={error} onRetry={reload} /></section>;
   if (!data) return <section className="card skel-card" role="status" aria-label="Cargando">{head}<Skeleton /><Skeleton w="70%" /><Skeleton w="80%" /></section>;
 

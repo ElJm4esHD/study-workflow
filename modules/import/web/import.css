@@ -18,7 +18,7 @@
 .imp-tag.exam { color: var(--accent); font-weight: 700; }
 .imp-save { position: sticky; bottom: calc(var(--nav-h) + 12px); margin-top: 16px; width: 100%; box-shadow: var(--e2); }
 .imp-plan { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-.imp-plan h3 { margin: 0; font-size: var(--t-card); font-weight: 650; }
+.imp-plan h2 { margin: 0; font-size: var(--t-card); font-weight: 650; }
 .imp-plan-meta { margin: 0; color: var(--muted); font-size: var(--t-sec); }
 .imp-plan .btn { display: inline-flex; align-items: center; gap: 6px; }
 .imp-bar { width: 100%; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }

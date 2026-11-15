@@ -93,7 +93,7 @@ function Form({ item, embedded }: { item?: TodoItem; embedded?: boolean }) {
     <form className="form" onSubmit={save} noValidate>
       {unsaved.dialog}
       <label>Título
-        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*S.*" autoFocus={!item && !embedded} />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*[^ ].*" autoFocus={!item && !embedded} />
       </label>
       <div className="field" role="group" aria-label="Subtareas">
         <span>Subtareas{subs.length > 0 && ` · ${subs.filter((s) => s.done).length}/${subs.length}`}</span>
@@ -166,7 +166,7 @@ export function TodoEditPage({ embedded }: { embedded?: boolean }) {
   const { data, error, loading, reload } = useApi<TodoItem>(id ? `/api/todo/${id}` : null);
   return (
     <div className="card todo-edit">
-      <div className="card-head"><h3>{id ? 'Editar tarea' : 'Nueva tarea'}</h3>{!embedded && <Link className="icon-btn" aria-label="Cerrar" to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace><CloseIcon /></Link>}</div>
+      <div className="card-head">{embedded ? <h2>{id ? 'Editar tarea' : 'Nueva tarea'}</h2> : <h1>{id ? 'Editar tarea' : 'Nueva tarea'}</h1>}{!embedded && <Link className="icon-btn" aria-label="Cerrar" to={{ pathname: "/todo", search: keepSearch(useLocation().search) }} replace><CloseIcon /></Link>}</div>
       {id && loading && !data && <div className="form" role="status" aria-label="Cargando"><Skeleton h={44} /><Skeleton w="40%" /><Skeleton h={44} /><Skeleton h={44} /></div>}
       {id && error && <ErrorState error={error} onRetry={reload} />}
       {(!id || data?.id === id) && <Form key={id ?? 'nueva'} item={data} embedded={embedded} />}

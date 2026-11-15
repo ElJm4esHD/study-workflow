@@ -1,0 +1,68 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type APIRequestContext } from '@playwright/test';
+
+const SCREENS = [
+  ['inicio', '/'], ['todo-hoy', '/todo'], ['todo-proximas', '/todo?vista=proximas'], ['todo-materia', '/todo?vista=materia'], ['todo-completadas', '/todo?vista=completadas'],
+  ['todo-nueva', '/todo/nueva'], ['calendario-mes', '/calendario?vista=mes'], ['calendario-semana', '/calendario?vista=semana'], ['evento-nuevo', '/calendario/evento/nuevo'],
+  ['finales', '/finales'], ['importar', '/importar'], ['planes', '/importar/planes'], ['ajustes', '/ajustes'],
+] as const;
+const SIZES = [['412', { width: 412, height: 915 }], ['1440', { width: 1440, height: 900 }]] as const;
+
+async function seed(request: APIRequestContext) {
+  const m = await (await request.post('/api/materias', { data: { name: 'Álgebra y Geometría Analítica', color: '#9fc3f7', sigla: 'AGA' } })).json();
+  const f = await (await request.post('/api/materias', { data: { name: 'Física', color: '#f4a3a3', sigla: 'FIS' } })).json();
+  const today = new Date().toISOString().slice(0, 10);
+  await request.post('/api/todo', { data: { title: 'Guía 4: autovalores y autovectores', materiaId: m.id, dueDate: today, dueTime: '09:00', category: 'estudio', durationMin: 90, subtasks: [{ id: crypto.randomUUID(), title: 'Ejercicio 1', done: false }] } });
+  await request.post('/api/todo', { data: { title: 'Entrega TP 2', materiaId: f.id, dueDate: today, category: 'entrega' } });
+  await request.post('/api/todo', { data: { title: 'Sin fecha', materiaId: null } });
+  await request.post('/api/calendar/events', { data: { title: 'Parcial 1', kind: 'parcial', materiaId: m.id, allDay: false, startDate: today, startTime: '14:00', endDate: today, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false } });
+}
+
+test.beforeAll(async ({ request }) => { await seed(request); });
+
+for (const [sizeName, viewport] of SIZES) {
+  for (const [name, url] of SCREENS) {
+    test(`axe ${name} @${sizeName}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto(url);
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+      const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
+      const lines = violations.map((v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.length}) ${v.nodes.slice(0, 3).map((n) => n.target.join(' ')).join(' | ')}`);
+      expect(lines, lines.join('\n')).toEqual([]);
+    });
+  }
+}
+
+test('fecha y hora: se tipean rápido y el calendario es accesible', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto('/todo/nueva');
+  await page.getByLabel('Título').fill('Prueba');
+  await page.getByLabel('Fecha', { exact: true }).fill('hoy');
+  await page.getByLabel('Hora', { exact: true }).fill('930');
+  await page.getByLabel('Hora', { exact: true }).blur();
+  await expect(page.getByLabel('Hora', { exact: true })).toHaveValue('09:30');
+  await page.getByRole('button', { name: /Elegir en el calendario: fecha/ }).click();
+  const dialog = page.getByRole('dialog', { name: /Elegir fecha/ });
+  await expect(dialog).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).include('dialog.picker').analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeHidden();
+  await expect(page.getByLabel('Fecha', { exact: true })).not.toHaveValue('');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page).toHaveURL(/\/todo$/);
+});
+
+test('hoja "Más": abre, atrapa el foco y Esc devuelve el foco', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto('/');
+  const more = page.getByRole('button', { name: 'Más' });
+  await more.click();
+  await expect(page.getByRole('dialog', { name: 'Más' })).toBeVisible();
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.sheet'))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(more).toBeFocused();
+});

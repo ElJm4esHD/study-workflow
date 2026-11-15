@@ -48,7 +48,7 @@ function Row({ item, today, view, sigla, color, selected, sortable, layout, onTo
       to={{ pathname: `/todo/${item.id}`, search: keepSearch(search) }}
       toggleLabel={`${item.completed ? 'Destildar' : 'Completar'}: ${item.title}`}
       noLayout={!layout} onToggle={onToggle}
-      dndRef={s.setNodeRef} dndProps={{ ...s.attributes, 'aria-disabled': undefined, ...s.listeners }} /* con hora no se reordena, pero la fila no está deshabilitada */ dragging={s.isDragging}
+      dndRef={s.setNodeRef} dndProps={{ ...s.attributes, role: 'group', 'aria-disabled': undefined, ...s.listeners }} /* con hora no se reordena, pero la fila no está deshabilitada */ dragging={s.isDragging}
       dndStyle={{ transform: CSS.Transform.toString(s.transform), transition: s.transition }}
     />
   );
@@ -210,7 +210,7 @@ export function TodoPage() {
       })}
       </div>
     </PullToRefresh>
-      {!editing && <Floating><Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></Floating>}
+      {!editing && <Floating><nav aria-label="Acción rápida"><Link to={{ pathname: '/todo/nueva', search: keepSearch(search) }} className="todo-fab" aria-label="Nueva tarea" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></nav></Floating>}
     </>
   );
 }

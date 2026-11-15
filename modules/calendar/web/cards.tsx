@@ -32,7 +32,7 @@ function useCard(from: string, to: string, title: string, className: string, ico
   const reload = useCallback(() => setTick((t) => t + 1), []);
   useEffect(() => onReload(reload), [reload]);
   const wrap = (body: ReactNode, link = '/calendario?vista=mes') => (
-    <section className={`card ${className}`}><div className="card-head"><h3>{icon}{title}</h3><Link to={link}>Calendario<ChevronRightIcon size={16} /></Link></div>{body}</section>
+    <section className={`card ${className}`}><div className="card-head"><h2>{icon}{title}</h2><Link to={link}>Calendario<ChevronRightIcon size={16} /></Link></div>{body}</section>
   );
   const state = error && !data
     ? wrap(<ErrorState error={error} onRetry={reload} />)

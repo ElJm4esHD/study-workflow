@@ -253,7 +253,7 @@ export function CalendarPage() {
       {month && wide && <aside className="cal-panel" aria-label="Detalle del día"><DayDetail data={data} date={selected} reload={() => void load()} /></aside>}
       {!wide && <Sheet open={sheet} onClose={close} label="Detalle del día">{lastDia.current && <DayDetail data={data} date={lastDia.current} reload={() => void load()} />}</Sheet>}
       {!(month && wide) && (
-        <Floating><Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></Floating>
+        <Floating><nav aria-label="Acción rápida"><Link to={`/calendario/evento/nuevo?fecha=${fecha}`} className="cal-fab" aria-label="Nuevo evento" aria-disabled={off} onClick={(e) => { if (block()) e.preventDefault(); }}><PlusIcon /></Link></nav></Floating>
       )}
     </div>
     </PullToRefresh>

@@ -45,7 +45,7 @@ export function PlansPage() {
       <div className="cols imp-plans">
         {data?.map((p) => (
           <div key={p.id} className="card imp-plan">
-            <h3>{p.title ?? `Plan del ${formatDate(todayAR(new Date(p.createdAt)))}`}</h3>
+            <h2>{p.title ?? `Plan del ${formatDate(todayAR(new Date(p.createdAt)))}`}</h2>
             <div className="imp-bar" role="progressbar" aria-valuemin={0} aria-valuemax={p.tasksTotal} aria-valuenow={p.tasksDone}>
               <m.div initial={{ scaleX: 0 }} animate={{ scaleX: p.tasksTotal ? p.tasksDone / p.tasksTotal : 0 }} transition={spring('sheet')} />
             </div>

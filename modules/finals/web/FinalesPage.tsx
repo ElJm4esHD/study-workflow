@@ -46,7 +46,7 @@ function Importar({ onDone }: { onDone(): void }) {
 
   return (
     <div className="card form">
-      <div className="card-head"><h3>Importar fechas</h3></div>
+      <div className="card-head"><h2>Importar fechas</h2></div>
       <button type="button" className="btn" onClick={paste}>Pegar del portapapeles</button>
       <label>O pegá acá el mensaje de Claude
         <textarea className="fin-text" value={text} onChange={(e) => setText(e.target.value)} rows={4} />
@@ -148,7 +148,7 @@ export function FinalesPage() {
         <div className="fin-side">
           {importing && <Importar onDone={done} />}
           <section className="card">
-            <div className="card-head"><h3>Fechas posibles</h3></div>
+            <div className="card-head"><h2>Fechas posibles</h2></div>
             {!active.length && <EmptyState icon={InboxIcon} title="Sin materias">Creá tus materias en Ajustes.</EmptyState>}
             {active.map((m) => {
               const own = dates.filter((d) => d.materiaId === m.id);

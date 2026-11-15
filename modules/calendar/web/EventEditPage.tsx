@@ -123,7 +123,7 @@ function Form({ item, ocurrencia }: { item?: CalendarEvent; ocurrencia: string |
       <form className="card form cal-form" onSubmit={submit} noValidate>
         {unsaved.dialog}
         <label>Título
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*S.*" autoFocus={!item} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required pattern=".*[^ ].*" autoFocus={!item} />
         </label>
         <div className="cal-field" role="group" aria-label="Tipo">
           <span>Tipo</span>

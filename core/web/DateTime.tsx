@@ -107,7 +107,8 @@ function Picker({ value, min, required, label, onPick, onClose }: { value: strin
   const dlg = useRef<HTMLDialogElement>(null);
   const grid = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
-  useEffect(() => { dlg.current?.showModal(); }, []);
+  // Al abrir, el foco va al día elegido (no al botón de mes anterior).
+  useEffect(() => { dlg.current?.showModal(); grid.current?.querySelector<HTMLElement>(`[data-d="${cursor}"]`)?.focus(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (moved.current) grid.current?.querySelector<HTMLElement>(`[data-d="${cursor}"]`)?.focus(); }, [cursor]);
   const first = `${cursor.slice(0, 8)}01`;
   const start = addDays(first, 1 - weekdayOf(first));
