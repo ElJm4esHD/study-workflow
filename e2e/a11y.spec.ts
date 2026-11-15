@@ -9,7 +9,7 @@ const SCREENS = [
 const SIZES = [['412', { width: 412, height: 915 }], ['1440', { width: 1440, height: 900 }]] as const;
 
 async function seed(request: APIRequestContext) {
-  const m = await (await request.post('/api/materias', { data: { name: 'Álgebra y Geometría Analítica', color: '#9fc3f7', sigla: 'AGA' } })).json();
+  const m = await (await request.post('/api/materias', { data: { name: 'Matemática I', color: '#9fc3f7', sigla: 'MAT1' } })).json();
   const f = await (await request.post('/api/materias', { data: { name: 'Física', color: '#f4a3a3', sigla: 'FIS' } })).json();
   const today = new Date().toISOString().slice(0, 10);
   await request.post('/api/todo', { data: { title: 'Guía 4: autovalores y autovectores', materiaId: m.id, dueDate: today, dueTime: '09:00', category: 'estudio', durationMin: 90, subtasks: [{ id: crypto.randomUUID(), title: 'Ejercicio 1', done: false }] } });

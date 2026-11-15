@@ -51,7 +51,7 @@ export function Apariencia() {
         <div className="set-row">
           <div className="set-label"><b><TypeIcon size={18} />Tamaño de letra</b><span>Cambia el texto de toda la app; los botones mantienen su tamaño táctil.</span></div>
           <Segmented name="font" label="Tamaño de letra" value={prefs.font} options={[['chica', 'Chica'], ['normal', 'Normal'], ['grande', 'Grande']]} onChange={(v) => setPref('font', v)} />
-          <div className="preview">Guía 4: autovalores y autovectores<small>Álgebra · Estudio · 09:00</small></div>
+          <div className="preview">Guía 4: autovalores y autovectores<small>Matemática I · Estudio · 09:00</small></div>
         </div>
         <div className="set-row">
           <div className="set-label"><b>Color de acento</b><span>Botones, selecciones y el foco.</span></div>

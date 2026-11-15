@@ -59,23 +59,23 @@ test('2 · cargando y con error', async ({ page }) => {
 async function seed(request: APIRequestContext) {
   const mk = async (name: string, color: string, sigla: string) => (await (await request.post('/api/materias', { data: { name, color, sigla } })).json()).id as string;
   const m = {
-    alg: await mk('Álgebra y Geometría Analítica', '#f4a3a3', 'AGA'), am2: await mk('Análisis Matemático 2', '#9fc3f7', 'AM2'), f1: await mk('Física 1', '#f0d27a', 'F1'),
-    md: await mk('Matemática Discreta', '#93dcbf', 'MD'), pi: await mk('Programación Imperativa', '#c7b6f5', 'PI'),
+    alg: await mk('Matemática I', '#f4a3a3', 'MAT1'), am2: await mk('Química', '#9fc3f7', 'QUI'), f1: await mk('Física', '#f0d27a', 'FIS'),
+    md: await mk('Inglés', '#93dcbf', 'ING'), pi: await mk('Programación', '#c7b6f5', 'PROG'),
   };
   const todo = (data: object) => request.post('/api/todo', { data });
   await todo({ title: 'Guía 4: autovalores y autovectores', materiaId: m.alg, dueDate: plus(0), dueTime: '09:00', category: 'estudio', durationMin: 90, subtasks: [{ id: 'a', title: 'Ejercicio 1', done: true }, { id: 'b', title: 'Ejercicio 2', done: false }] });
   await todo({ title: 'Entrega TP 2: listas enlazadas', materiaId: m.pi, dueDate: plus(0), dueTime: '23:59', category: 'entrega', durationMin: 120 });
-  await todo({ title: 'Resolver P.5.1 a P.5.4', materiaId: m.md, dueDate: plus(0), durationMin: 30 });
-  await todo({ title: 'Repasar integrales dobles', materiaId: m.am2, dueDate: plus(0), category: 'estudio', durationMin: 60 });
+  await todo({ title: 'Reading de la unidad 5', materiaId: m.md, dueDate: plus(0), durationMin: 30 });
+  await todo({ title: 'Repasar estequiometría', materiaId: m.am2, dueDate: plus(0), category: 'estudio', durationMin: 60 });
   await todo({ title: 'Ejercicios de cinemática', materiaId: m.f1, dueDate: plus(-2), durationMin: 45, reminderMin: 15 });
-  await todo({ title: 'Leer el apunte de grafos', materiaId: m.md, dueDate: plus(1), durationMin: 30 });
+  await todo({ title: 'Vocabulario de la unidad 6', materiaId: m.md, dueDate: plus(1), durationMin: 30 });
   await todo({ title: 'Informe de laboratorio', materiaId: m.f1, dueDate: plus(3), category: 'entrega', durationMin: 90 });
-  await todo({ title: 'Comprar el libro de álgebra', materiaId: null });
-  const done = await (await todo({ title: 'Armar el resumen de límites', materiaId: m.am2, dueDate: plus(-1) })).json();
+  await todo({ title: 'Comprar el libro de química', materiaId: null });
+  const done = await (await todo({ title: 'Armar el resumen de enlaces químicos', materiaId: m.am2, dueDate: plus(-1) })).json();
   await request.patch(`/api/todo/${done.id}`, { data: { completed: true } });
   const ev = (data: object) => request.post('/api/calendar/events', { data: { allDay: false, endTime: null, notes: null, repeatWeekdays: null, repeatUntil: null, reminderMin: null, reminderInsistent: false, ...data } });
-  await ev({ title: 'Parcial de Matemática Discreta', kind: 'parcial', materiaId: m.md, allDay: true, startDate: plus(6), endDate: plus(6), startTime: null });
-  await ev({ title: 'Parcial de Análisis Matemático 2', kind: 'parcial', materiaId: m.am2, allDay: true, startDate: plus(9), endDate: plus(9), startTime: null });
+  await ev({ title: 'Parcial de Inglés', kind: 'parcial', materiaId: m.md, allDay: true, startDate: plus(6), endDate: plus(6), startTime: null });
+  await ev({ title: 'Parcial de Química', kind: 'parcial', materiaId: m.am2, allDay: true, startDate: plus(9), endDate: plus(9), startTime: null });
   await ev({ title: 'Clase de consulta', kind: 'evento', materiaId: m.alg, startDate: plus(2), endDate: plus(2), startTime: '18:00', endTime: '19:30' });
   await ev({ title: 'Clase de Física', kind: 'evento', materiaId: m.f1, startDate: plus(-3), endDate: plus(-3), startTime: '08:00', endTime: '10:00', repeatWeekdays: [1, 3], repeatUntil: plus(60) });
   // Fechas posibles de finales (dentro de 2 a 5 semanas) para ver combinaciones.
