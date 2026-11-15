@@ -27,6 +27,11 @@ test('exportar y restaurar en otra base devuelve lo mismo', async () => {
   expect(r.headers['content-disposition']).toMatch(/attachment; filename="study-workflow-[0-9]{4}-[0-9]{2}-[0-9]{2}[.]json"/);
 });
 
+test('el backup v1 no incluye las tablas de sincronización', async () => {
+  const { app } = await seed();
+  expect(Object.keys(exportBackup(app.ctx).tables).filter((k) => k.startsWith('sync_'))).toEqual([]);
+});
+
 test('restaurar reemplaza lo que había y rechaza archivos que no son del backup sin cambiar nada', async () => {
   const { app } = await seed();
   const b = JSON.parse(JSON.stringify(exportBackup(app.ctx)));

@@ -11,7 +11,7 @@ type Rows = Record<string, Record<string, unknown>[]>;
 type Backup = { format: typeof FORMAT; version: 1; exportedAt: string; schema: { module: string; version: string }[]; tables: Rows };
 
 const tableNames = (ctx: CoreContext) =>
-  (ctx.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'migrations' ORDER BY name").all() as { name: string }[]).map((r) => r.name);
+  (ctx.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'migrations' AND name NOT LIKE 'sync!_%' ESCAPE '!' ORDER BY name").all() as { name: string }[]).map((r) => r.name);
 const schema = (ctx: CoreContext) => ctx.db.prepare('SELECT module, version FROM migrations ORDER BY module, version').all() as { module: string; version: string }[];
 
 export function exportBackup(ctx: CoreContext): Backup {
