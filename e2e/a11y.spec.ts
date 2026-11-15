@@ -70,6 +70,7 @@ test('hoja "Más": abre, atrapa el foco y Esc devuelve el foco', async ({ page }
 test('búsqueda global: Ctrl+K, resultados accesibles y Enter abre el primero', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  await page.waitForLoadState('networkidle'); // la app tiene que haber arrancado para escuchar el teclado
   await expect(page.getByRole('dialog', { name: 'Buscar' })).toBeHidden(); // cerrado no se ve
   await page.keyboard.press('Control+k');
   const dialog = page.getByRole('dialog', { name: 'Buscar' });

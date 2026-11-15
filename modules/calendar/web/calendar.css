@@ -127,7 +127,7 @@
 .exam-card .ruler b, .week-row .ruler b { transform-origin: bottom; animation: grow calc(.42s * var(--k)) cubic-bezier(.3,1.4,.5,1) both; }
 @keyframes grow { from { transform: scaleY(.2); opacity: 0; } }
 .week-row, .week-head { display: grid; grid-template-columns: minmax(0, 1.4fr) 5fr auto; align-items: center; gap: 10px; }
-.week-row { min-height: 44px; color: inherit; text-decoration: none; border-radius: 8px; }
+.week-row { min-height: 44px; color: inherit; text-decoration: none; border-radius: var(--r-sm); }
 .week-row .name { display: flex; align-items: center; gap: 8px; font-size: var(--t-sec); min-width: 0; }
 .week-row .name span:last-child { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .week-row .ruler b { height: 20px; border-radius: 5px; }

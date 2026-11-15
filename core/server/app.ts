@@ -1,3 +1,5 @@
+import { constants, createBrotliCompress, createGzip } from 'node:zlib';
+import { Readable } from 'node:stream';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { registerAuth } from './auth.ts';
@@ -47,6 +49,16 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   const app = Fastify({ logger: !process.env.VITEST });
   registerCors(app, ['https://localhost']);
   registerAuth(app);
+  // Compresión (br o gzip) de texto, JS, CSS y JSON: el bundle baja de ~680 KB a ~200 KB. Con el zlib de Node, sin dependencias.
+  app.addHook('onSend', async (req, reply, payload) => {
+    const type = String(reply.getHeader('content-type') ?? '');
+    const ae = String(req.headers['accept-encoding'] ?? '');
+    const enc = ae.split(',').some((x) => x.trim().startsWith('br')) ? 'br' : ae.split(',').some((x) => x.trim().startsWith('gzip')) ? 'gzip' : null;
+    if (!enc || payload == null || reply.statusCode !== 200 || reply.getHeader('content-encoding') || !['text/', 'application/json', 'application/javascript', 'image/svg'].some((t) => type.startsWith(t))) return payload;
+    reply.header('Content-Encoding', enc).header('Vary', 'Accept-Encoding').removeHeader('content-length');
+    const src = payload instanceof Readable ? payload : Readable.from([Buffer.from(payload as string | Buffer)]);
+    return src.pipe(enc === 'br' ? createBrotliCompress({ params: { [constants.BROTLI_PARAM_QUALITY]: 4 } }) : createGzip());
+  });
 
   app.setErrorHandler((err: Error & { statusCode?: number; validation?: unknown[] }, req, reply) => {
     if (err instanceof HttpError) return reply.status(err.status).send(body(err.code, err.message));

@@ -12,6 +12,8 @@ npm run dev          # server (:3000) + Vite con proxy /api
 npm test
 npm run typecheck
 npm run a11y         # auditoría de accesibilidad (axe + Playwright) a 412 y 1440 px, con base temporal
+npm run capturas     # capturas de todas las pantallas y estados en docs/capturas/ (base temporal)
+node scripts/icons.mjs  # regenera el favicon y los íconos de la web (el dibujo es el mismo del ícono de Android)
 ```
 
 La base local queda en `./data/study.sqlite`.
@@ -115,6 +117,14 @@ docker compose -p study-workflow -f releases/$V/compose.yaml up -d
 - **Búsqueda global** de tareas y eventos: `/` o Ctrl+K en la compu; "Buscar" en el menú Más del celu.
 - **Backup**: Ajustes › Datos › Exportar baja un .json con todo; Importar lo restaura (reemplaza todo; el servidor guarda antes una copia en `/data/backups/pre-import-*.sqlite`).
 - **Guía de primera vez** (3 pasos, salteable); se reabre desde Ajustes › General.
+
+## Qué cambió de uso (pulido final, etapa 4)
+
+- Ícono nuevo y splash del mismo color que la app. En Android 13+ el ícono acompaña el tema si activás "Íconos temáticos".
+- La web se puede instalar como app (Chrome › ⋮ › Instalar) y la pestaña muestra la pantalla en la que estás.
+- La vista Semana tarda un instante en abrirse la primera vez (se baja solo cuando la usás).
+- Con muchas tareas en un grupo, el To-do muestra 30 y un botón "Mostrar más".
+- El checklist para probar en el celu está en `docs/checklist-s25.md`; los números de rendimiento, en `docs/pedidos/2026-11-15-pulido-final-etapa4.md`.
 
 ## Agregar un módulo
 

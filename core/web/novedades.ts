@@ -12,6 +12,9 @@ export const NOVEDADES: Novedad[] = [
     'Guía de primera vez para conectar el servidor, crear materias y cargar un plan.',
     'Las fechas se leen “Hoy”, “Mañana”, “En 3 días”, “Vencida hace 2 días”.',
     'Si el sistema pide reducir el movimiento, la app arranca sin animaciones.',
+    'Ícono nuevo (con versión para íconos temáticos), la web se puede instalar como app de escritorio y la pestaña muestra el nombre de cada pantalla.',
+    'Más rápida: la web baja comprimida y la vista Semana se carga solo cuando la abrís. Las listas largas muestran de a 30 tareas con “Mostrar más”.',
+    'El widget de To-do usa el color de acento que elijas.',
   ] },
   { fecha: '14/11/2026', titulo: 'Pulido de la interfaz', items: [
     'Tema oscuro, tarjetas, animaciones con resortes y vibración con la intensidad que elijas.',

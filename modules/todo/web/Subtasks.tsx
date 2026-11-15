@@ -29,7 +29,7 @@ export function useSubtasks(item: TodoItem, onSaved: (i: TodoItem) => void) {
   const done = subs.filter((s) => s.done).length;
   return {
     trailing: (
-      <button type="button" className="sub-btn" aria-expanded={open} aria-label={`Subtareas: ${done} de ${subs.length}`} onClick={() => setOpen(!open)}>
+      <button type="button" className="sub-btn" aria-expanded={open} aria-label={`${done}/${subs.length} subtareas hechas`} onClick={() => setOpen(!open)}>
         <SubtasksIcon size={14} />{done}/{subs.length}<ChevronRightIcon size={14} className="sub-chev" />
       </button>
     ),

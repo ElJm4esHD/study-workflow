@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { calendar } from '../../modules/calendar/server/index.ts';
 import { todo } from '../../modules/todo/server/index.ts';
 import { PALETTE } from '../shared/palette.ts';
@@ -50,4 +51,15 @@ test('búsqueda global: tareas y eventos, sin distinguir mayúsculas; mínimo 2 
   expect(await hits('a')).toEqual([]);
   expect((await hits('100%'))).toEqual([]);
   expect((await hits("Parcial"))[0]).toMatchObject({ kind: "parcial", to: expect.stringMatching(/^[/]calendario[/]evento[/]/) });
+});
+
+test('comprime las respuestas JSON si el cliente lo acepta, y no si no', async () => {
+  const { app } = await seed();
+  const gz = await app.inject({ url: '/api/backup', headers: { 'accept-encoding': 'gzip' } });
+  expect(gz.headers['content-encoding']).toBe('gzip');
+  expect(JSON.parse(gunzipSync(gz.rawPayload).toString()).format).toBe('study-workflow-backup');
+  const br = await app.inject({ url: '/api/backup', headers: { 'accept-encoding': 'gzip, br' } });
+  expect(br.headers['content-encoding']).toBe('br');
+  expect(JSON.parse(brotliDecompressSync(br.rawPayload).toString()).version).toBe(1);
+  expect((await app.inject('/api/backup')).headers['content-encoding']).toBeUndefined();
 });
