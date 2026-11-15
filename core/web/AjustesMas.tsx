@@ -5,7 +5,7 @@ import { apiBase, isNative } from './server.ts';
 import { BLOCKED, useCore } from './CoreContext.tsx';
 import { ChevronRightIcon, GaugeIcon, TypeIcon, VibrateIcon } from './icons.tsx';
 import { clearCopies } from './offline.ts';
-import { ACCENTS, HOMES, setPref, usePrefs, type Accent, type Home } from './prefs.ts';
+import { ACCENTS, HOMES, resolvedTheme, setPref, THEMES, usePrefs, type Accent, type Home } from './prefs.ts';
 import { vibrate } from './haptics.ts';
 import { ReminderField, reminderDefaults } from './ReminderField.tsx';
 import { ConfirmDialog, radioKeys, Segmented } from './ui.tsx';
@@ -45,6 +45,10 @@ export function Apariencia() {
       <h2>Apariencia</h2>
       <div className="card set-card">
         <div className="set-row">
+          <div className="set-label"><b>Tema</b><span>“Según el sistema” usa el modo claro u oscuro de este dispositivo y cambia con él.</span></div>
+          <Segmented name="theme" label="Tema" value={prefs.theme} options={THEMES} onChange={(v) => setPref('theme', v)} />
+        </div>
+        <div className="set-row">
           <div className="set-label"><b><TypeIcon size={18} />Tamaño de letra</b><span>Cambia el texto de toda la app; los botones mantienen su tamaño táctil.</span></div>
           <Segmented name="font" label="Tamaño de letra" value={prefs.font} options={[['chica', 'Chica'], ['normal', 'Normal'], ['grande', 'Grande']]} onChange={(v) => setPref('font', v)} />
           <div className="preview">Guía 4: autovalores y autovectores<small>Álgebra · Estudio · 09:00</small></div>
@@ -52,9 +56,9 @@ export function Apariencia() {
         <div className="set-row">
           <div className="set-label"><b>Color de acento</b><span>Botones, selecciones y el foco.</span></div>
           <div className="swatches" role="radiogroup" aria-label="Color de acento" onKeyDown={radioKeys}>
-            {(Object.entries(ACCENTS) as [Accent, { label: string; hex: string }][]).map(([id, a]) => (
+            {(Object.entries(ACCENTS) as [Accent, (typeof ACCENTS)[Accent]][]).map(([id, a]) => (
               <button key={id} type="button" role="radio" aria-checked={prefs.accent === id} aria-label={a.label} tabIndex={prefs.accent === id ? 0 : -1}
-                className="swatch" style={{ background: a.hex }} onClick={() => setPref('accent', id)} />
+                className="swatch" style={{ background: resolvedTheme(prefs.theme) === 'light' ? a.strong : a.hex }} onClick={() => setPref('accent', id)} />
             ))}
           </div>
         </div>

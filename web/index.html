@@ -3,13 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#0e1117" />
     <meta name="description" content="Tareas, calendario, materias y exámenes de la facultad." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <style>html{background:#0e1117;color:#a3acbe;font-family:system-ui,sans-serif}.boot{display:grid;place-items:center;min-height:100dvh}</style>
+    <style>html{background:#0e1117;color:#a3acbe;font-family:system-ui,sans-serif}html[data-theme=light]{background:#f4f5f8;color:#4f586a}.boot{display:grid;place-items:center;min-height:100dvh}</style>
+    <!-- Tema antes de dibujar (misma regla que prefs.ts) para que no haya un salto de color al abrir. -->
+    <script>try{var t=JSON.parse(localStorage.getItem('sw.prefs')||'{}').theme;if(t==='claro'||(t==='sistema'&&matchMedia('(prefers-color-scheme: light)').matches))document.documentElement.dataset.theme='light'}catch(e){}</script>
     <title>Study Workflow</title>
   </head>
   <body>

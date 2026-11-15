@@ -26,7 +26,11 @@ object WidgetStore {
     fun server(ctx: Context): String? = p(ctx).getString("server", null)?.takeIf { it.isNotBlank() }
     /** Color de acento elegido en la app (Ajustes › Apariencia); el widget lo usa en el contador y el botón +. */
     fun accent(ctx: Context): Int = runCatching { android.graphics.Color.parseColor(p(ctx).getString("accent", null)) }.getOrDefault(0xFFB7C4FF.toInt())
-    fun setAccent(ctx: Context, hex: String) = p(ctx).edit().putString("accent", hex).apply()
+    fun accentLight(ctx: Context): Int = runCatching { android.graphics.Color.parseColor(p(ctx).getString("accentLight", null)) }.getOrDefault(0xFF3E50C4.toInt())
+    fun setAccent(ctx: Context, hex: String, light: String?) = p(ctx).edit().putString("accent", hex).putString("accentLight", light).apply()
+    /** Tema elegido en la app: "dark", "light" o "system". */
+    fun theme(ctx: Context): String = p(ctx).getString("theme", null) ?: "dark"
+    fun setTheme(ctx: Context, mode: String) = p(ctx).edit().putString("theme", mode).apply()
     fun setServer(ctx: Context, url: String?) = p(ctx).edit().putString("server", url?.trimEnd('/')).apply()
 
     fun todos(ctx: Context): List<Todo>? = p(ctx).getString("todos", null)?.let { JSONArray(it).objs().map(::toTodo) }

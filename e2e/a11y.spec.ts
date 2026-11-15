@@ -20,9 +20,10 @@ async function seed(request: APIRequestContext) {
 
 test.beforeAll(async ({ request }) => { await seed(request); });
 
-for (const [sizeName, viewport] of SIZES) {
+for (const theme of ['oscuro', 'claro'] as const) for (const [sizeName, viewport] of SIZES) {
   for (const [name, url] of SCREENS) {
-    test(`axe ${name} @${sizeName}`, async ({ page }) => {
+    test(`axe ${name} @${sizeName} ${theme}`, async ({ page }) => {
+      await page.addInitScript((t) => localStorage.setItem('sw.prefs', JSON.stringify({ theme: t })), theme);
       await page.setViewportSize(viewport);
       await page.goto(url);
       await page.waitForLoadState('networkidle');

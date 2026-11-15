@@ -1,11 +1,12 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor, registerPlugin, SystemBars, SystemBarsStyle } from '@capacitor/core';
 
 interface WidgetsPlugin {
   setServer(o: { url: string | null }): Promise<void>;
   refresh(): Promise<void>;
   takeRoute(): Promise<{ route: string | null }>;
   askNotifications(): Promise<void>;
-  setAccent(o: { hex: string }): Promise<void>;
+  setAccent(o: { hex: string; light: string }): Promise<void>;
+  setTheme(o: { mode: 'dark' | 'light' | 'system' }): Promise<void>;
   testReminder(o: { insistent: boolean }): Promise<void>;
   setDone(o: { id: string; completed: boolean }): Promise<void>;
   addListener(ev: 'route', fn: (d: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
@@ -20,7 +21,13 @@ export const refreshWidgets = (): void => void plugin?.refresh().catch(() => {})
 /** Pide el permiso de notificaciones (Android 13+) la primera vez que se pone un recordatorio. */
 export const askNotifications = (): void => void plugin?.askNotifications().catch(() => {});
 /** Pasa el color de acento al widget (se guarda en el nativo). */
-export const setWidgetAccent = (hex: string): void => void plugin?.setAccent({ hex }).catch(() => {});
+export const setWidgetAccent = (hex: string, light: string): void => void plugin?.setAccent({ hex, light }).catch(() => {});
+/** Tema elegido: el nativo lo guarda para el widget y el splash; las barras del sistema siguen al tema que se ve. */
+export function setNativeTheme(mode: 'dark' | 'light' | 'system', shown: 'dark' | 'light'): void {
+  if (!plugin) return;
+  void plugin.setTheme({ mode }).catch(() => {});
+  void SystemBars.setStyle({ style: shown === 'light' ? SystemBarsStyle.Light : SystemBarsStyle.Dark }).catch(() => {});
+}
 /** Muestra ahora un recordatorio de prueba (mismo canal y sonido que los reales). */
 export const testReminder = (insistent: boolean): void => void plugin?.testReminder({ insistent }).catch(() => {});
 /** Tilde hecho sin conexión en la app: el nativo actualiza su copia y cancela el recordatorio. */

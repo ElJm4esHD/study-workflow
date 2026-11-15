@@ -17,6 +17,13 @@ import com.getcapacitor.annotation.CapacitorPlugin
 class WidgetsPlugin : Plugin() {
     companion object {
         const val EXTRA_ROUTE = "sw_route"
+
+        /** El modo nocturno propio de la app (persiste en el sistema): el splash del próximo arranque ya sale con el tema elegido. */
+        fun applyNightMode(ctx: android.content.Context, mode: String) {
+            if (Build.VERSION.SDK_INT < 31) return
+            val um = ctx.getSystemService(android.app.UiModeManager::class.java) ?: return
+            um.setApplicationNightMode(when (mode) { "light" -> android.app.UiModeManager.MODE_NIGHT_NO; "system" -> android.app.UiModeManager.MODE_NIGHT_AUTO; else -> android.app.UiModeManager.MODE_NIGHT_YES })
+        }
         private var pending: String? = null
 
         /** Lo llama MainActivity en onCreate y onNewIntent; true si el intent traía una ruta. */
@@ -64,10 +71,23 @@ class WidgetsPlugin : Plugin() {
     fun setAccent(call: PluginCall) {
         val hex = call.getString("hex")
         if (hex != null && runCatching { android.graphics.Color.parseColor(hex) }.isSuccess) {
-            val changed = WidgetStore.accent(context) != android.graphics.Color.parseColor(hex)
-            WidgetStore.setAccent(context, hex)
+            val light = call.getString("light")?.takeIf { runCatching { android.graphics.Color.parseColor(it) }.isSuccess }
+            val changed = WidgetStore.accent(context) != android.graphics.Color.parseColor(hex) || light != null && WidgetStore.accentLight(context) != android.graphics.Color.parseColor(light)
+            WidgetStore.setAccent(context, hex, light)
             if (changed) SyncWorker.schedule(context)
         }
+        call.resolve()
+    }
+
+    /** Tema de la app ("dark", "light" o "system"): lo usan el widget y, desde Android 12, el splash y las barras del sistema. */
+    @PluginMethod
+    fun setTheme(call: PluginCall) {
+        val mode = call.getString("mode")?.takeIf { it in setOf("dark", "light", "system") } ?: return call.reject("Tema inválido")
+        if (WidgetStore.theme(context) != mode) {
+            WidgetStore.setTheme(context, mode)
+            SyncWorker.schedule(context)
+        }
+        applyNightMode(context, mode)
         call.resolve()
     }
 
@@ -96,4 +116,5 @@ class WidgetsPlugin : Plugin() {
         pending = null
         call.resolve(o)
     }
+
 }

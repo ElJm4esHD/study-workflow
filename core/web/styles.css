@@ -1,4 +1,4 @@
-﻿/* Tema oscuro único. Todos los colores son variables: los CSS de módulos solo usan estas.
+﻿/* Tema oscuro (por defecto) y claro ([data-theme='light'], lo pone prefs.ts). Todos los colores son variables: los CSS de módulos solo usan estas.
    Sistema de diseño (docs/superpowers/specs/2026-11-14-pulido-ui-design.md). */
 :root {
   --bg: #0e1117; --surface: #161b24; --surface-2: #1d2430; --surface-3: #252d3b;
@@ -8,6 +8,9 @@
   --late: #ffa3a3; --entrega: #ffd38a; --ok: #93dcbf; /* peligro / aviso / completado */
   --inverse: #e8ebf2; --on-inverse: #10131a; --inverse-action: #3a4ba8; /* aviso (toast): claro sobre el fondo oscuro */
   --on-strong: #fff; --scrim: rgb(5 7 10 / .6); /* texto sobre el tono fuerte de una materia; fondo detrás de hojas */
+  --on-late: #2a0d0d; --nav-bg: rgb(22 27 36 / .88);
+  /* Materias: --dark elige el pastel (1) o el tono fuerte (0) para --m (ver materiaVars); --tint es el fondo suave de los chips */
+  --dark: 1; --tint: 18%;
   /* Zonas seguras del APK (edge-to-edge): Capacitor inyecta --safe-area-inset-*; en la web valen 0. */
   --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   /* Espaciado (escala 4/8), radios y elevación */
@@ -25,6 +28,20 @@
   --t-card: calc(16px * var(--fs)); --t-h2: calc(20px * var(--fs)); --t-page: calc(24px * var(--fs));
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   color-scheme: dark;
+}
+/* Tema claro: mismas jerarquías que el oscuro; las materias usan su tono fuerte para texto y marcas (AA sobre blanco). */
+:root[data-theme='light'] {
+  --bg: #f4f5f8; --surface: #ffffff; --surface-2: #eef0f5; --surface-3: #e2e6ee;
+  --line: rgb(20 28 45 / .09); --line-strong: rgb(20 28 45 / .16);
+  --text: #171c27; --muted: #4f586a; --faint: #5f687b;
+  --accent: #3e50c4; --accent-hover: #34449f; --on-accent: #fff; --accent-soft: rgb(62 80 196 / .10);
+  --late: #c22f2f; --entrega: #8f6200; --ok: #17805a;
+  --inverse: #1d2430; --on-inverse: #eef0f5; --inverse-action: #b7c4ff;
+  --scrim: rgb(20 24 34 / .35); --on-late: #fff; --nav-bg: rgb(255 255 255 / .9);
+  --e1: 0 1px 2px rgb(20 28 45 / .06), 0 0 0 1px rgb(20 28 45 / .04);
+  --e2: 0 8px 24px rgb(20 28 45 / .12); --e3: 0 24px 64px rgb(20 28 45 / .18);
+  --dark: 0; --tint: 9%;
+  color-scheme: light;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; background: var(--bg); color: var(--text); font-size: var(--t-body); line-height: 1.4; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
@@ -52,7 +69,7 @@ p { margin: 0 0 .75rem; }
 
 /* Navegación del celu: barra de abajo (4 ítems; el resto va en la hoja "Más") */
 .nav { position: fixed; inset: auto 0 0 0; height: var(--nav-h); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 10; padding-bottom: var(--sab);
-  background: rgb(22 27 36 / .88); backdrop-filter: blur(16px) saturate(1.4); border-top: 1px solid var(--line); }
+  background: var(--nav-bg); backdrop-filter: blur(16px) saturate(1.4); border-top: 1px solid var(--line); }
 .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: 0; color: var(--muted); text-decoration: none; font-size: calc(12px * var(--fs)); font-weight: 500; cursor: pointer; }
 .nav-item .nav-pill { width: 56px; height: 30px; border-radius: 15px; display: grid; place-items: center; position: relative; }
 .nav-item .nav-pill::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--accent-soft); transform: scaleX(.4); opacity: 0; transition: transform var(--d-screen) var(--ease-out), opacity var(--d-micro); }
@@ -167,7 +184,7 @@ input:not([type='checkbox']):not([type='radio']):focus, textarea:focus, select:f
 
 /* --m = pastel de la materia, --ms = tono fuerte; se setean en el style del elemento o de un ancestro. */
 .chip { display: inline-flex; align-items: center; gap: 4px; min-height: 20px; padding: 0 6px; border-radius: var(--r-chip);
-  font-size: var(--t-micro); font-weight: 700; letter-spacing: .02em; background: color-mix(in srgb, var(--m, var(--muted)) 18%, transparent); color: var(--m, var(--muted)); white-space: nowrap; }
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: .02em; background: color-mix(in srgb, var(--m, var(--muted)) var(--tint), transparent); color: var(--m, var(--muted)); white-space: nowrap; }
 .chip.solid { background: var(--ms); color: var(--on-strong); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m, var(--muted)); flex: none; display: inline-block; }
 .tag { font-size: var(--t-meta); color: var(--muted); }
@@ -286,7 +303,7 @@ input::-webkit-calendar-picker-indicator { filter: invert(.8); opacity: .65; cur
 
 /* Botones con ícono, peligro sólido */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-.btn.primary.danger-fill { background: var(--late); color: #2a0d0d; }
+.btn.primary.danger-fill { background: var(--late); color: var(--on-late); }
 /* Checkbox y radio propios (no los del navegador). Los switches (`role=switch`) tienen su propio dibujo. */
 input[type='checkbox']:not([role='switch']), input[type='radio'] {
   appearance: none; -webkit-appearance: none; margin: 0; flex: none; width: 22px; height: 22px; border: 2px solid var(--muted); background: none;
