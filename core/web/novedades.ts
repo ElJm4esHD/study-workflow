@@ -2,6 +2,9 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.0.0-beta.2', fecha: '15/11/2026', titulo: 'Base de sincronización (prueba)', items: [
+    'Primer paso de la app que funciona sin conexión y sincroniza con tu servidor: motor de sincronización, almacenamiento local y las rutas nuevas del servidor. Todavía no cambia nada de lo que ves.',
+  ] },
   { version: '1.1.1', fecha: '15/11/2026', titulo: 'Código abierto', items: [
     'El proyecto está en GitHub con licencia AGPL-3.0, README nuevo y capturas con datos de ejemplo.',
     'La dirección del servidor que trae el APK sale de tu .env.deploy al compilarlo.',

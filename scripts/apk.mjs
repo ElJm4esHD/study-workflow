@@ -52,8 +52,9 @@ if (!existsSync(keystore) || !existsSync(keyProps)) {
 
 // versionName = la de package.json; versionCode = X·1000000 + Y·1000 + Z (sube con cada versión y queda arriba del esquema viejo por fecha).
 const versionName = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
-const [vx, vy, vz] = versionName.split('.').map(Number);
-const versionCode = vx * 1_000_000 + vy * 1000 + vz;
+const [vx, vy, vz, vb] = versionName.split(/[.-]/).filter((s) => s !== 'beta').map(Number);
+// 2.0.0-beta.N queda justo debajo de 2.0.0 (y encima de 1.x).
+const versionCode = vx * 1_000_000 + vy * 1000 + vz - (vb === undefined ? 0 : 100 - vb);
 
 sh('npx vite build');
 sh('npx cap sync android');

@@ -11,6 +11,7 @@ import { backfillSiglas, makeMaterias } from './materias.ts';
 import { runMigrations } from './migrate.ts';
 import { makeSettings } from './settings.ts';
 import { registerData } from './data.ts';
+import { registerSync } from './sync.ts';
 import { orderModules, type CoreContext, type ServerModule } from './registry.ts';
 
 const VERSION: string = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
@@ -93,6 +94,7 @@ export async function buildApp(opts: { dbPath: string; modules: ServerModule[]; 
   });
 
   registerData(app, ctx, mods, opts.dbPath);
+  registerSync(app, db);
   app.get('/api/health', async () => ({ ok: true, version: VERSION }));
   for (const m of mods) await app.register((a) => m.routes(a, ctx), { prefix: `/api/${m.id}` });
 

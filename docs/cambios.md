@@ -58,3 +58,7 @@ Lo que cambió para quien usa la app en cada pedido. La lista corta de cada vers
 - **Tema**: Ajustes › Apariencia › Tema: Oscuro (por defecto), Claro o Según el sistema. Es de cada dispositivo. El widget, el splash y las barras del celu lo siguen.
 - **Semana**: grilla propia (ya no usa FullCalendar). En el celu se ven 3 días con la tira de la semana arriba: deslizá para moverte de a 3 días o tocá un día de la tira. Tocá un hueco para ver "+ HH:MM" y tocalo de nuevo para crear un evento a esa hora. Las tareas sin hora van en "Todo el día"; tocá el día o "+N más" para ver el detalle.
 - **Finales**: tres pasos en una pantalla: "¿Qué rendís?" (chips de materias), "Fechas posibles" (una fila por materia; tocá una fecha para editarla o + para agregar) y "Combinaciones" (filtros como chips arriba, la mejor con su mes dibujado y el resto con solo lo que cambia resaltado). Tocá una combinación para verla arriba. Importar fechas se abre en una hoja.
+
+## 2.0.0-beta.2 (base de sincronización)
+
+Sin cambios de uso todavía: se agregó el motor de sincronización, el almacenamiento local y las rutas `/api/sync/*` del servidor (ver [docs/sync.md](sync.md)).
