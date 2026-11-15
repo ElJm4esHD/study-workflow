@@ -78,3 +78,8 @@ Sin cambios de uso todavía: se agregó el motor de sincronización, el almacena
 - Los cambios de la compu llegan al widget y a las alarmas en segundo plano, sin abrir la app.
 - Los recordatorios de eventos que se repiten se calculan en el celu.
 - Sin dirección del servidor la app y el widget andan igual (solo local).
+
+## 2.0.0-beta.5 (migración)
+
+- `node scripts/migrar-local-first.mjs <backup-v1.json>` convierte tus datos de la 1.x (con informe antes/después y ida y vuelta) y, con `--cargar`, los sube a un server 2.0. `--a-v1` hace la vuelta atrás. Guía completa: [migracion.md](migracion.md).
+- `npm run deploy -- --next` y `npm run apk -- --next`: la versión de prueba vive al lado de la real.

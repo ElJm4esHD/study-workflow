@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Corre en el server: bash -s <sha> <puerto>, leído del repo bare. Los comandos que podrían leer stdin
+# Corre en el server: bash -s <sha> <puerto> [nombre], leído del repo bare. El nombre (por defecto study-workflow; study-workflow-next para la
+# versión de prueba) separa contenedor, imágenes, carpeta de releases y datos (/srv/<nombre>). Los comandos que podrían leer stdin
 # llevan </dev/null porque bash está leyendo este mismo script por stdin.
 set -euo pipefail
 SHA=$1
 export PORT=${2:?falta el puerto}
-APP=$HOME/apps/study-workflow
-DATA=/srv/study-workflow
+NAME=${3:-study-workflow}
+APP=$HOME/apps/$NAME
+DATA=/srv/$NAME
 cd "$APP"
 
-dc() { local tag=$1 rel=$2; shift 2; IMAGE_TAG=$tag docker compose -p study-workflow -f "releases/$rel/compose.yaml" "$@" </dev/null; }
+dc() { local tag=$1 rel=$2; shift 2; IMAGE_NAME=$NAME IMAGE_TAG=$tag DATA_DIR=$DATA docker compose -p "$NAME" -f "releases/$rel/compose.yaml" "$@" </dev/null; }
 
 PREV=$(cat .deployed 2>/dev/null || true)
 if [ "$PREV" = "$SHA" ]; then echo "Ya está desplegada la versión $SHA."; exit 0; fi
@@ -19,15 +21,18 @@ git --git-dir "$HOME/git/study-workflow.git" archive "$SHA" | tar -x -C "release
 # compose lee este .env: los comandos manuales en el release (restore, logs) usan el mismo puerto.
 printf 'PORT=%s\nIMAGE_TAG=%s\n' "$PORT" "$SHA" > "releases/$SHA/.env"
 
-if ! docker build -t "study-workflow:$SHA" "releases/$SHA" </dev/null; then
+if ! docker build -t "$NAME:$SHA" "releases/$SHA" </dev/null; then
   echo "BUILD FALLÓ"; rm -rf "releases/$SHA"; exit 1
 fi
 
+# El archivo de base de la versión que está corriendo (study.sqlite en la 1.x, sync.sqlite en la 2.x): el backup y la vuelta atrás son de ese.
 BACKUP=""
+PREVDB=""
 if [ -n "$PREV" ] && [ -n "$(dc "$PREV" "$PREV" ps -q app)" ]; then
   BACKUP=pre-deploy-$(date +%Y%m%d-%H%M%S).sqlite
   dc "$PREV" "$PREV" exec -T app node core/server/backup.ts "/data/backups/$BACKUP" \
     || { echo "BACKUP FALLÓ, no se toca nada"; exit 1; }
+  PREVDB=$(basename "$(dc "$PREV" "$PREV" exec -T app printenv DB_PATH | tr -d '[:space:]')")
 fi
 
 dc "$SHA" "$SHA" up -d || echo "UP FALLÓ"
@@ -36,8 +41,8 @@ for i in $(seq 15); do
     echo "$SHA" > .deployed
     # Se conservan los 3 más nuevos y siempre el actual y el anterior.
     ls -1t releases | grep -vxF -e "$SHA" -e "$PREV" | tail -n +2 | xargs -r -I{} rm -rf "releases/{}" || true
-    docker images study-workflow --format '{{.Tag}}' </dev/null | grep -vx latest | grep -vxF -e "$SHA" -e "$PREV" \
-      | tail -n +2 | xargs -r -I{} docker rmi "study-workflow:{}" >/dev/null 2>&1 || true
+    docker images "$NAME" --format '{{.Tag}}' </dev/null | grep -vx latest | grep -vxF -e "$SHA" -e "$PREV" \
+      | tail -n +2 | xargs -r -I{} docker rmi "$NAME:{}" >/dev/null 2>&1 || true
     exit 0
   fi
   sleep 2
@@ -47,9 +52,9 @@ echo "HEALTH CHECK FALLÓ, volviendo a la versión anterior"
 dc "$SHA" "$SHA" logs --tail 30 app || true
 dc "$SHA" "$SHA" stop app
 if [ -z "$PREV" ]; then echo "No hay versión anterior a la que volver."; exit 1; fi
-if [ -n "$BACKUP" ]; then
-  cp "$DATA/backups/$BACKUP" "$DATA/study.sqlite"
-  rm -f "$DATA/study.sqlite-wal" "$DATA/study.sqlite-shm"
+if [ -n "$BACKUP" ] && [ -n "$PREVDB" ]; then
+  cp "$DATA/backups/$BACKUP" "$DATA/$PREVDB"
+  rm -f "$DATA/$PREVDB-wal" "$DATA/$PREVDB-shm"
 fi
 dc "$PREV" "$PREV" up -d
 exit 1

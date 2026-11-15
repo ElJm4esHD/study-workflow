@@ -19,5 +19,5 @@ export function backupTo(dbPath: string, dest: string): void {
 if (import.meta.main) {
   const dest = process.argv[2];
   if (!dest) { console.error('Uso: node core/server/backup.ts <destino>'); process.exit(1); }
-  backupTo(process.env.DB_PATH ?? './data/study.sqlite', resolve(dest));
+  backupTo(process.env.DB_PATH ?? './data/sync.sqlite', resolve(dest));
 }

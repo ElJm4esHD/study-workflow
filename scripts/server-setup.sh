@@ -3,10 +3,11 @@
 set -euo pipefail
 PORT=${1:?falta el puerto}
 HTTPS_PORT=${2:?falta el puerto HTTPS}
-DATA=/srv/study-workflow
+NAME=${3:-study-workflow} # study-workflow-next para la versión de prueba
+DATA=/srv/$NAME
 
 git init --bare -q -b main "$HOME/git/study-workflow.git"
-mkdir -p "$HOME/apps/study-workflow/releases"
+mkdir -p "$HOME/apps/$NAME/releases"
 
 if mkdir -p "$DATA/backups" 2>/dev/null && [ "$(stat -c %u "$DATA")" = 1000 ]; then
   echo "OK: $DATA/backups"

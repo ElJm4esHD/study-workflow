@@ -1,6 +1,6 @@
 services:
   app:
-    image: study-workflow:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-study-workflow}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       PORT: ${PORT:?falta PORT}

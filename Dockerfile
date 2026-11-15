@@ -9,7 +9,7 @@ FROM node:24-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
-    DB_PATH=/data/study.sqlite \
+    DB_PATH=/data/sync.sqlite \
     WEB_DIST=/app/dist/web \
     TZ=America/Argentina/Buenos_Aires
 COPY package.json package-lock.json ./

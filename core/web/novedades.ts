@@ -2,6 +2,10 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.0.0-beta.5', fecha: '15/11/2026', titulo: 'Migración de tus datos (prueba)', items: [
+    'Conversor de tus datos de la versión 1.x a la 2.0, con informe de cantidades antes y después y vuelta atrás.',
+    'La versión de prueba se instala y se deploya al lado de la real (otro contenedor, puerto y datos) y no la toca.',
+  ] },
   { version: '2.0.0-beta.4', fecha: '15/11/2026', titulo: 'Widget y recordatorios desde el celu (prueba)', items: [
     'El widget y los recordatorios leen los datos guardados en el celu: andan sin conexión y se actualizan al instante con lo que hacés en la app.',
     'Tildar en el widget se guarda al toque y sube solo cuando hay conexión; si la misma tarea cambió en otro dispositivo, gana el cambio más nuevo.',
