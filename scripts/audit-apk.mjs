@@ -34,14 +34,14 @@ const hits = [];
 const even = (b) => b.subarray(0, b.length & ~1);
 // El link público al repo (github.com/<login>/study-workflow) sale en la página de privacidad: el login ya es público, y puede coincidir con DEPLOY_USER.
 const REPO_URL = /github\.com\/[A-Za-z0-9-]+\/study-workflow/gi;
-function scan(name, data, isSite = false) {
-  if (isSite) data = Buffer.from(data.toString('latin1').replace(REPO_URL, 'github.com/REPO/study-workflow'), 'latin1');
+function scan(name, data) {
+  data = Buffer.from(data.toString('latin1').replace(REPO_URL, 'github.com/REPO/study-workflow'), 'latin1');
   const texts = [data.toString('latin1'), even(data).toString('utf16le'), even(data.subarray(1)).toString('utf16le')];
   for (const [label, re] of checks) if (texts.some((t) => re.test(t))) hits.push([name, label]);
 }
 let count = 0;
 if (statSync(apk).isDirectory()) {
-  const walk = (d) => { for (const e of readdirSync(d, { withFileTypes: true })) { const f = join(d, e.name); if (e.isDirectory()) walk(f); else { count++; scan(f.slice(apk.length + 1), readFileSync(f), true); } } };
+  const walk = (d) => { for (const e of readdirSync(d, { withFileTypes: true })) { const f = join(d, e.name); if (e.isDirectory()) walk(f); else { count++; scan(f.slice(apk.length + 1), readFileSync(f)); } } };
   walk(apk);
 } else {
   // Lector de .zip mínimo (APK = zip): directorio central → cada entrada, stored o deflate.
