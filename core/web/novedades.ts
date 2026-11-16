@@ -2,6 +2,13 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.0.0', fecha: '16/11/2026', titulo: 'La app funciona sola', items: [
+    'Todo vive en tu dispositivo: crear, editar, borrar e importar andan sin conexión, en la web y en el celu. El servidor solo sincroniza.',
+    'Se sincroniza al abrir, al volver la red, cada 5 minutos y al instante después de cada cambio. Si dos dispositivos tocan lo mismo, gana el cambio más nuevo.',
+    'El widget y los recordatorios leen los datos del celu: andan sin conexión y se actualizan solos con lo que cambiás en la compu.',
+    'Ajustes › Datos muestra el estado de la sincronización; el backup nuevo (versión 2) se exporta e importa ahí.',
+    'Tus datos de la versión 1.x se migraron con un conversor que verifica que no se pierda nada.',
+  ] },
   { version: '2.0.0-beta.5', fecha: '15/11/2026', titulo: 'Migración de tus datos (prueba)', items: [
     'Conversor de tus datos de la versión 1.x a la 2.0, con informe de cantidades antes y después y vuelta atrás.',
     'La versión de prueba se instala y se deploya al lado de la real (otro contenedor, puerto y datos) y no la toca.',

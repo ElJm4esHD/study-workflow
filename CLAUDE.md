@@ -21,7 +21,8 @@ Interfaz en español (Argentina). Zona horaria `America/Argentina/Buenos_Aires`,
 
 ## Stack
 
-- Frontend: React + Vite + TypeScript. Backend: Node 24 (TypeScript con type stripping) + Fastify + `node:sqlite`.
+- **Local-first (2.0):** la app (web y APK) guarda los datos en el dispositivo y corre toda la lógica; el servidor solo guarda y entrega registros de sincronización. Diseño en `docs/superpowers/specs/2026-11-15-local-first-design.md`, referencia en `docs/sync.md`.
+- Frontend: React + Vite + TypeScript. Backend: Node 24 (TypeScript con type stripping) + Fastify + `node:sqlite` (`/api/sync/*` y `/api/health`; no conoce módulos ni reglas).
 - Deploy: Docker Compose en mi servidor (`npm run deploy`). Un contenedor sirve la API y el frontend.
 - Celular: Capacitor 8 (Android) con el frontend adentro (`npm run apk`), widgets nativos en Kotlin + Jetpack Glance.
 
@@ -36,7 +37,7 @@ Interfaz en español (Argentina). Zona horaria `America/Argentina/Buenos_Aires`,
 
 ## Arquitectura modular (requisito)
 
-Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/` registrada en `modules/server.ts` y `modules/web.ts`, sin tocar otros módulos. Un módulo no lee tablas de otro: usa su API o servicio. Contrato completo en `docs/modulos.md`.
+Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/` registrada en `modules/app.ts` (lógica y datos, corre en la app) y `modules/web.ts`, sin tocar otros módulos. Un módulo no lee colecciones de otro: usa su servicio. Contrato completo en `docs/modulos.md`.
 
 ## Estado actual (ya hecho)
 
@@ -45,14 +46,14 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 - **Calendario:** vista Mes (grilla propia, chips por materia, exámenes en color sólido, detalle del día) y Semana (grilla propia: 3 días en el celu, 7 en la compu, tocar un hueco para crear; lógica en `modules/calendar/web/week.ts`). Eventos `evento | parcial | recuperatorio | final`, repetición semanal, recordatorio.
 - **Finales** (módulo `finals`, 3 pasos: qué rendís, fechas, combinaciones con la mejor en un mini mes): fechas posibles por materia (a mano o pegando el JSON de mi skill; formato en `docs/formato-finales.md`, v1, mismo criterio de contrato), combinaciones con filtros y orden, elegir crea los eventos `final` y se puede deshacer.
 - **Importar plan:** pegar JSON generado por mi skill de Claude `cargar-app`. Formato y reglas: `docs/formato-importacion.md` (v3). Es un contrato: no lo cambies sin subir `version`, seguir aceptando las anteriores y pasarme el texto exacto de los cambios.
-- **APK:** offline con la última copia; sin conexión solo se puede tildar (cola, gana la última escritura). Menú "Compartir" → Importar. Guía en `docs/android.md`.
-- **Widget To-do** (Glance): scroll y tildado dentro del widget, cola offline propia. No hay widget ni vista Agenda.
-- **Recordatorios:** `reminderMin` (minutos antes) + `reminderInsistent` en tareas y eventos; el celu los programa en nativo (AlarmManager) desde la copia del sync del widget. Selector compartido en `core/web/ReminderField.tsx`.
+- **APK:** todo anda sin conexión (base SQLite nativa `sw.db`, compartida con el widget y las alarmas); se sincroniza en segundo plano, gana el cambio más nuevo por registro (HLC). Menú "Compartir" → Importar. Guía en `docs/android.md`.
+- **Widget To-do** (Glance): lee `sw.db`; scroll y tildado dentro del widget (el tilde se escribe al instante y sube en segundo plano). No hay widget ni vista Agenda.
+- **Recordatorios:** `reminderMin` (minutos antes) + `reminderInsistent` en tareas y eventos; el celu los programa en nativo (AlarmManager) desde `sw.db` (incluye las ocurrencias de eventos que se repiten). Selector compartido en `core/web/ReminderField.tsx`.
 - **Atrás en el APK:** `MainActivity` llama a `window.swBack()` (`core/web/App.tsx`, regla en `core/web/back.ts`).
 - **Estilo (Hito C):** tema Oscuro (por defecto), Claro o Según el sistema (`prefs.ts`, `[data-theme]` en `styles.css`; en claro las materias usan su tono fuerte vía `--dark` en `materiaVars`), tarjetas, densidad compacta, esquinas medias, fuente del sistema, animaciones sutiles. Tokens en `core/web/styles.css`. Zonas táctiles ≥ 44–48 px.
 - **Ajustes** en secciones: General (pantalla de inicio, guía), Materias, Módulos, Tareas (duración y categoría por defecto, ocultar completadas tras N días; panel del módulo `todo`), Calendario, Recordatorios (anticipación e insistente por defecto, probar sonido), Apariencia (letra, color de acento, animaciones, vibración), Datos, Servidor y Acerca de (versión y Novedades).
 - **Versiones:** semver en `package.json` (única fuente: web, server y APK). **Cada pedido sube la versión y agrega su entrada en `core/web/novedades.ts`** (`{ version, fecha }`; un test exige que coincida con `package.json`). Lo de "este dispositivo" va en `core/web/prefs.ts` (localStorage, anda sin conexión); lo compartido, en `settings` del servidor.
-- **Búsqueda global** (`/` o Ctrl+K; "Buscar" en Más): `GET /api/search`; cada módulo aporta `search(ctx, q)` en su `ServerModule`. **Backup** (`GET/POST /api/backup`): exporta e importa todas las tablas sin conocer los módulos; antes de restaurar deja una copia en `backups/` junto a la base.
+- **Búsqueda global** (`/` o Ctrl+K; "Buscar" en Más): `GET /api/search`; cada módulo aporta `search(ctx, q)` en su `AppModule`. **Backup** (Ajustes › Datos, formato v2): exporta e importa los registros de todas las colecciones sin conocer los módulos. Migración desde la 1.x y vuelta atrás: `docs/migracion.md`.
 - **Guía de primera vez** (`core/web/Onboarding.tsx`), **selectores de fecha y hora propios** (`core/web/DateTime.tsx`: se tipean rápido o se eligen en un calendario), **borrar con "Deshacer"** en vez de confirmar, **aviso de cambios sin guardar** (`useUnsaved`), guardado sin doble envío (`useSubmit`), fechas relativas ("Hoy", "Vencida hace 2 días") y "Reducir movimiento" del sistema como valor inicial de animaciones.
 - **Producto:** ícono adaptativo con versión monocromática (el dibujo se comparte con la web: `scripts/icons.mjs`), web instalable (manifest), servidor con compresión Brotli/gzip, listas largas del To-do de a 30 por grupo.
 - Diseños y planes anteriores: `docs/superpowers/specs/` y `docs/superpowers/plans/`. El pulido final (auditoría y cada etapa) está en `docs/pedidos/2026-11-15-pulido-final*.md`.
@@ -65,4 +66,5 @@ Núcleo chico + módulos. Agregar una funcionalidad = una carpeta `modules/<id>/
 - Cuidado con el CSS: un `display` en un selector de `dialog` lo deja visible aunque esté cerrado (poner el `display` solo en `[open]`).
 - Actualizar `README.md` y `docs/` cuando cambie el uso. Los cambios de uso de cada versión van en `docs/cambios.md`.
 - **Repo público** (GitHub, AGPL-3.0, remote `github`): nunca commitear datos reales (host, tailnet, usuario, IPs, rutas de mi máquina, datos de uso). Van en `.env.deploy` o `CLAUDE.local.md`; docs y ejemplos usan `tu-server.tu-tailnet.ts.net` y `tu-usuario`. Capturas y fixtures, solo con datos de ejemplo.
+- **Sync:** el motor de TypeScript (`core/web/sync/`) y el de Kotlin (`SyncCore.kt`) corren los mismos casos (`core/shared/sync-cases.json`); si cambiás una regla, cambiala ahí y que pasen los dos (`npm test` y `gradlew testDebugUnitTest`). Versión de prueba al lado de la real: `npm run deploy -- --next` / `npm run apk -- --next`.
 - **Releases:** `npm run release` (APK público sin `.env.deploy` + auditoría + zips de skills + `gh release`). Checklist en `docs/release.md`. `npm run apk` sigue siendo el APK personal con mi server precargado.

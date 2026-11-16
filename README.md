@@ -90,7 +90,7 @@ No hace falta Android Studio: el APK ya compilado está en **[Releases](https://
 2. **Permití instalar apps desconocidas.** Abrí el APK desde la notificación de descarga (o desde **Mis archivos › Descargas**). La primera vez Android dice que no puede instalar apps de esa fuente: tocá **Configuración**, activá **Permitir de esta fuente** y volvé.
 3. **Si tenés un Samsung con "Bloqueador automático"** (One UI 6 o más nuevo), Android no te deja instalar nada que no venga de una tienda. Desactivalo en **Ajustes › Seguridad y privacidad › Bloqueador automático**, instalá y volvé a activarlo si querés.
 4. **Instalá.** Tocá **Instalar**. Si aparece **Play Protect** ("App no reconocida" o "App bloqueada"), es porque la app no viene de Play Store: tocá **Más detalles › Instalar de todos modos**. Si te ofrece mandarla a analizar, podés tocar **No enviar**.
-5. **Primera apertura.** La app pide la dirección de tu server: `https://tu-server.tu-tailnet.ts.net:PUERTO` (el `DEPLOY_HOST` y el `HTTPS_PORT` de tu `.env.deploy`). Tocá **Probar y guardar**. Después se cambia en Ajustes › Servidor.
+5. **Primera apertura.** La app anda sola desde el primer momento, con los datos en el celu. Para sincronizar con tu server, la dirección (`https://tu-server.tu-tailnet.ts.net:PUERTO`, el `DEPLOY_HOST` y el `HTTPS_PORT` de tu `.env.deploy`) viene precargada en el APK de `npm run apk`; en el APK público se carga en Ajustes › Servidor.
 6. **Widget y recordatorios.** Mantené apretada la pantalla de inicio › **Widgets** › Study Workflow. Para que suenen los recordatorios, aceptá los permisos de notificaciones y de alarmas cuando la app los pida.
 
 **Para actualizar**, bajá el APK nuevo del Release e instalalo encima: tus datos están en el server y no se pierden. Si antes habías compilado la app vos, Android la rechaza porque tiene otra firma. En ese caso desinstalala primero.
@@ -113,7 +113,7 @@ npm run apk:public       # dist/study-workflow-X.Y.Z.apk genérico: pide la dire
 
 ```bash
 npm install
-npm run dev          # server en :3000 + Vite con proxy /api (base local en ./data/study.sqlite)
+npm run dev          # server en :3000 (solo sincronización, base en ./data/sync.sqlite) + Vite con proxy /api
 npm test             # API y lógica de dominio (Vitest)
 npm run typecheck
 npm run a11y         # axe + Playwright a 412 y 1440 px, tema oscuro y claro: tiene que dar 0 violaciones

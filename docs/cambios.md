@@ -83,3 +83,7 @@ Sin cambios de uso todavía: se agregó el motor de sincronización, el almacena
 
 - `node scripts/migrar-local-first.mjs <backup-v1.json>` convierte tus datos de la 1.x (con informe antes/después y ida y vuelta) y, con `--cargar`, los sube a un server 2.0. `--a-v1` hace la vuelta atrás. Guía completa: [migracion.md](migracion.md).
 - `npm run deploy -- --next` y `npm run apk -- --next`: la versión de prueba vive al lado de la real.
+
+## 2.0.0 (local-first)
+
+Versión final de la serie 2.0.0-beta: la app corre en el dispositivo y el servidor solo sincroniza. Los cambios de uso de cada etapa están arriba (2.0.0-beta.2 a beta.5). Migración desde la 1.x y vuelta atrás: [migracion.md](migracion.md).

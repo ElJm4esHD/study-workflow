@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Abrí `http://localhost:5173`, creá una tarea y cerralo con Ctrl+C. Lo que crees acá queda en `./data/study.sqlite`, no en el server.
+Abrí `http://localhost:5173`, creá una tarea y cerralo con Ctrl+C. Los datos viven en el navegador (IndexedDB) y se sincronizan con el server local de `./data/sync.sqlite`; no son los de tu server real.
 
 ---
 
