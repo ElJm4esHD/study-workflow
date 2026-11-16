@@ -3,17 +3,32 @@ package ar.federico.studyworkflow;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
+import android.content.IntentSender;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import ar.federico.studyworkflow.widget.GooglePlugin;
 import ar.federico.studyworkflow.widget.WidgetsPlugin;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    // Pantalla de permiso de Google (Drive): se registra acá porque tiene que existir antes de que la actividad arranque.
+    private ActivityResultLauncher<IntentSenderRequest> googleLauncher;
+
+    public void launchGoogle(IntentSender sender) {
+        googleLauncher.launch(new IntentSenderRequest.Builder(sender).build());
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // SystemBars con insetsHandling 'css' lo pide en Capacitor 8 (en el 9 viene solo).
         EdgeToEdge.enable(this);
         registerPlugin(SharedTextPlugin.class);
         registerPlugin(WidgetsPlugin.class);
+        registerPlugin(GooglePlugin.class);
+        googleLauncher = registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(),
+            r -> GooglePlugin.onResult(this, r.getResultCode(), r.getData()));
         super.onCreate(savedInstanceState);
         SharedTextPlugin.capture(getIntent());
         WidgetsPlugin.capture(getIntent());

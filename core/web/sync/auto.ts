@@ -3,7 +3,8 @@ import type { LocalDb } from './db.ts';
 import { makeSyncer } from './engine.ts';
 import { serverTarget, type Call } from './target.ts';
 import { AuthError, driveRest, driveTarget } from './drive.ts';
-import { connectGoogle, driveToken, loadGoogle, targetKind } from './google.ts';
+import { connectGoogle, driveToken, IS_NATIVE, loadGoogle, targetKind } from './google.ts';
+import { setWidgetTarget } from '../widgets.ts';
 
 /** Cuándo y contra qué se sincroniza: al abrir, al volver la red o a primer plano, cada 5 min y 2 s después de un cambio. */
 export type SyncStatus = { enabled: boolean; syncing: boolean; pending: number; lastSync: string | null; error: string | null; saveError: boolean; needsAuth: boolean };
@@ -39,7 +40,8 @@ export const syncNowNow = () => syncNow();
 export function startSync(db: LocalDb, onRemote: () => void): void {
   const kind = targetKind();
   const enabledNow = () => (kind === 'drive' ? true : kind === 'server' && syncBase() !== null);
-  if (kind === 'drive') void loadGoogle().catch(() => {}); // el popup de "Reconectar" necesita el script ya cargado
+  setWidgetTarget(kind);
+  if (kind === 'drive' && !IS_NATIVE) void loadGoogle().catch(() => {}); // el popup de "Reconectar" necesita el script ya cargado
   const run = makeSyncer(db, kind === 'drive' ? driveTarget(driveRest(driveToken)) : serverTarget(call));
   db.onExternal(onRemote);
   const refresh = () => set({ pending: db.pendingCount(), saveError: db.error !== null, lastSync: db.getMeta('lastSync') ?? null });

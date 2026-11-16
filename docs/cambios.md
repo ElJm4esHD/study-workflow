@@ -88,6 +88,12 @@ Sin cambios de uso todavía: se agregó el motor de sincronización, el almacena
 
 Versión final de la serie 2.0.0-beta: la app corre en el dispositivo y el servidor solo sincroniza. Los cambios de uso de cada etapa están arriba (2.0.0-beta.2 a beta.5). Migración desde la 1.x y vuelta atrás: [migracion.md](migracion.md).
 
+## Qué cambió de uso (2.1.0-beta.3, Google Drive en el celu)
+
+- **APK**: Ajustes › **Google Drive** › Conectar sincroniza con tu Drive (carpeta oculta de la app) en vez de Mi servidor. Hace falta el cliente Android de Google Cloud (paso 5 de [google-cloud.md](google-cloud.md)). Al conectar o desconectar, los datos del celu se juntan con los del destino nuevo, sin borrar nada.
+- **Widget y recordatorios** siguen al día en segundo plano también con Drive. Si Google pide volver a entrar, el widget deja de sincronizar hasta que abras la app y toques "Reconectar".
+- Desconectar en el celu no quita el permiso de Google: se hace en myaccount.google.com/permissions.
+
 ## Qué cambió de uso (2.1.0-beta.2, Google Drive en la web)
 
 - **Web pública (GitHub Pages)**: la misma app sin servidor. Ajustes › **Google Drive** › Conectar guarda y sincroniza tus datos en una carpeta oculta de tu Drive (permiso `drive.appdata`). Al conectar, lo que ya tenías en el dispositivo se junta con lo que haya en el Drive. Configuración de Google: [docs/google-cloud.md](google-cloud.md). Mi web en mi server no cambia.

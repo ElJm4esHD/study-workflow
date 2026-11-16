@@ -79,6 +79,44 @@ class SyncCasesTest {
         }
     }
 
+    /** Un Drive en memoria (id → nombre y contenido). */
+    private class FakeDrive(initial: Map<String, String>) : DriveFiles {
+        val files = LinkedHashMap<String, Pair<String, String>>()
+        private var n = 0
+        init { initial.forEach { (name, body) -> files["id${++n}"] = name to body } }
+        override fun list() = files.map { it.key to it.value.first }
+        override fun read(id: String) = files[id]?.second ?: throw NotFound()
+        override fun create(name: String, body: String) { files["id${++n}"] = name to body }
+        override fun remove(id: String) { files.remove(id) }
+    }
+
+    private fun normName(n: String) = n.replace(Regex("^epoch-.*[.]json$"), "epoch-*.json").replace(Regex("^(log-[0-9]{13}-[0-9a-f]{4}-[A-Za-z0-9-]+?)-[0-9a-f]{8}[.]json$"), "$1-*.json")
+
+    private fun cursorParts(o: JSONObject) = listOf(o.getInt("v"), if (o.isNull("e")) null else o.getString("e"), o.getJSONArray("s").strs(), o.getJSONArray("l").strs())
+
+    /** Los mismos casos `drive` que corre cases.test.ts contra core/web/sync/drive.ts. */
+    @Test fun drive() {
+        for (c in cases.getJSONArray("drive").objs()) {
+            val name = c.getString("name")
+            val fs = FakeDrive(c.getJSONObject("files").let { f -> f.keys().asSequence().associateWith { f.getJSONObject(it).toString() } })
+            val target = DriveTarget(fs, { if (c.has("now")) c.getLong("now") else 3000L }, if (c.has("compactAt")) c.getInt("compactAt") else 200, if (c.has("page")) c.getInt("page") else 50)
+            var prev: String? = null
+            for (s in c.getJSONArray("steps").objs()) {
+                if (s.getString("op") == "push") { target.push(s.getJSONArray("records").objs().map(::row)); continue }
+                val cur = s.get("cursor")
+                val cursor = when { cur == JSONObject.NULL -> null; cur == "prev" -> prev; cur is String -> cur; else -> cur.toString() }
+                val p = target.pull(cursor)
+                val e = s.getJSONObject("expect")
+                assertEquals(name, e.getJSONArray("ids").strs().sorted(), p.records.map { "${it.t}/${it.id}@${it.hlc}" }.sorted())
+                assertEquals(name, e.getBoolean("more"), p.more)
+                assertEquals(name, if (e.isNull("reset")) null else e.getString("reset"), p.reset)
+                assertEquals(name, cursorParts(e.getJSONObject("cursor")), cursorParts(JSONObject(p.cursor)))
+                prev = p.cursor
+            }
+            if (c.has("expectFiles")) assertEquals(name, c.getJSONArray("expectFiles").strs().sorted(), fs.files.values.map { normName(it.first) }.sorted())
+        }
+    }
+
     @Test fun series() {
         for (c in cases.getJSONArray("series").objs()) {
             val e = c.getJSONObject("event")

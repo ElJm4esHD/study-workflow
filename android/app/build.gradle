@@ -66,6 +66,8 @@ dependencies {
     implementation project(':capacitor-android')
     implementation 'androidx.glance:glance-appwidget:1.1.1'
     implementation 'androidx.work:work-runtime-ktx:2.10.1'
+    // Token de Drive (drive.appdata) sin secreto en el código, renovable también desde el sync de fondo.
+    implementation 'com.google.android.gms:play-services-auth:21.4.0'
     testImplementation "junit:junit:$junitVersion"
     // org.json real: en los tests de la JVM el de Android viene vacío y los casos compartidos son JSON.
     testImplementation 'org.json:json:20231013'

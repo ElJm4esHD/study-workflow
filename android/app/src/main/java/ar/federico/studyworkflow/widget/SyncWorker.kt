@@ -41,13 +41,19 @@ class SyncWorker(private val ctx: Context, params: WorkerParameters) : Coroutine
     }
 
     private fun sync() {
-        val base = WidgetStore.server(ctx) ?: return
+        val target: Target = when (WidgetStore.target(ctx)) {
+            "drive" -> DriveTarget(DriveRest { GoogleAuth.silentToken(ctx) })
+            "local" -> return
+            else -> ServerTarget(WidgetStore.server(ctx) ?: return)
+        }
         val db = SwDb.get(ctx)
         val store = SqlStore(db)
         var retry = false
         try {
-            SyncCore.sync(store, store.clock(), ServerTarget(base), System.currentTimeMillis())
+            SyncCore.sync(store, store.clock(), target, System.currentTimeMillis())
             WidgetStore.setOffline(ctx, false)
+        } catch (_: AuthException) {
+            return // falta reconectar Drive: no se reintenta solo, lo resuelve la app (aviso "Reconectar")
         } catch (e: Exception) {
             // IOException = sin red o el server respondió mal; cualquier otra cosa (p. ej. un proxy que devuelve HTML) también se reintenta.
             if (e is IOException) WidgetStore.setOffline(ctx, true)

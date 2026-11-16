@@ -3,6 +3,7 @@ import type { Row } from './sync/db.ts';
 
 interface WidgetsPlugin {
   setServer(o: { url: string | null }): Promise<void>;
+  setTarget(o: { kind: 'server' | 'drive' | 'local' }): Promise<void>;
   refresh(): Promise<void>;
   takeRoute(): Promise<{ route: string | null }>;
   askNotifications(): Promise<void>;
@@ -20,6 +21,8 @@ export const plugin = Capacitor.isNativePlatform() ? registerPlugin<WidgetsPlugi
 
 // Un fallo del widget nunca debe romper la app.
 export const setWidgetServer = (url: string | null): void => void plugin?.setServer({ url }).catch(() => {});
+/** Destino de sincronización: el sync de fondo (Kotlin) lo lee de acá. */
+export const setWidgetTarget = (kind: 'server' | 'drive' | 'local'): void => void plugin?.setTarget({ kind }).catch(() => {});
 export const refreshWidgets = (): void => void plugin?.refresh().catch(() => {});
 /** Pide el permiso de notificaciones (Android 13+) la primera vez que se pone un recordatorio. */
 export const askNotifications = (): void => void plugin?.askNotifications().catch(() => {});

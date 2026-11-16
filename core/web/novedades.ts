@@ -2,6 +2,11 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.1.0-beta.3', fecha: '16/11/2026', titulo: 'Google Drive en el celu (prueba)', items: [
+    'En el APK, Ajustes › Google Drive permite sincronizar con tu Drive en vez de un servidor propio. La sesión de Google se renueva sola, sin tocar nada.',
+    'El widget y los recordatorios también se actualizan en segundo plano con Drive: lo que cargás en la compu llega al celu sin abrir la app.',
+    'Si Google pide volver a entrar, aparece "Reconectar" arriba y los cambios quedan guardados en el celu.',
+  ] },
   { version: '2.1.0-beta.2', fecha: '16/11/2026', titulo: 'Web pública con Google Drive (prueba)', items: [
     'Versión web pública (GitHub Pages) que no necesita servidor: Ajustes › Google Drive conecta tu cuenta y sincroniza con una carpeta oculta de tu Drive. La app no ve ningún otro archivo tuyo.',
     'En la web, Google pide un toque para renovar el permiso cada 1 hora: aparece un aviso con el botón "Reconectar" y no se pierde nada mientras tanto.',

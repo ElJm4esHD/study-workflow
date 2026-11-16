@@ -35,7 +35,7 @@ class ServerTarget(private val base: String, private val pageSize: Int = 1000) :
     }
 
     override fun pull(cursor: String?): Page {
-        val q = "?limit=$pageSize" + (cursor?.let { "&since=" + URLEncoder.encode(it, "UTF-8") } ?: "")
+        val q = "?limit=$pageSize" + (cursor?.takeIf { it.isNotEmpty() }?.let { "&since=" + URLEncoder.encode(it, "UTF-8") } ?: "")
         val o = JSONObject(call("/api/sync/pull$q", "GET"))
         val recs = o.getJSONArray("records")
         return Page(

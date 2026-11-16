@@ -32,6 +32,9 @@ object WidgetStore {
     /** Tema elegido en la app: "dark", "light" o "system". */
     fun theme(ctx: Context): String = p(ctx).getString("theme", null) ?: "dark"
     fun setTheme(ctx: Context, mode: String) = p(ctx).edit().putString("theme", mode).apply()
+    /** Destino de sincronización de este celu: "server" (por defecto), "drive" o "local". Lo fija la app (Ajustes). */
+    fun target(ctx: Context): String = p(ctx).getString("target", null) ?: "server"
+    fun setTarget(ctx: Context, kind: String) = p(ctx).edit().putString("target", kind).apply()
     fun setServer(ctx: Context, url: String?) = p(ctx).edit().putString("server", url?.trimEnd('/')).apply()
 
     fun todos(ctx: Context): List<Todo> = store(ctx).docs("todo_items").map(::toTodo)

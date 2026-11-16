@@ -56,6 +56,17 @@ class WidgetsPlugin : Plugin() {
         call.resolve()
     }
 
+    /** Destino de sincronización elegido en la app: "server", "drive" o "local". El sync de fondo lo lee de acá. */
+    @PluginMethod
+    fun setTarget(call: PluginCall) {
+        val kind = call.getString("kind")?.takeIf { it in setOf("server", "drive", "local") } ?: return call.reject("Destino inválido")
+        if (WidgetStore.target(context) != kind) {
+            WidgetStore.setTarget(context, kind)
+            SyncWorker.schedule(context)
+        }
+        call.resolve()
+    }
+
     @PluginMethod
     fun refresh(call: PluginCall) {
         SyncWorker.refreshLocal(context)
