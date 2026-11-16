@@ -13,6 +13,8 @@ Diseño: `docs/superpowers/specs/2026-11-15-local-first-design.md`. Esta es la r
 - **Reset**: `reset: 'purged'` (el dispositivo se quedó atrás de una limpieza) baja todo y descarta lo que el server ya no tiene, sin tocar lo sin subir; `reset: 'epoch'` (otro server o base restaurada) **no borra nada local**: vuelve a subir todo lo del dispositivo.
 - La web sincroniza con su propio origen; el APK, con la dirección de Ajustes › Servidor (sin dirección anda solo local).
 
+- **Google Drive** (`core/web/sync/drive.ts`, diseño en `docs/superpowers/specs/2026-11-16-google-drive-design.md`): `driveTarget(DriveFiles)` con archivos que nunca se modifican en `appDataFolder` (`epoch-*`, `log-<hlc>-*`, `snap-<hlc>-<p|n>`). El cursor es el conjunto de archivos ya leídos, no un reloj. Compacta a partir de 200 logs. `driveRest(token)` es la `DriveFiles` real (REST v3). Tests con un Drive en memoria: `drive.test.ts`. Falta el login y la pantalla de elegir destino (etapas 3 a 5), y el equivalente en Kotlin (etapa 4).
+
 ## En el APK (etapa 4)
 
 - **Almacenamiento:** `sw.db` (SQLite nativo, WAL) en vez de IndexedDB. La app lo usa por el plugin Widgets (`dbLoad` al arrancar, `dbApply` en cada cambio; `core/web/sync/nativeStore.ts`); el widget, los recordatorios y el sync de fondo lo leen y escriben directo (`SwDb.kt`). Un guardado solo pisa una fila si su HLC no es menor.

@@ -2,6 +2,9 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.1.0-beta.1', fecha: '16/11/2026', titulo: 'Google Drive como destino (prueba)', items: [
+    'Base para sincronizar con tu propio Google Drive, sin servidor: el motor ya sabe guardar y leer cambios en la carpeta oculta de la app. Todavía no se puede elegir en la pantalla.',
+  ] },
   { version: '2.0.0', fecha: '16/11/2026', titulo: 'La app funciona sola', items: [
     'Todo vive en tu dispositivo: crear, editar, borrar e importar andan sin conexión, en la web y en el celu. El servidor solo sincroniza.',
     'Se sincroniza al abrir, al volver la red, cada 5 minutos y al instante después de cada cambio. Si dos dispositivos tocan lo mismo, gana el cambio más nuevo.',
