@@ -3,7 +3,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "author": "Federico Gaubeca Klix",
-  "version": "2.1.0-beta.1",
+  "version": "2.1.0-beta.2",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -14,6 +14,7 @@
     "dev:server": "node --watch core/server/main.ts",
     "dev": "node scripts/dev.mjs",
     "build": "vite build",
+    "pages": "node scripts/pages.mjs",
     "deploy": "node scripts/deploy.mjs",
     "server-setup": "node scripts/deploy.mjs --setup",
     "apk": "node scripts/apk.mjs",

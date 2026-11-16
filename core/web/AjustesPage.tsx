@@ -11,6 +11,8 @@ import { PageHeader, radioKeys } from './ui.tsx';
 import { AcercaDe, Apariencia, Datos, General, Recordatorios } from './AjustesMas.tsx';
 import { useSubmit } from './useSubmit.ts';
 import { ServerForm } from './ServerForm.tsx';
+import { DriveSettings } from './DriveSettings.tsx';
+import { GOOGLE_CLIENT_ID, IS_PAGES } from './sync/google.ts';
 import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
 
@@ -168,6 +170,7 @@ export function AjustesPage() {
       <Recordatorios />
       <Apariencia />
       <Datos />
+      {IS_PAGES && GOOGLE_CLIENT_ID && <DriveSettings />}
       {isNative() && <section className="card-group"><h2>Servidor</h2><ServerForm onDone={() => location.reload()} /></section>}
       <AcercaDe />
       </div>

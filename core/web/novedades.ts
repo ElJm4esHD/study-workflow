@@ -2,6 +2,11 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.1.0-beta.2', fecha: '16/11/2026', titulo: 'Web pública con Google Drive (prueba)', items: [
+    'Versión web pública (GitHub Pages) que no necesita servidor: Ajustes › Google Drive conecta tu cuenta y sincroniza con una carpeta oculta de tu Drive. La app no ve ningún otro archivo tuyo.',
+    'En la web, Google pide un toque para renovar el permiso cada 1 hora: aparece un aviso con el botón "Reconectar" y no se pierde nada mientras tanto.',
+    'Se puede instalar como app y abrir sin conexión. Nueva página de privacidad.',
+  ] },
   { version: '2.1.0-beta.1', fecha: '16/11/2026', titulo: 'Google Drive como destino (prueba)', items: [
     'Base para sincronizar con tu propio Google Drive, sin servidor: el motor ya sabe guardar y leer cambios en la carpeta oculta de la app. Todavía no se puede elegir en la pantalla.',
   ] },

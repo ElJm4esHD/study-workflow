@@ -12,10 +12,21 @@ const env = process.env.SW_PUBLIC !== '1' && existsSync(envFile) ? Object.fromEn
 const httpsPort = process.env.SW_NEXT === '1' ? env.HTTPS_PORT_NEXT : env.HTTPS_PORT;
 const defaultServer = env.DEPLOY_HOST && httpsPort ? `https://${env.DEPLOY_HOST}:${httpsPort}` : '';
 
-export default defineConfig({
+// `vite build --mode pages` (npm run pages): la web pública en GitHub Pages, sin server propio; el ID de cliente OAuth sale de .env.google o del entorno (es público por diseño, pero no se commitea).
+const googleFile = new URL('./.env.google', import.meta.url);
+const googleEnv = existsSync(googleFile) ? Object.fromEntries([...readFileSync(googleFile, 'utf8').matchAll(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/gm)].map((m) => [m[1], m[2]])) : {};
+const googleId = process.env.GOOGLE_WEB_CLIENT_ID ?? googleEnv.GOOGLE_WEB_CLIENT_ID ?? '';
+
+export default defineConfig(({ mode }) => ({
   root: 'web',
+  base: mode === 'pages' ? '/study-workflow/' : '/',
   plugins: [react()],
-  define: { __APP_VERSION__: JSON.stringify(version), __DEFAULT_SERVER__: JSON.stringify(defaultServer) },
-  build: { outDir: '../dist/web', emptyOutDir: true },
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
+    __DEFAULT_SERVER__: JSON.stringify(mode === 'pages' ? '' : defaultServer),
+    __PAGES__: JSON.stringify(mode === 'pages'),
+    __GOOGLE_CLIENT_ID__: JSON.stringify(mode === 'pages' ? googleId : ''),
+  },
+  build: { outDir: mode === 'pages' ? '../dist/pages' : '../dist/web', emptyOutDir: true },
   server: { proxy: { '/api': 'http://localhost:3000' }, fs: { allow: ['..'] } },
-});
+}));

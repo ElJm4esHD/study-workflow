@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark light" />
+<title>Privacidad · Study Workflow</title>
+<style>
+  :root { --bg:#f4f5f8; --fg:#1d2330; --muted:#4f586a; --link:#2f4bd1 }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e1117; --fg:#e6e9f0; --muted:#a3acbe; --link:#b7c4ff } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,sans-serif }
+  main { max-width:44rem; margin:0 auto; padding:2rem 1rem 4rem }
+  h1 { font-size:1.6rem } h2 { font-size:1.15rem; margin-top:2rem }
+  a { color:var(--link) } .muted { color:var(--muted) }
+</style>
+</head>
+<body>
+<main>
+  <h1>Política de privacidad de Study Workflow</h1>
+  <p class="muted">Última actualización: 16/11/2026</p>
+  <p>Study Workflow es una app para organizar la facultad: tareas, calendario, materias, exámenes y planes de estudio. Es de código abierto y se usa en el navegador o como app en el celular.</p>
+
+  <h2>Qué datos guarda la app</h2>
+  <p>Lo que cargás vos: materias, tareas, eventos, exámenes y ajustes. Nada más. La app no pide tu nombre ni tu mail, no tiene cuentas propias, no usa publicidad, no usa analíticas y no hay rastreadores.</p>
+
+  <h2>Dónde se guardan</h2>
+  <ul>
+    <li><b>En tu dispositivo</b> (el almacenamiento del navegador o de la app). Es la copia principal: la app funciona sin conexión.</li>
+    <li><b>En tu propio Google Drive</b>, solo si elegís conectarlo. Se usa la carpeta oculta de la aplicación (permiso <code>drive.appdata</code>): la app no ve ni puede tocar ninguno de tus otros archivos de Drive, y vos tampoco ves esa carpeta como archivos normales.</li>
+    <li><b>En tu propio servidor</b>, solo si elegís esa opción en la versión para celular y lo configurás vos.</li>
+  </ul>
+
+  <h2>Quién tiene acceso</h2>
+  <p>Solo vos. Los datos viajan directo entre tu dispositivo y Google Drive: no pasan por ningún servidor del autor de la app ni de terceros. El autor no tiene acceso a tus datos ni a tu cuenta de Google. El permiso de Google se usa únicamente para leer y escribir esos archivos de sincronización.</p>
+
+  <h2>Cómo borrar tus datos</h2>
+  <ul>
+    <li><b>Desconectar Drive:</b> Ajustes › Google Drive › Desconectar. La app deja de sincronizar y revoca el permiso.</li>
+    <li><b>Borrar lo que quedó en Drive:</b> en <a href="https://drive.google.com/drive/settings" rel="noreferrer">drive.google.com › Configuración › Administrar aplicaciones</a>, buscá Study Workflow y elegí <i>Eliminar datos de la aplicación oculta</i>. También podés quitar el acceso en <a href="https://myaccount.google.com/permissions" rel="noreferrer">myaccount.google.com/permissions</a>.</li>
+    <li><b>Borrar lo del dispositivo:</b> borrá los datos del sitio en el navegador, o desinstalá la app en el celular.</li>
+  </ul>
+
+  <h2>Cambios y contacto</h2>
+  <p>Si esta política cambia, se actualiza acá con una fecha nueva. Para consultas, abrí un issue en el <a href="https://github.com/ElJm4esHD/study-workflow" rel="noreferrer">repositorio del proyecto</a>.</p>
+
+  <p><a href="./">← Volver a la app</a></p>
+</main>
+</body>
+</html>

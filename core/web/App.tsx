@@ -33,7 +33,7 @@ function Routes() {
         { path: '*', element: <Navigate to="/" replace /> },
       ],
     }];
-    return createBrowserRouter(routes);
+    return createBrowserRouter(routes, { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' }); // en GitHub Pages la app vive en /study-workflow/
   }, [key]); // eslint-disable-line
   // Pantalla de inicio elegida en Ajustes: solo al abrir la app (una vez), y un widget o un link que pidan otra ruta ganan.
   const homed = useRef(false);

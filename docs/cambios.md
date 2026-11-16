@@ -87,3 +87,10 @@ Sin cambios de uso todavía: se agregó el motor de sincronización, el almacena
 ## 2.0.0 (local-first)
 
 Versión final de la serie 2.0.0-beta: la app corre en el dispositivo y el servidor solo sincroniza. Los cambios de uso de cada etapa están arriba (2.0.0-beta.2 a beta.5). Migración desde la 1.x y vuelta atrás: [migracion.md](migracion.md).
+
+## Qué cambió de uso (2.1.0-beta.2, Google Drive en la web)
+
+- **Web pública (GitHub Pages)**: la misma app sin servidor. Ajustes › **Google Drive** › Conectar guarda y sincroniza tus datos en una carpeta oculta de tu Drive (permiso `drive.appdata`). Al conectar, lo que ya tenías en el dispositivo se junta con lo que haya en el Drive. Configuración de Google: [docs/google-cloud.md](google-cloud.md). Mi web en mi server no cambia.
+- **Reconectar**: en la web, Google renueva el permiso solo con un toque cada ~1 hora; aparece "Reconectar" arriba y los cambios quedan guardados en el dispositivo mientras tanto.
+- **Página de privacidad** (`/privacidad.html`) y web instalable que abre sin conexión.
+- `npm run pages` arma y audita el sitio; `npm run pages -- --publish` lo sube a la rama `gh-pages`.

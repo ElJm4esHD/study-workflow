@@ -2,9 +2,11 @@ import { isNative, getServerUrl, DEFAULT_SERVER } from '../server.ts';
 import type { LocalDb } from './db.ts';
 import { makeSyncer } from './engine.ts';
 import { serverTarget, type Call } from './target.ts';
+import { AuthError, driveRest, driveTarget } from './drive.ts';
+import { connectGoogle, driveToken, loadGoogle, targetKind } from './google.ts';
 
 /** Cuándo y contra qué se sincroniza: al abrir, al volver la red o a primer plano, cada 5 min y 2 s después de un cambio. */
-export type SyncStatus = { enabled: boolean; syncing: boolean; pending: number; lastSync: string | null; error: string | null; saveError: boolean };
+export type SyncStatus = { enabled: boolean; syncing: boolean; pending: number; lastSync: string | null; error: string | null; saveError: boolean; needsAuth: boolean };
 
 /** Dirección del destino "Mi servidor": la web comparte origen con el server; el APK usa la guardada (si no hay, anda solo local). */
 export const syncBase = (): string | null => (isNative() ? ((getServerUrl() ?? DEFAULT_SERVER).replace(/\/+$/, '') || null) : '');
@@ -18,36 +20,44 @@ const call: Call = async (method, path, body) => {
   return res.json();
 };
 
-let status: SyncStatus = { enabled: false, syncing: false, pending: 0, lastSync: null, error: null, saveError: false };
+let status: SyncStatus = { enabled: false, syncing: false, pending: 0, lastSync: null, error: null, saveError: false, needsAuth: false };
 const listeners = new Set<(s: SyncStatus) => void>();
 export const getSyncStatus = () => status;
 export function onSyncStatus(fn: (s: SyncStatus) => void): () => void { listeners.add(fn); return () => void listeners.delete(fn); }
 const set = (p: Partial<SyncStatus>) => { status = { ...status, ...p }; listeners.forEach((f) => f(status)); };
 
 let syncNow: () => Promise<void> = async () => {};
+/** "Reconectar" (Google Drive): pide un token nuevo con un toque y sincroniza. Llamar directo desde un clic. */
+export async function reconnectDrive(): Promise<void> {
+  await connectGoogle();
+  await syncNow();
+}
 /** Sincroniza ya (Ajustes › "Sincronizar ahora"). */
 export const syncNowNow = () => syncNow();
 
 /** `onRemote`: se llama cuando llegaron cambios de otro dispositivo (para recargar las pantallas). */
 export function startSync(db: LocalDb, onRemote: () => void): void {
-  const run = makeSyncer(db, serverTarget(call));
+  const kind = targetKind();
+  const enabledNow = () => (kind === 'drive' ? true : kind === 'server' && syncBase() !== null);
+  if (kind === 'drive') void loadGoogle().catch(() => {}); // el popup de "Reconectar" necesita el script ya cargado
+  const run = makeSyncer(db, kind === 'drive' ? driveTarget(driveRest(driveToken)) : serverTarget(call));
   db.onExternal(onRemote);
   const refresh = () => set({ pending: db.pendingCount(), saveError: db.error !== null, lastSync: db.getMeta('lastSync') ?? null });
   syncNow = async () => {
-    if (syncBase() === null) { set({ enabled: false }); return; }
+    if (!enabledNow()) { set({ enabled: false }); return; }
     set({ enabled: true, syncing: true });
     try {
       const r = await run();
-      set({ error: null });
+      set({ error: null, needsAuth: false });
       if (r.pulled > 0) onRemote();
     } catch (e) {
-      set({ error: navigator.onLine === false ? 'Sin conexión: se sincroniza cuando vuelva.' : e instanceof Error ? e.message : 'No se pudo sincronizar.' });
+      set({ needsAuth: e instanceof AuthError, error: navigator.onLine === false ? 'Sin conexión: se sincroniza cuando vuelva.' : e instanceof Error ? e.message : 'No se pudo sincronizar.' });
     }
     set({ syncing: false });
     refresh();
   };
   refresh();
-  set({ enabled: syncBase() !== null });
+  set({ enabled: enabledNow() });
   let debounce: number | undefined;
   db.subscribe(() => {
     refresh();
@@ -66,6 +76,6 @@ export function startSync(db: LocalDb, onRemote: () => void): void {
 
 /** Primer arranque en un dispositivo sin datos: se espera (hasta 8 s) a bajar lo del servidor para no mostrar todo vacío. */
 export async function firstSync(db: LocalDb): Promise<void> {
-  if (db.getMeta('cursor') || syncBase() === null) return;
+  if (db.getMeta('cursor') || targetKind() === 'local' || (targetKind() === 'server' && syncBase() === null)) return;
   await Promise.race([syncNow(), new Promise((r) => setTimeout(r, 8000))]);
 }

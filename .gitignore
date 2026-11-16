@@ -14,6 +14,7 @@ CLAUDE.local.md
 .env
 .env.*
 !.env.deploy.example
+!.env.google.example
 # Builds, pruebas y backups
 *.apk
 *.aab
