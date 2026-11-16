@@ -2,6 +2,12 @@
 export type Novedad = { version: string; fecha: string; titulo: string; items: string[] };
 
 export const NOVEDADES: Novedad[] = [
+  { version: '2.1.0', fecha: '16/11/2026', titulo: 'Usala sin servidor: Google Drive', items: [
+    'La primera vez la app te pregunta dónde guardar los datos: tu Google Drive (recomendado, sin servidor), Mi servidor o solo este dispositivo. Se cambia cuando quieras en Ajustes › Sincronización, sin perder nada: lo del dispositivo se junta con lo del destino nuevo.',
+    'Con Drive, los datos van a una carpeta oculta de tu cuenta que solo usa esta app. La app no ve ningún otro archivo tuyo y nadie más tiene acceso.',
+    'Web pública que se instala como app y anda sin conexión, y página de privacidad. En la web, Google pide un toque ("Reconectar") cada ~1 hora; en el celu la sesión se renueva sola.',
+    'El widget y los recordatorios se actualizan en segundo plano también con Drive.',
+  ] },
   { version: '2.1.0-beta.3', fecha: '16/11/2026', titulo: 'Google Drive en el celu (prueba)', items: [
     'En el APK, Ajustes › Google Drive permite sincronizar con tu Drive en vez de un servidor propio. La sesión de Google se renueva sola, sin tocar nada.',
     'El widget y los recordatorios también se actualizan en segundo plano con Drive: lo que cargás en la compu llega al celu sin abrir la app.',

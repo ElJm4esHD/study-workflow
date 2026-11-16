@@ -24,8 +24,10 @@ export type TargetKind = 'drive' | 'server' | 'local';
 export const targetKind = (): TargetKind => {
   const k = localStorage.getItem(TARGET_KEY);
   if (IS_PAGES) return k === 'drive' && DRIVE_AVAILABLE ? 'drive' : 'local';
-  return IS_NATIVE && k === 'drive' ? 'drive' : 'server';
+  return IS_NATIVE ? (k === 'drive' || k === 'local' ? k : 'server') : 'server';
 };
+/** ¿Ya se eligió un destino en este dispositivo? */
+export const targetChosen = (): boolean => localStorage.getItem(TARGET_KEY) !== null;
 export const setTargetKind = (k: TargetKind): void => localStorage.setItem(TARGET_KEY, k);
 
 type Stored = { t: string; exp: number };

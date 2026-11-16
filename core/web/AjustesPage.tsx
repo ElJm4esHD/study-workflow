@@ -10,10 +10,8 @@ import { ArchiveIcon, ChevronIcon, ChevronRightIcon, PlusIcon, UnarchiveIcon } f
 import { PageHeader, radioKeys } from './ui.tsx';
 import { AcercaDe, Apariencia, Datos, General, Recordatorios } from './AjustesMas.tsx';
 import { useSubmit } from './useSubmit.ts';
-import { ServerForm } from './ServerForm.tsx';
-import { DriveSettings } from './DriveSettings.tsx';
+import { SyncSettings } from './DriveSettings.tsx';
 import { DRIVE_AVAILABLE } from './sync/google.ts';
-import { isNative } from './server.ts';
 import { MateriaChip } from './MateriaChip.tsx';
 
 
@@ -170,8 +168,7 @@ export function AjustesPage() {
       <Recordatorios />
       <Apariencia />
       <Datos />
-      {DRIVE_AVAILABLE && <DriveSettings />}
-      {isNative() && <section className="card-group"><h2>Servidor</h2><ServerForm onDone={() => location.reload()} /></section>}
+      {DRIVE_AVAILABLE && <SyncSettings />}
       <AcercaDe />
       </div>
     </>

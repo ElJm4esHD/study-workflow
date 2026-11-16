@@ -2,7 +2,7 @@
 
 **Tu facultad y tu día en una sola app, con el plan de estudio armado junto a Claude.**
 
-To-do, calendario, materias, parciales y finales, en la compu (navegador) y en el celu (APK de Android con widget). Self-hosted: corre en tu propio server con Docker y solo se accede por Tailscale. Sin cuentas, sin servicios de terceros, sin costos.
+To-do, calendario, materias, parciales y finales, en la compu (navegador) y en el celu (APK de Android con widget). Podés usarla **sin servidor**, sincronizando con tu propio Google Drive, o **self-hosted**: en tu propio server con Docker, accesible solo por Tailscale. Sin cuentas propias, sin costos.
 
 <p align="center">
   <img src="docs/capturas/412/inicio.png" alt="Inicio en el celu: próximo examen, tareas de hoy y próximos 7 días" width="240">
@@ -82,15 +82,26 @@ npm run deploy                       # push al server, build, backup de la base,
 - Antes de cada deploy se hace un backup de la base (`/srv/study-workflow/backups/`).
 - **Guía paso a paso** (clave SSH en Windows, permisos, verificación, restore y problemas comunes): [`DEPLOY.md`](DEPLOY.md).
 
+## Usala sin server
+
+La forma más simple: ningún servidor, tus datos en tu propio Google Drive.
+
+- **En la compu:** abrí **<https://ElJm4esHD.github.io/study-workflow/>** (se puede instalar como app y anda sin conexión). La primera vez elegí **Google Drive**.
+- **En el celu:** instalá el APK de [Releases](https://github.com/ElJm4esHD/study-workflow/releases/latest) (pasos abajo) y elegí **Google Drive** en la primera pantalla.
+- Con la misma cuenta de Google, los dos ven los mismos datos. Los datos van a una **carpeta oculta de tu Drive** que solo usa esta app (permiso `drive.appdata`): la app no ve ningún otro archivo tuyo y nadie más tiene acceso. Más en la [política de privacidad](https://ElJm4esHD.github.io/study-workflow/privacidad.html).
+- En la web, Google pide un toque en **Reconectar** cada ~1 hora (límite de Google para el navegador); mientras tanto todo se guarda en el dispositivo. En el celu la sesión se renueva sola.
+- Si querés tu propia copia del proyecto de Google (para publicar la tuya), la guía está en [docs/google-cloud.md](docs/google-cloud.md).
+- También podés usarla **solo en un dispositivo**, o con **tu propio servidor** (secciones siguientes). Se cambia en Ajustes › Sincronización sin perder datos.
+
 ## Instalar en el celu
 
-No hace falta Android Studio: el APK ya compilado está en **[Releases](https://github.com/ElJm4esHD/study-workflow/releases/latest)**. Antes tenés que tener tu server andando (sección anterior) y Tailscale instalado y conectado en el celu.
+No hace falta Android Studio: el APK ya compilado está en **[Releases](https://github.com/ElJm4esHD/study-workflow/releases/latest)**. Si vas a usar Google Drive, no necesitás nada más. Si vas a usar tu servidor, tenés que tenerlo andando (sección anterior) y Tailscale instalado y conectado en el celu.
 
 1. **Bajá el APK.** Desde el celu, abrí el [último Release](https://github.com/ElJm4esHD/study-workflow/releases/latest) y tocá `study-workflow-X.Y.Z.apk`. Si Chrome avisa que el archivo puede ser dañino, tocá **Descargar de todas formas**.
 2. **Permití instalar apps desconocidas.** Abrí el APK desde la notificación de descarga (o desde **Mis archivos › Descargas**). La primera vez Android dice que no puede instalar apps de esa fuente: tocá **Configuración**, activá **Permitir de esta fuente** y volvé.
 3. **Si tenés un Samsung con "Bloqueador automático"** (One UI 6 o más nuevo), Android no te deja instalar nada que no venga de una tienda. Desactivalo en **Ajustes › Seguridad y privacidad › Bloqueador automático**, instalá y volvé a activarlo si querés.
 4. **Instalá.** Tocá **Instalar**. Si aparece **Play Protect** ("App no reconocida" o "App bloqueada"), es porque la app no viene de Play Store: tocá **Más detalles › Instalar de todos modos**. Si te ofrece mandarla a analizar, podés tocar **No enviar**.
-5. **Primera apertura.** La app anda sola desde el primer momento, con los datos en el celu. Para sincronizar con tu server, la dirección (`https://tu-server.tu-tailnet.ts.net:PUERTO`, el `DEPLOY_HOST` y el `HTTPS_PORT` de tu `.env.deploy`) viene precargada en el APK de `npm run apk`; en el APK público se carga en Ajustes › Servidor.
+5. **Primera apertura.** La app pregunta dónde guardar los datos: **Google Drive** (recomendado), **Mi servidor** o **Solo este dispositivo**. La app anda sola desde el primer momento, con los datos en el celu. Para tu servidor, la dirección (`https://tu-server.tu-tailnet.ts.net:PUERTO`, el `DEPLOY_HOST` y el `HTTPS_PORT` de tu `.env.deploy`) viene precargada en el APK de `npm run apk` y esa pantalla no aparece; en el APK público se escribe ahí. Se cambia después en Ajustes › Sincronización.
 6. **Widget y recordatorios.** Mantené apretada la pantalla de inicio › **Widgets** › Study Workflow. Para que suenen los recordatorios, aceptá los permisos de notificaciones y de alarmas cuando la app los pida.
 
 **Para actualizar**, bajá el APK nuevo del Release e instalalo encima: tus datos están en el server y no se pierden. Si antes habías compilado la app vos, Android la rechaza porque tiene otra firma. En ese caso desinstalala primero.

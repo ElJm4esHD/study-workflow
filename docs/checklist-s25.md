@@ -75,3 +75,11 @@ Instalar: `npm run apk` y después `adb install -r dist\study-workflow.apk` (o p
 - [ ] (Solo si querés probar el ciclo completo) Importar ese archivo en una base de pruebas: reemplaza todo y la app recarga.
 - [ ] Sincronizar ahora (Ajustes › Datos): muestra "Sincronizado hace instantes" y, con la compu, aparecen los cambios de la otra.
 - [ ] Exportar e importar usan el formato v2 (solo registros); un backup 1.x no se acepta (se convierte en la migración).
+
+## 10. Google Drive
+- [ ] APK público recién instalado (o con los datos borrados): la primera pantalla pregunta dónde guardar los datos. El APK personal (`npm run apk`) no la muestra.
+- [ ] Ajustes › Sincronización › Conectar Google Drive: sale el permiso de Google (uno solo, la carpeta de datos de la app) y queda "Ahora: Google Drive".
+- [ ] Lo cargado en la compu (web de Pages) aparece en el celu y al revés, con la misma cuenta.
+- [ ] Cargar una tarea con recordatorio desde la compu, con la app cerrada en el celu: aparece en el widget y suena sin abrir la app.
+- [ ] Cambiar a "Solo este dispositivo" y volver a Drive no pierde nada.
+- [ ] Si Google pide volver a entrar: aparece "Reconectar" y los cambios no se pierden.

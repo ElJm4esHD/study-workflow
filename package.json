@@ -3,7 +3,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "author": "Federico Gaubeca Klix",
-  "version": "2.1.0-beta.3",
+  "version": "2.1.0",
   "type": "module",
   "engines": {
     "node": ">=24"

@@ -10,6 +10,7 @@ import { getPrefs } from './prefs.ts';
 import { initLocal, local } from './local.ts';
 import { reloadAll } from './api.ts';
 import { firstSync, startSync } from './sync/auto.ts';
+import { Destino, needsDestino } from './Destino.tsx';
 import { DEFAULT_SERVER, getServerUrl } from './server.ts';
 import { onSharedText, stashShared, takeSharedText } from './shared.ts';
 import { parentOf } from './back.ts';
@@ -89,5 +90,6 @@ export function App() {
   useEffect(() => { start().then(() => setState('ready'), (e) => setState(e instanceof Error ? e : new Error(String(e)))); }, []);
   if (state instanceof Error) return <div className="center-screen" role="alert"><h1>No se pudo abrir la app</h1><p>{state.message}</p><button className="btn primary" onClick={() => location.reload()}>Reintentar</button></div>;
   if (state === 'loading') return <div className="main"><PageSkeleton /></div>;
+  if (needsDestino()) return <ErrorBoundary><MotionRoot><Destino /></MotionRoot></ErrorBoundary>;
   return <ErrorBoundary><MotionRoot><CoreProvider><Routes /></CoreProvider></MotionRoot></ErrorBoundary>;
 }

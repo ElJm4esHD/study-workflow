@@ -4,6 +4,7 @@ import { MateriaForm } from './AjustesPage.tsx';
 import { useCore } from './CoreContext.tsx';
 import { MateriaChip } from './MateriaChip.tsx';
 import { DEFAULT_SERVER, getServerUrl, isNative } from './server.ts';
+import { targetKind } from './sync/google.ts';
 
 const KEY = 'sw.welcomed';
 export const wasWelcomed = (): boolean => { try { return localStorage.getItem(KEY) === '1'; } catch { return true; } };
@@ -34,6 +35,7 @@ export function Onboarding() {
 
   const close = (to?: string) => { markWelcomed(); setOpen(false); if (to) nav(to); };
   const active = materias.filter((m) => !m.archived);
+  const kind = targetKind();
   const server = isNative() ? (getServerUrl() ?? DEFAULT_SERVER) : location.origin;
   const last = step === steps - 1;
 
@@ -44,7 +46,9 @@ export function Onboarding() {
         <div className="ob-body">
           <h2 id="ob-t">Bienvenido a Study Workflow</h2>
           <p>Acá organizás la facultad y tu día: tareas, calendario, materias, exámenes y planes de estudio.</p>
-          <p>Estás conectado a <b className="ob-url">{server}</b>. {isNative() && 'Si algún día no carga, revisá que Tailscale esté prendido en el celu. Podés cambiar la dirección en Ajustes › Servidor.'}</p>
+          {kind === 'drive' ? <p>Tus datos se sincronizan con tu Google Drive y también quedan en este dispositivo. Podés cambiarlo en Ajustes › Sincronización.</p>
+            : kind === 'local' ? <p>Tus datos quedan solo en este dispositivo. Si querés usarlos en más de uno, activá la sincronización en Ajustes › Sincronización.</p>
+            : <p>Estás conectado a <b className="ob-url">{server}</b>. {isNative() && 'Si algún día no carga, revisá que Tailscale esté prendido en el celu. Podés cambiar el destino en Ajustes › Sincronización.'}</p>}
         </div>
       )}
       {step === 1 && (

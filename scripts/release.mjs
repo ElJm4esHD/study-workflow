@@ -57,9 +57,12 @@ const skillZips = readdirSync(join(root, 'skills')).filter((d) => existsSync(joi
 
 // 4. Release con el APK y las skills.
 const notes = `## ${nov.titulo}\n\n${nov.items.map((i) => `- ${i}`).join('\n')}\n\n## Instalar\n\n`
-  + `Bajá **study-workflow-${version}.apk** desde el celu y abrilo. Necesitás tu propio servidor (Docker + Tailscale): la primera vez la app te pide su dirección. `
+  + `Bajá **study-workflow-${version}.apk** desde el celu y abrilo. La primera vez la app te pregunta dónde guardar los datos: tu Google Drive (sin servidor), tu propio servidor (Docker + Tailscale) o solo el celu.`
   + `Paso a paso, incluido el aviso de Play Protect, en el [README](https://github.com/ElJm4esHD/study-workflow#instalar-en-el-celu).\n\n`
   + `Las skills de Claude (\`skill-*.zip\`) se suben en claude.ai › Configuración › Capacidades › Skills.\n`;
 const r = spawnSync(gh, ['release', 'create', tag, apk, ...skillZips, '--target', 'main', '--title', `Study Workflow ${version}`, '--notes', notes], { cwd: root, stdio: 'inherit' });
 if (r.status !== 0) die('gh release create falló.');
 console.log(`\n✔ Release ${tag} publicado con el APK y ${skillZips.length} skills.`);
+
+// 5. Web pública (GitHub Pages): mismo build y misma auditoría. Si falla, el Release ya salió: se repite con `npm run pages -- --publish`.
+if (spawnSync('node', ['scripts/pages.mjs', '--publish'], { cwd: root, stdio: 'inherit' }).status !== 0) console.error('✖ El Release salió, pero la web de GitHub Pages NO se actualizó. Repetí: npm run pages -- --publish');

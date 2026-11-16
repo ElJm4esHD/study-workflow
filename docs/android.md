@@ -58,7 +58,7 @@ Cada vez que quieras instalar o actualizar, en la terminal:
 2. Abrí **Study Workflow**. Pide la dirección del servidor; ya viene puesta la de tu `.env.deploy` (`https://DEPLOY_HOST:HTTPS_PORT`, por ejemplo `https://tu-server.tu-tailnet.ts.net:8443`). Si compilaste sin `.env.deploy` o bajaste el APK de GitHub Releases (`npm run apk:public`), escribila a mano.
 3. Tocá **Probar y guardar**. Si anda, entra a Inicio.
 
-La dirección se cambia después en Ajustes → Servidor.
+El destino (Google Drive, tu servidor o solo el celu) se cambia después en Ajustes › Sincronización. El APK público pregunta dónde guardar los datos la primera vez.
 
 ## Compartir un plan desde la app de Claude
 
